@@ -1,0 +1,28 @@
+{
+  "name": "@iyknel/notification-service",
+  "version": "1.0.0",
+  "description": "Email and SMS notifications",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@iyknel/shared": "workspace:*",
+    "@prisma/client": "^5.8.0",
+    "bull": "^4.11.5",
+    "fastify": "^4.25.2",
+     "@fastify/cors": "^8.4.2",
+    "nodemailer": "^6.9.7",
+    "redis": "^4.6.12"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.14",
+    "tsx": "^4.7.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
+  }
+}

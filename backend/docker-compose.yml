@@ -1,0 +1,233 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iyknel-postgres
+    environment:
+      POSTGRES_USER: iyknel_user
+      POSTGRES_PASSWORD: pass2enter
+      POSTGRES_DB: iyknel_db
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iyknel_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: iyknel-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: iyknel-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - auth-service
+      - product-service
+      - pricing-service
+      - buyer-service
+      - cart-checkout-service
+      - order-service
+      - payment-service
+      - inventory-service
+      - notification-service
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: packages/auth-service/Dockerfile
+    container_name: auth-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY: 24h
+      NODE_ENV: ${NODE_ENV:-development}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: .
+      dockerfile: packages/product-service/Dockerfile
+    container_name: product-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  pricing-service:
+    build:
+      context: .
+      dockerfile: packages/pricing-service/Dockerfile
+    container_name: pricing-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  buyer-service:
+    build:
+      context: .
+      dockerfile: packages/buyer-service/Dockerfile
+    container_name: buyer-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  cart-checkout-service:
+    build:
+      context: .
+      dockerfile: packages/cart-checkout-service/Dockerfile
+    container_name: cart-checkout-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: .
+      dockerfile: packages/order-service/Dockerfile
+    container_name: order-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3006:3006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: packages/payment-service/Dockerfile
+    container_name: payment-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
+      FLUTTERWAVE_SECRET_KEY: ${FLUTTERWAVE_SECRET_KEY}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3007:3007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: packages/inventory-service/Dockerfile
+    container_name: inventory-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3008:3008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: packages/notification-service/Dockerfile
+    container_name: notification-service
+    environment:
+      DATABASE_URL: postgresql://iyknel_user:pass2enter@postgres:5432/iyknel_db
+      REDIS_URL: redis://redis:6379
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3009:3009"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: iyknel-network

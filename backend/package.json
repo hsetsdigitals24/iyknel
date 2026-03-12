@@ -1,0 +1,42 @@
+{
+  "name": "iyknel-backend",
+  "version": "1.0.0",
+  "description": "B2B FMCG eCommerce platform",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/auth-service",
+    "packages/product-service",
+    "packages/pricing-service",
+    "packages/buyer-service",
+    "packages/cart-checkout-service",
+    "packages/order-service",
+    "packages/payment-service",
+    "packages/inventory-service",
+    "packages/notification-service"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:auth": "npm run dev -w packages/auth-service",
+    "dev:product": "npm run dev -w packages/product-service",
+    "dev:pricing": "npm run dev -w packages/pricing-service",
+    "dev:buyer": "npm run dev -w packages/buyer-service",
+    "dev:checkout": "npm run dev -w packages/cart-checkout-service",
+    "dev:order": "npm run dev -w packages/order-service",
+    "dev:payment": "npm run dev -w packages/payment-service",
+    "dev:inventory": "npm run dev -w packages/inventory-service",
+    "dev:notification": "npm run dev -w packages/notification-service",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "prisma:migrate": "npm run prisma:migrate -w packages/shared",
+    "prisma:generate": "npm run prisma:generate -w packages/shared",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "@types/redis": "^4.0.11",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  }
+}
