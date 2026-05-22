@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { AuditLog } from "@prisma/client";
 import { db } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,12 +21,7 @@ export default async function AuditPage({
   const actor = searchParams.actor?.trim() ?? "";
   const action = searchParams.action?.trim() ?? "";
 
-  type AuditLogRow = AuditLog & {
-    actor: { email: string } | null;
-    order: { id: string; number: string } | null;
-  };
-
-  const logs: AuditLogRow[] = await db.auditLog.findMany({
+  const logs = await db.auditLog.findMany({
     where: {
       ...(action ? { action: { startsWith: action } } : {}),
       ...(actor
@@ -37,7 +31,16 @@ export default async function AuditPage({
     orderBy: { createdAt: "desc" },
     take: 100,
     include: { actor: true, order: { select: { id: true, number: true } } },
-  });
+  }) as Array<{
+    id: string;
+    actorId: string | null;
+    orderId: string | null;
+    action: string;
+    detail: Record<string, unknown> | null;
+    createdAt: Date;
+    actor: { email: string } | null;
+    order: { id: string; number: string } | null;
+  }>;
 
   return (
     <div className="space-y-6">
