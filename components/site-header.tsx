@@ -1,0 +1,67 @@
+import Link from "next/link";
+import { Heart, Search, ShoppingCart } from "lucide-react";
+import { UserMenu } from "@/components/user-menu";
+
+export function SiteHeader() {
+  return (
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="container flex h-16 items-center gap-4">
+        <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
+          Iyknel<span className="text-primary">.</span>
+        </Link>
+
+        <form action="/products" method="get" className="hidden flex-1 md:block">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              name="q"
+              placeholder="Search products, brands, categories…"
+              className="h-10 w-full rounded-full border border-input bg-secondary/40 pl-10 pr-4 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+          </div>
+        </form>
+
+        <nav className="flex items-center gap-1">
+          <Link
+            href="/products"
+            className="hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground lg:inline-flex"
+          >
+            Catalog
+          </Link>
+          <Link
+            href="/wishlist"
+            aria-label="Wishlist"
+            className="hidden h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground md:inline-flex"
+          >
+            <Heart className="h-5 w-5" />
+          </Link>
+          <Link
+            href="/cart"
+            aria-label="Cart"
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <ShoppingCart className="h-5 w-5" />
+          </Link>
+          <div className="ml-1 hidden md:block">
+            <UserMenu />
+          </div>
+        </nav>
+      </div>
+
+      <div className="border-t md:hidden">
+        <form action="/products" method="get" className="container py-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              name="q"
+              placeholder="Search products…"
+              className="h-10 w-full rounded-full border border-input bg-secondary/40 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+        </form>
+      </div>
+    </header>
+  );
+}

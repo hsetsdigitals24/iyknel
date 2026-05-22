@@ -1,0 +1,39 @@
+import "server-only";
+import { db } from "@/lib/db";
+import { addItem } from "@/lib/cart";
+
+async function getOrCreate(userId: string) {
+  return db.wishlist.upsert({
+    where: { userId },
+    update: {},
+    create: { userId },
+  });
+}
+
+export async function listWishlist(userId: string) {
+  const w = await getOrCreate(userId);
+  return db.wishlistItem.findMany({
+    where: { wishlistId: w.id },
+    include: { product: true },
+    orderBy: { addedAt: "desc" },
+  });
+}
+
+export async function addToWishlist(userId: string, productId: string) {
+  const w = await getOrCreate(userId);
+  await db.wishlistItem.upsert({
+    where: { wishlistId_productId: { wishlistId: w.id, productId } },
+    update: {},
+    create: { wishlistId: w.id, productId },
+  });
+}
+
+export async function removeFromWishlist(userId: string, productId: string) {
+  const w = await getOrCreate(userId);
+  await db.wishlistItem.deleteMany({ where: { wishlistId: w.id, productId } });
+}
+
+export async function moveToCart(userId: string, productId: string) {
+  await addItem(userId, productId, { cartons: 0, pieces: 1 });
+  await removeFromWishlist(userId, productId);
+}
