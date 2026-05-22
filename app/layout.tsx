@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { AuthSessionProvider } from "@/components/session-provider";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
 
