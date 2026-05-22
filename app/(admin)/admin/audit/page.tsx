@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { AuditLog } from "@prisma/client";
 import { db } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,12 @@ export default async function AuditPage({
   const actor = searchParams.actor?.trim() ?? "";
   const action = searchParams.action?.trim() ?? "";
 
-  const logs = await db.auditLog.findMany({
+  type AuditLogRow = AuditLog & {
+    actor: { email: string } | null;
+    order: { id: string; number: string } | null;
+  };
+
+  const logs: AuditLogRow[] = await db.auditLog.findMany({
     where: {
       ...(action ? { action: { startsWith: action } } : {}),
       ...(actor
