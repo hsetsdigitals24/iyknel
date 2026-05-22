@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { OrderStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { formatNaira } from "@/lib/utils";
 import { OrderStatusPill } from "@/components/order-status-pill";
@@ -17,7 +18,13 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
       orderBy: { submittedAt: "desc" },
       take: 20,
       select: { id: true, number: true, status: true, totalKobo: true, submittedAt: true },
-    }),
+    }) as Promise<Array<{
+      id: string;
+      number: string;
+      status: OrderStatus;
+      totalKobo: number;
+      submittedAt: Date;
+    }>>,
     db.order.aggregate({
       where: { userId: customer.id, status: { in: ["PAID", "DISPATCHED", "DELIVERED"] } },
       _sum: { totalKobo: true },
