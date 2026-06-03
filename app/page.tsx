@@ -10,19 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { CategoryTile } from "@/components/category-tile";
 import { FeaturedProductsCarousel } from "@/components/featured-products-carousel";
-
-const CATEGORY_KEYWORDS: Record<string, string> = {
-  drinks: "soft-drink,bottle",
-  snacks: "snacks,biscuit",
-  "pasta-grains": "rice,pasta",
-  "cooking-essentials": "cooking-oil,spice",
-  "dairy-frozen": "milk,dairy",
-  "personal-care": "soap,toothpaste",
-  household: "detergent,cleaning",
-  "baby-care": "baby,diaper",
-  "health-wellness": "vitamins,pharmacy",
-  "office-stationery": "stationery,office",
-};
+import { WhyIyknel } from "@/components/why-iyknel";
 
 export default async function LandingPage() {
   const [categories, products] = await Promise.all([
@@ -64,6 +52,8 @@ export default async function LandingPage() {
           <PromoCarousel />
         </section>
 
+        <WhyIyknel />
+
         {/* Category tiles */}
         <section className="container py-12 md:py-16">
           <div className="mb-6 flex items-end justify-between">
@@ -82,12 +72,7 @@ export default async function LandingPage() {
 
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10">
             {categories.map((c) => (
-              <CategoryTile
-                key={c.id}
-                slug={c.slug}
-                name={c.name}
-                imageKeyword={CATEGORY_KEYWORDS[c.slug] ?? c.name.toLowerCase()}
-              />
+              <CategoryTile key={c.id} slug={c.slug} name={c.name} />
             ))}
           </div>
         </section>
@@ -167,7 +152,7 @@ export default async function LandingPage() {
             </div>
             <div className="relative aspect-[5/4] md:aspect-auto">
               <Image
-                src="https://source.unsplash.com/featured/1200x900/?warehouse,wholesale,boxes"
+                src="/placeholders/banner.svg"
                 alt="Wholesale warehouse"
                 fill
                 sizes="(min-width: 768px) 50vw, 100vw"

@@ -1,14 +1,26 @@
 import Link from "next/link";
 import { Heart, Search, ShoppingCart } from "lucide-react";
 import { UserMenu } from "@/components/user-menu";
+import { BrandLogo } from "@/components/brand-logo";
+import { getSession } from "@/lib/session";
+import { db } from "@/lib/db";
 
-export function SiteHeader() {
+async function getCartCount(): Promise<number> {
+  const s = await getSession();
+  if (!s?.user?.id) return 0;
+  const cart = await db.cart.findUnique({
+    where: { userId: s.user.id },
+    select: { items: { select: { id: true } } },
+  });
+  return cart?.items.length ?? 0;
+}
+
+export async function SiteHeader() {
+  const cartCount = await getCartCount();
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center gap-4">
-        <Link href="/" className="font-serif text-2xl font-semibold tracking-tight">
-          Iyknel<span className="text-primary">.</span>
-        </Link>
+        <BrandLogo size="sm" priority />
 
         <form action="/products" method="get" className="hidden flex-1 md:block">
           <div className="relative">
@@ -32,16 +44,21 @@ export function SiteHeader() {
           <Link
             href="/wishlist"
             aria-label="Wishlist"
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground md:inline-flex"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             <Heart className="h-5 w-5" />
           </Link>
           <Link
             href="/cart"
-            aria-label="Cart"
+            aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </Link>
           <div className="ml-1 hidden md:block">
             <UserMenu />

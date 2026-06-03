@@ -9,6 +9,12 @@ export const registerSchema = z.object({
   email: z.string().email("Enter a valid email"),
   phone: z.string().regex(phoneRegex, "Enter a valid phone number"),
   password: z.string().min(8, "Use at least 8 characters").max(72),
+  consent: z.preprocess(
+    (v) => v === "on" || v === "true" || v === true,
+    z.literal(true, {
+      errorMap: () => ({ message: "You must accept the Terms and Privacy Policy." }),
+    }),
+  ),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

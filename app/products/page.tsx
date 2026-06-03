@@ -9,7 +9,9 @@ import { ProductCard } from "@/components/product-card";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
-type SP = { q?: string; category?: string; sort?: string; inStock?: string };
+type SP = { q?: string; category?: string; sort?: string; inStock?: string; page?: string };
+
+const PAGE_SIZE = 60;
 
 const SORTS: Record<string, Prisma.ProductOrderByWithRelationInput> = {
   newest: { createdAt: "desc" },
@@ -23,6 +25,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
   const categorySlug = searchParams.category?.trim() ?? "";
   const sortKey = (searchParams.sort && SORTS[searchParams.sort]) ? searchParams.sort! : "newest";
   const inStockOnly = searchParams.inStock === "1";
+  const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1);
 
   const where: Prisma.ProductWhereInput = {
     active: true,
@@ -48,7 +51,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
       where,
       orderBy: SORTS[sortKey],
       include: { category: true },
-      take: 120,
+      take: page * PAGE_SIZE,
     }),
     db.product.count({ where }),
   ]);
@@ -60,7 +63,14 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
 
   const baseParams = (overrides: Partial<SP>) => {
     const p = new URLSearchParams();
-    const merged = { q, category: categorySlug, sort: sortKey, inStock: inStockOnly ? "1" : "", ...overrides };
+    const merged = {
+      q,
+      category: categorySlug,
+      sort: sortKey,
+      inStock: inStockOnly ? "1" : "",
+      page: page > 1 ? String(page) : "",
+      ...overrides,
+    };
     Object.entries(merged).forEach(([k, v]) => {
       if (v) p.set(k, v as string);
     });
@@ -215,20 +225,31 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                {products.map((p, i) => (
-                  <ProductCard
-                    key={p.id}
-                    slug={p.slug}
-                    name={p.name}
-                    priceKobo={p.priceKobo}
-                    image={productImages[i] ?? undefined}
-                    category={p.category?.name}
-                    stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces}
-                    badge={i % 7 === 0 ? "deal" : i % 11 === 0 ? "bestseller" : null}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                  {products.map((p, i) => (
+                    <ProductCard
+                      key={p.id}
+                      slug={p.slug}
+                      name={p.name}
+                      priceKobo={p.priceKobo}
+                      image={productImages[i] ?? undefined}
+                      category={p.category?.name}
+                      stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces}
+                      badge={i % 7 === 0 ? "deal" : i % 11 === 0 ? "bestseller" : null}
+                    />
+                  ))}
+                </div>
+                {products.length < total && (
+                  <div className="mt-8 flex justify-center">
+                    <Button asChild variant="outline" size="lg" className="rounded-full">
+                      <Link href={baseParams({ page: String(page + 1) })}>
+                        Load more · {total - products.length} remaining
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

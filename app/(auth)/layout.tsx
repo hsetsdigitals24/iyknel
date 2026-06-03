@@ -1,23 +1,24 @@
 import Image from "next/image";
-import Link from "next/link";
 import { BadgeCheck, Banknote, Truck } from "lucide-react";
+
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-12 text-primary-foreground md:flex">
         <Image
-          src="https://source.unsplash.com/featured/1200x1600/?warehouse,wholesale,products"
+          src="/placeholders/banner.svg"
           alt=""
           fill
           sizes="50vw"
           className="object-cover opacity-25"
           priority
         />
-        <div className="relative z-10 flex items-center gap-2">
-          <Link href="/" className="font-serif text-3xl font-semibold tracking-tight">
-            Iyknel<span className="text-primary-foreground/70">.</span>
-          </Link>
+        <div className="relative z-10">
+          <div className="inline-flex items-center rounded-lg bg-background px-3 py-2 shadow-sm">
+            <BrandLogo size="lg" priority />
+          </div>
         </div>
 
         <div className="relative z-10 max-w-md space-y-4">
@@ -49,9 +50,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex items-center justify-center bg-background p-6 md:p-12">
         <div className="w-full max-w-md">
           <div className="mb-6 flex items-center justify-between md:hidden">
-            <Link href="/" className="font-serif text-2xl font-semibold">
-              Iyknel<span className="text-primary">.</span>
-            </Link>
+            <BrandLogo size="md" />
           </div>
           {children}
         </div>

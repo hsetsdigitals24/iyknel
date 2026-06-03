@@ -2,15 +2,15 @@ import Link from "next/link";
 import { ArrowRight, Heart, Package, ShoppingBag, ShoppingCart } from "lucide-react";
 
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireCustomer } from "@/lib/session";
 import { formatNaira } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/status-pill";
 import { ClickableTr } from "@/components/clickable-row";
 
 export default async function CustomerDashboard() {
-  const session = await getSession();
-  const userId = session!.user.id;
+  const session = await requireCustomer();
+  const userId = session.user.id;
 
   const [business, recentOrders, openOrdersCount, cart, wishlistCount] = await Promise.all([
     db.business.findUnique({ where: { userId } }),

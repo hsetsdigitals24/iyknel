@@ -110,7 +110,13 @@ export async function getSignedFileUrl(
   key: string,
   opts?: { expiresIn?: number },
 ): Promise<string> {
-  if (looksLikeUrl(key)) return key;
+  if (looksLikeUrl(key)) {
+    // source.unsplash.com is deprecated and no longer resolves. Old seed rows
+    // still contain those URLs; swap them for the local placeholder so pages
+    // don't 500 from next/image rejecting an unconfigured remote host.
+    if (key.includes("source.unsplash.com")) return "/placeholders/product.svg";
+    return key;
+  }
   const bucket = process.env.R2_BUCKET;
   if (!bucket) throw new Error("R2_BUCKET not set");
   return getSignedUrl(

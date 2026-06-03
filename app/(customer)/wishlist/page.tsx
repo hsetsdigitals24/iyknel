@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Heart } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
 
-import { requireCustomer } from "@/lib/session";
+import { getSession } from "@/lib/session";
 import { listWishlist } from "@/lib/wishlist";
 import { resolveImage } from "@/lib/r2";
 import { formatNaira } from "@/lib/utils";
@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { WishlistRowActions } from "./row-actions";
 
 export default async function WishlistPage() {
-  const session = await requireCustomer();
+  const session = await getSession();
+  if (!session?.user) return <GuestWishlist />;
   const items = await listWishlist(session.user.id);
   const itemImages = await Promise.all(items.map((i) => resolveImage(i.product.images[0])));
 
@@ -82,6 +83,33 @@ export default async function WishlistPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function GuestWishlist() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 py-10 text-center">
+      <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
+      <div className="space-y-2">
+        <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">
+          Save products to your wishlist
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Sign in to your wholesale account to save products for later, or open a new account in
+          minutes.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Button asChild size="lg" className="rounded-full">
+          <Link href="/login?next=/wishlist">
+            Sign in <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="rounded-full">
+          <Link href="/register">Open a wholesale account</Link>
+        </Button>
+      </div>
     </div>
   );
 }

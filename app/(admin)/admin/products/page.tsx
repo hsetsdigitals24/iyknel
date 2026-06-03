@@ -88,6 +88,11 @@ export default async function AdminProductsPage({
                     <Link href={`/admin/products/${p.id}`} className="font-medium hover:underline">
                       {p.name}
                     </Link>
+                    {p.images.length === 0 && (
+                      <Badge variant="outline" className="ml-2 border-warning text-warning">
+                        No image
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{p.sku}</TableCell>
                   <TableCell className="text-muted-foreground">

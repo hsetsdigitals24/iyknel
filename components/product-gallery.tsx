@@ -13,20 +13,14 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
   return (
     <div className="space-y-3">
       <div className="relative aspect-square overflow-hidden rounded-2xl border bg-surface-muted">
-        {current ? (
-          <Image
-            src={current}
-            alt={alt}
-            fill
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-            No image available
-          </div>
-        )}
+        <Image
+          src={current || "/placeholders/product.svg"}
+          alt={alt}
+          fill
+          sizes="(min-width: 768px) 50vw, 100vw"
+          className="object-cover"
+          priority
+        />
       </div>
 
       {safe.length > 1 && (

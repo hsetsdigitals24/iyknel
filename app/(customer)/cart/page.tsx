@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { ArrowRight, ShoppingCart } from "lucide-react";
+import { ArrowRight, MessageSquareText, ShoppingCart } from "lucide-react";
 
-import { requireCustomer } from "@/lib/session";
+import { getSession } from "@/lib/session";
 import { getCartSummary } from "@/lib/cart";
+import { logisticsWaiverFor } from "@/lib/logistics";
 import { formatNaira } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CartLineRow } from "@/components/cart-line";
 
 export default async function CartPage() {
-  const session = await requireCustomer();
+  const session = await getSession();
+  if (!session?.user) return <GuestCart />;
   const cart = await getCartSummary(session.user.id);
+  const waiver = logisticsWaiverFor(cart.subtotalKobo);
 
   return (
     <div className="space-y-6">
@@ -62,10 +65,20 @@ export default async function CartPage() {
                   value={`${(cart.weightGrams / 1000).toFixed(2)} kg`}
                 />
               </dl>
-              <div className="rounded-lg bg-surface-muted p-3 text-xs text-muted-foreground">
-                Logistics cost is computed by the back office after submission, based on your
-                delivery address and total order weight.
-              </div>
+              {waiver.waived ? (
+                <div className="rounded-lg border border-success/30 bg-success/10 p-3 text-xs font-medium text-success">
+                  Free logistics unlocked — your order qualifies for waived delivery.
+                </div>
+              ) : (
+                <div className="rounded-lg bg-surface-muted p-3 text-xs text-muted-foreground">
+                  Add{" "}
+                  <span className="font-semibold text-foreground">
+                    {formatNaira(waiver.remainingKobo)}
+                  </span>{" "}
+                  more to unlock free logistics. Otherwise, delivery is auto-priced from your
+                  address and total weight.
+                </div>
+              )}
               <div className="border-t pt-4">
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-medium">Subtotal</span>
@@ -89,6 +102,41 @@ export default async function CartPage() {
           </aside>
         </div>
       )}
+    </div>
+  );
+}
+
+function GuestCart() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 py-10">
+      <header className="space-y-2 text-center">
+        <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h1 className="font-serif text-3xl font-semibold tracking-tight md:text-4xl">
+          Your cart lives in your wholesale account
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Iyknel is B2B-only. Sign in to your verified business account to build a cart, or send
+          us a quote request — we&apos;ll get back within one business day.
+        </p>
+      </header>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Button asChild size="lg" className="rounded-full">
+          <Link href="/register">
+            Open a wholesale account <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="rounded-full">
+          <Link href="/quote">
+            <MessageSquareText className="mr-2 h-4 w-4" /> Request a quote
+          </Link>
+        </Button>
+      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login?next=/cart" className="font-medium text-primary hover:underline">
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 }

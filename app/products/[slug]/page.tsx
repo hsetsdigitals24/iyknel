@@ -4,6 +4,7 @@ import { CheckCircle2, ChevronRight, ShieldCheck, Truck } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { resolveImage, resolveImages } from "@/lib/r2";
+import { FREE_LOGISTICS_THRESHOLD_KOBO } from "@/lib/logistics";
 import { formatNaira } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -90,6 +91,10 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 </p>
                 <span className="text-xs text-muted-foreground">per unit</span>
               </div>
+
+              <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-info/10 px-3 py-1 text-xs font-medium text-info ring-1 ring-info/30">
+                Free logistics on orders over {formatNaira(FREE_LOGISTICS_THRESHOLD_KOBO)}
+              </p>
 
               <div className="flex flex-wrap items-center gap-2">
                 {inStock ? (

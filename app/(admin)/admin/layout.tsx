@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/session";
 import { UserMenu } from "@/components/user-menu";
+import { BrandLogo } from "@/components/brand-logo";
 
 const NAV = [
   { href: "/admin", label: "Overview" },
@@ -18,9 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-screen flex-col">
       <header className="border-b">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/admin" className="font-serif text-xl">
-            Iyknel <span className="text-muted-foreground">/ back office</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <BrandLogo size="sm" href="/admin" />
+            <span className="text-sm text-muted-foreground">/ back office</span>
+          </div>
           <UserMenu />
         </div>
       </header>

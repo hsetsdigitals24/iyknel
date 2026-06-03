@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
+import { getContact } from "@/lib/contact";
+
 const CATEGORY_LINKS = [
   { slug: "drinks", name: "Drinks & Beverages" },
   { slug: "snacks", name: "Snacks & Confectionery" },
@@ -11,13 +14,12 @@ const CATEGORY_LINKS = [
 ];
 
 export function SiteFooter() {
+  const contact = getContact();
   return (
     <footer className="mt-16 border-t bg-surface-muted">
       <div className="container grid gap-10 py-12 md:grid-cols-4">
         <div className="space-y-3">
-          <Link href="/" className="font-serif text-2xl tracking-tight">
-            Iyknel<span className="text-primary">.</span>
-          </Link>
+          <BrandLogo size="md" />
           <p className="text-sm text-muted-foreground">
             Wholesale FMCG for Nigerian businesses. Browse the catalog, submit your order, pay by
             bank transfer — we handle logistics.
@@ -78,16 +80,22 @@ export function SiteFooter() {
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <span>Lagos, Nigeria</span>
             </li>
-            <li className="flex items-start gap-2">
-              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <a href="mailto:orders@iyknel.ng" className="hover:text-foreground">
-                orders@iyknel.ng
-              </a>
-            </li>
-            <li className="flex items-start gap-2">
-              <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>+234 800 000 0000</span>
-            </li>
+            {contact.email && (
+              <li className="flex items-start gap-2">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <a href={`mailto:${contact.email}`} className="hover:text-foreground">
+                  {contact.email}
+                </a>
+              </li>
+            )}
+            {contact.phone && (
+              <li className="flex items-start gap-2">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <a href={`tel:${contact.phone}`} className="hover:text-foreground">
+                  {contact.phoneDisplay}
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </div>
@@ -95,7 +103,17 @@ export function SiteFooter() {
       <div className="border-t">
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Iyknel. Wholesale FMCG · B2B only.</span>
-          <span>Bank transfer · No payment gateways · Logistics computed automatically</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href="/privacy" className="hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/quote" className="hover:text-foreground">
+              Request a quote
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

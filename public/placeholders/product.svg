@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="Product image placeholder">
+  <rect width="800" height="800" fill="#f1f0ec"/>
+  <g fill="none" stroke="#c9c4ba" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="240" y="280" width="320" height="260" rx="12"/>
+    <path d="M240 360 L560 360"/>
+    <path d="M400 280 L400 540"/>
+    <path d="M320 220 L320 280"/>
+    <path d="M480 220 L480 280"/>
+  </g>
+  <text x="400" y="620" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" fill="#8a8474" letter-spacing="2">PRODUCT</text>
+</svg>

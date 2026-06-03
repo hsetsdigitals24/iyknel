@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,30 @@ export function RegisterForm() {
         error={fieldErrors?.password?.[0]}
         required
       />
+      <div className="space-y-1.5">
+        <label className="flex items-start gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            name="consent"
+            className="mt-0.5 h-4 w-4 rounded border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"
+            aria-invalid={!!fieldErrors?.consent?.[0]}
+          />
+          <span>
+            I agree to the{" "}
+            <Link href="/terms" className="font-medium text-primary hover:underline" target="_blank">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="font-medium text-primary hover:underline" target="_blank">
+              Privacy Policy
+            </Link>
+            .
+          </span>
+        </label>
+        {fieldErrors?.consent?.[0] && (
+          <p className="text-xs text-destructive">{fieldErrors.consent[0]}</p>
+        )}
+      </div>
       {state && !state.ok && !fieldErrors && (
         <p className="text-sm text-destructive">{state.message}</p>
       )}

@@ -4,11 +4,9 @@ import Link from "next/link";
 type Props = {
   slug: string;
   name: string;
-  imageKeyword: string;
 };
 
-export function CategoryTile({ slug, name, imageKeyword }: Props) {
-  const src = `https://source.unsplash.com/featured/400x400/?${encodeURIComponent(imageKeyword)},product`;
+export function CategoryTile({ slug, name }: Props) {
   return (
     <Link
       href={`/products?category=${slug}`}
@@ -16,7 +14,7 @@ export function CategoryTile({ slug, name, imageKeyword }: Props) {
     >
       <div className="relative h-20 w-20 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border">
         <Image
-          src={src}
+          src="/placeholders/product.svg"
           alt={name}
           fill
           sizes="80px"

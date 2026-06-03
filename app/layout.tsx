@@ -3,6 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 import { AuthSessionProvider } from "@/components/session-provider";
+import { WhatsAppFab } from "@/components/whatsapp-fab";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif", display: 
 export const metadata: Metadata = {
   title: "Iyknel — Wholesale FMCG, delivered.",
   description: "Order fast-moving consumer goods for your business. Invoice, pay, dispatch.",
+  icons: { icon: "/main_logo.png" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={cn(sans.variable, serif.variable)} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
         <AuthSessionProvider>{children}</AuthSessionProvider>
+        <WhatsAppFab />
         <Toaster position="top-right" richColors />
       </body>
     </html>

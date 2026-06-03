@@ -242,10 +242,8 @@ function seedSlug(input: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function unsplashUrl(keyword: string): string {
-  // NOTE: source.unsplash.com is deprecated by Unsplash and may stop resolving
-  // without notice. If images break, swap to hand-picked images.unsplash.com URLs.
-  return `https://source.unsplash.com/featured/800x800/?${encodeURIComponent(keyword)},product`;
+function unsplashUrl(_keyword: string): string {
+  return "/placeholders/product.svg";
 }
 
 // Default carton size (units per carton) per category. null = sold by piece only.

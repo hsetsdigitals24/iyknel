@@ -1,5 +1,22 @@
 import { db } from "@/lib/db";
 
+export const FREE_LOGISTICS_THRESHOLD_KOBO = 20_000_000;
+
+export type LogisticsWaiver = {
+  waived: boolean;
+  thresholdKobo: number;
+  remainingKobo: number;
+};
+
+export function logisticsWaiverFor(subtotalKobo: number): LogisticsWaiver {
+  const waived = subtotalKobo >= FREE_LOGISTICS_THRESHOLD_KOBO;
+  return {
+    waived,
+    thresholdKobo: FREE_LOGISTICS_THRESHOLD_KOBO,
+    remainingKobo: waived ? 0 : FREE_LOGISTICS_THRESHOLD_KOBO - subtotalKobo,
+  };
+}
+
 export type VehiclePick = {
   vehicleId: string;
   vehicleName: string;

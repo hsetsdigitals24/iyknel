@@ -13,6 +13,7 @@ export async function registerBusiness(_prev: FormState, formData: FormData): Pr
     email: formData.get("email"),
     phone: formData.get("phone"),
     password: formData.get("password"),
+    consent: formData.get("consent"),
   });
   if (!parsed.success) {
     return {

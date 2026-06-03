@@ -23,14 +23,14 @@ A B2B e-commerce platform for fast-moving consumer goods (FMCG), targeting the N
 ## Commands
 
 ```bash
-pnpm dev                      # local dev server
-pnpm build                    # production build
-pnpm lint                     # eslint
-pnpm typecheck                # tsc --noEmit
-pnpm test                     # vitest / jest
-pnpm prisma migrate dev       # apply migrations
-pnpm prisma db seed           # seed vehicles, distance bands, logistics costs, admin user
-pnpm prisma studio            # DB browser
+npm run dev                   # local dev server
+npm run build                 # production build
+npm run lint                  # eslint
+npm run typecheck             # tsc --noEmit
+npm test                      # vitest / jest
+npx prisma migrate dev        # apply migrations
+npx prisma db seed            # seed vehicles, distance bands, logistics costs, admin user
+npx prisma studio             # DB browser
 ```
 
 ## Directory map
@@ -81,6 +81,9 @@ R2_SECRET_ACCESS_KEY
 R2_BUCKET
 R2_PUBLIC_BASE_URL
 ADMIN_NOTIFY_EMAIL
+CONTACT_EMAIL
+CONTACT_PHONE
+CONTACT_WHATSAPP
 BANK_NAME
 BANK_ACCOUNT_NAME
 BANK_ACCOUNT_NUMBER
