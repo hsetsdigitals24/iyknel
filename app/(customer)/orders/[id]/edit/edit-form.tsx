@@ -3,13 +3,19 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { AlertTriangle, Minus, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Minus, Plus, PackagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatNaira } from "@/lib/utils";
-import { editOrderAction } from "@/app/(customer)/orders/actions";
+import {
+  addAddressAction,
+  editOrderAction,
+  restoreOrderToCartAction,
+} from "@/app/(customer)/orders/actions";
 
 type ItemInput = {
   itemId: string;
@@ -63,6 +69,8 @@ export function OrderEditForm({
 }: Props) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [addMorePending, startAddMore] = useTransition();
+  const [addAddressPending, startAddAddress] = useTransition();
   const [lines, setLines] = useState<LineState[]>(
     items.map((it) => ({
       itemId: it.itemId,
@@ -70,8 +78,67 @@ export function OrderEditForm({
       pieces: it.quantityPieces,
     })),
   );
+  const [addressList, setAddressList] = useState<AddressInput[]>(addresses);
   const [addressId, setAddressId] = useState(initialAddressId);
   const [notes, setNotes] = useState(initialNotes);
+  const [showNewAddress, setShowNewAddress] = useState(false);
+
+  function onAddMore() {
+    if (
+      !window.confirm(
+        "This will move every item in this order back to your cart and cancel the order so you can rebuild it. Continue?",
+      )
+    ) {
+      return;
+    }
+    startAddMore(async () => {
+      const res = await restoreOrderToCartAction(orderId);
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
+      }
+      if (res.skipped.length > 0) {
+        toast.success(
+          `Restored ${res.restored} item${res.restored === 1 ? "" : "s"} to your cart. ${res.skipped.length} skipped — see your cart.`,
+        );
+      } else {
+        toast.success(`Restored ${res.restored} item${res.restored === 1 ? "" : "s"} to your cart.`);
+      }
+      router.push("/cart");
+      router.refresh();
+    });
+  }
+
+  function onAddAddress(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const input = {
+      line1: String(fd.get("line1") ?? ""),
+      line2: String(fd.get("line2") ?? ""),
+      city: String(fd.get("city") ?? ""),
+      state: String(fd.get("state") ?? ""),
+      label: String(fd.get("label") ?? ""),
+    };
+    startAddAddress(async () => {
+      const res = await addAddressAction(input);
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
+      }
+      const newAddr: AddressInput = {
+        id: res.addressId,
+        label: input.label || null,
+        line1: input.line1,
+        line2: input.line2 || null,
+        city: input.city,
+        state: input.state,
+      };
+      setAddressList((prev) => [...prev, newAddr]);
+      setAddressId(res.addressId);
+      setShowNewAddress(false);
+      toast.success("Address added.");
+    });
+  }
 
   const itemsChanged = lines.some((l) => {
     const it = items.find((i) => i.itemId === l.itemId)!;
@@ -227,16 +294,25 @@ export function OrderEditForm({
       </section>
 
       <section className="rounded-2xl border bg-card p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider">
-          Delivery address
-        </h2>
-        {addresses.length === 0 ? (
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider">Delivery address</h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowNewAddress((v) => !v)}
+            className="text-primary hover:text-primary"
+          >
+            {showNewAddress ? "Cancel" : "+ Add new address"}
+          </Button>
+        </div>
+        {addressList.length === 0 && !showNewAddress ? (
           <p className="text-sm text-muted-foreground">
-            You don&apos;t have any saved addresses yet.
+            You don&apos;t have any saved addresses yet. Use <em>+ Add new address</em> above.
           </p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
-            {addresses.map((a) => (
+            {addressList.map((a) => (
               <label
                 key={a.id}
                 className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
@@ -270,6 +346,38 @@ export function OrderEditForm({
             ))}
           </div>
         )}
+
+        {showNewAddress && (
+          <form onSubmit={onAddAddress} className="mt-4 space-y-3 rounded-lg border bg-surface-muted/40 p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="line1">Address line 1</Label>
+                <Input id="line1" name="line1" required />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="line2">Address line 2 (optional)</Label>
+                <Input id="line2" name="line2" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="city">City</Label>
+                <Input id="city" name="city" required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="state">State</Label>
+                <Input id="state" name="state" required />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="label">Label (optional)</Label>
+                <Input id="label" name="label" placeholder="e.g. Warehouse, Shop, Branch B" />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={addAddressPending}>
+                {addAddressPending ? "Saving…" : "Save address"}
+              </Button>
+            </div>
+          </form>
+        )}
       </section>
 
       <section className="rounded-2xl border bg-card p-5">
@@ -298,6 +406,17 @@ export function OrderEditForm({
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="ghost">
             <a href={`/orders/${orderId}`}>Cancel</a>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full"
+            disabled={addMorePending || pending}
+            onClick={onAddMore}
+            title="Move every item back to your cart and cancel this order so you can add more products and re-submit."
+          >
+            <PackagePlus className="mr-2 h-4 w-4" />
+            {addMorePending ? "Restoring…" : "Add more items"}
           </Button>
           <Button
             type="button"

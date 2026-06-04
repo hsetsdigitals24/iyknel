@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { db } from "@/lib/db";
 import { sendMail } from "@/lib/mail";
 import { friendlyError, logError } from "@/lib/errors";
 
@@ -35,31 +36,41 @@ export async function submitQuote(
     return { status: "error", message: friendlyError(parsed.error) };
   }
 
-  const to = process.env.ADMIN_NOTIFY_EMAIL;
-  if (!to) {
-    return {
-      status: "error",
-      message: "Quote email is not configured. Please try again later.",
-    };
-  }
-
   const { businessName, contactName, email, phone, message } = parsed.data;
+
+  let quote;
   try {
-    await sendMail({
-      to,
-      subject: `Quote request from ${businessName}`,
-      text: [
-        `Business: ${businessName}`,
-        `Contact: ${contactName}`,
-        `Email: ${email}`,
-        `Phone: ${phone}`,
-        "",
-        message,
-      ].join("\n"),
+    quote = await db.quoteRequest.create({
+      data: { businessName, contactName, email, phone, message },
     });
   } catch (e) {
-    logError("quote.submit", e);
+    logError("quote.persist", e);
     return { status: "error", message: friendlyError(e) };
+  }
+
+  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+  if (adminEmail) {
+    const base = process.env.NEXTAUTH_URL ?? "";
+    const reviewUrl = `${base}/admin/quotes/${quote.id}`;
+    try {
+      await sendMail({
+        to: adminEmail,
+        subject: `Quote request from ${businessName}`,
+        text: [
+          `Business: ${businessName}`,
+          `Contact: ${contactName}`,
+          `Email: ${email}`,
+          `Phone: ${phone}`,
+          "",
+          message,
+          "",
+          `Review & reply: ${reviewUrl}`,
+        ].join("\n"),
+      });
+    } catch (e) {
+      // Email failed but the record exists — admin can still see it in /admin/quotes.
+      logError("quote.notifyAdmin", e);
+    }
   }
 
   return {

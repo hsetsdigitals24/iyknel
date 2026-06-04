@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { db } from "@/lib/db";
 import { requireCustomer } from "@/lib/session";
 import {
   cancelOrderByCustomer,
   editOrder,
   markPaidByCustomer,
+  restoreOrderToCartAndCancel,
   type EditOrderInput,
 } from "@/lib/orders";
 import { friendlyError, logError } from "@/lib/errors";
@@ -63,6 +65,60 @@ export async function editOrderAction(orderId: string, input: EditOrderInput): P
 }
 
 const cancelSchema = z.object({ reason: z.string().min(2, "Tell us why.").max(500) });
+
+const newAddressSchema = z.object({
+  line1: z.string().trim().min(2, "Enter address line 1.").max(200),
+  line2: z.string().trim().max(200).optional().or(z.literal("")),
+  city: z.string().trim().min(2, "Enter the city.").max(80),
+  state: z.string().trim().min(2, "Enter the state.").max(80),
+  label: z.string().trim().max(40).optional().or(z.literal("")),
+});
+
+export async function addAddressAction(
+  input: z.infer<typeof newAddressSchema>,
+): Promise<{ ok: true; addressId: string } | { ok: false; message: string }> {
+  const s = await requireCustomer();
+  const parsed = newAddressSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: friendlyError(parsed.error) };
+  }
+  try {
+    const created = await db.address.create({
+      data: {
+        userId: s.user.id,
+        line1: parsed.data.line1,
+        line2: parsed.data.line2 || null,
+        city: parsed.data.city,
+        state: parsed.data.state,
+        label: parsed.data.label || null,
+      },
+    });
+    revalidatePath("/checkout");
+    return { ok: true, addressId: created.id };
+  } catch (e) {
+    logError("orders.addAddress", e, { userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
+  }
+}
+
+export async function restoreOrderToCartAction(
+  orderId: string,
+): Promise<
+  | { ok: true; restored: number; skipped: { name: string; reason: string }[] }
+  | { ok: false; message: string }
+> {
+  const s = await requireCustomer();
+  try {
+    const result = await restoreOrderToCartAndCancel(s.user.id, orderId);
+    revalidatePath("/cart");
+    revalidatePath("/orders");
+    revalidatePath(`/orders/${orderId}`);
+    return { ok: true, ...result };
+  } catch (e) {
+    logError("orders.restoreToCart", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
+  }
+}
 
 export async function cancelOrderByCustomerAction(
   orderId: string,

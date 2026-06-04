@@ -15,7 +15,7 @@ A B2B e-commerce platform for fast-moving consumer goods (FMCG), targeting the N
 - **Email:** nodemailer
 - **SMS:** BulkSMS Nigeria
 - **Invoice PDF:** `@react-pdf/renderer`
-- **File storage:** Cloudflare R2 (via AWS S3 SDK)
+- **File storage:** Cloudflare R2 
 - **Validation:** Zod (every API input)
 - **CSV parsing:** papaparse
 - **Motion:** Framer Motion — restrained, page transitions + cart drawer only

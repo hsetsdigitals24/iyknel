@@ -782,3 +782,52 @@ export async function cancelOrderByCustomer(userId: string, orderId: string, rea
   }
   return cancelOrder(userId, orderId, `Customer: ${reason}`);
 }
+
+export type RestoreResult = {
+  restored: number;
+  skipped: { name: string; reason: string }[];
+};
+
+/**
+ * Move every line of `orderId` back into the user's cart, then cancel the order.
+ * Items that no longer exist / aren't in stock are recorded in `skipped`; the
+ * remaining items are still added and the order is still cancelled so the user
+ * can rebuild without juggling two queues.
+ */
+export async function restoreOrderToCartAndCancel(
+  userId: string,
+  orderId: string,
+): Promise<RestoreResult> {
+  const order = await db.order.findFirst({
+    where: { id: orderId, userId },
+    include: { items: true },
+  });
+  if (!order) throw new OrderSubmissionError("Order not found.");
+  if (!EDITABLE_STATUSES.includes(order.status as (typeof EDITABLE_STATUSES)[number])) {
+    throw new OrderSubmissionError(
+      "This order can no longer be edited. Please contact the back office.",
+    );
+  }
+
+  const { addItem } = await import("@/lib/cart");
+  const skipped: RestoreResult["skipped"] = [];
+  let restored = 0;
+  for (const it of order.items) {
+    if (it.quantityCartons === 0 && it.quantityPieces === 0) continue;
+    try {
+      await addItem(userId, it.productId, {
+        cartons: it.quantityCartons,
+        pieces: it.quantityPieces,
+      });
+      restored += 1;
+    } catch (e) {
+      skipped.push({
+        name: it.nameSnapshot,
+        reason: e instanceof Error ? e.message : "No longer available.",
+      });
+    }
+  }
+
+  await cancelOrder(userId, orderId, "Customer: rebuilding order (add more items).");
+  return { restored, skipped };
+}

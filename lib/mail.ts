@@ -8,6 +8,8 @@ type Mailable = {
   subject: string;
   text: string;
   html?: string;
+  bcc?: string | string[];
+  replyTo?: string;
 };
 
 let cachedTransport: import("nodemailer").Transporter | null = null;
@@ -36,6 +38,8 @@ export async function sendMail(msg: Mailable) {
   await transport.sendMail({
     from: process.env.SMTP_FROM ?? "no-reply@example.com",
     to: msg.to,
+    bcc: msg.bcc,
+    replyTo: msg.replyTo,
     subject: msg.subject,
     text: msg.text,
     html: msg.html,
