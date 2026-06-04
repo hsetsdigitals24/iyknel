@@ -27,6 +27,15 @@ export const forgotSchema = z.object({
   phone: z.string().regex(phoneRegex, "Enter a valid phone number"),
 });
 
+export const categoryInputSchema = z.object({
+  name: z.string().trim().min(2, "Name is required").max(120),
+  slug: z.string().trim().max(120).optional().or(z.literal("")),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  sortOrder: z.coerce.number().int().min(0).max(10_000).default(100),
+  active: z.coerce.boolean().optional().default(true),
+});
+export type CategoryInput = z.infer<typeof categoryInputSchema>;
+
 export const reviewSchema = z.object({
   productId: z.string().min(1),
   rating: z.coerce.number().int().min(1, "Pick a rating").max(5),

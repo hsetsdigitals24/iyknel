@@ -4,9 +4,10 @@ import Link from "next/link";
 type Props = {
   slug: string;
   name: string;
+  image?: string | null;
 };
 
-export function CategoryTile({ slug, name }: Props) {
+export function CategoryTile({ slug, name, image }: Props) {
   return (
     <Link
       href={`/products?category=${slug}`}
@@ -14,7 +15,7 @@ export function CategoryTile({ slug, name }: Props) {
     >
       <div className="relative h-20 w-20 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border">
         <Image
-          src="/placeholders/product.svg"
+          src={image || "/placeholders/product.svg"}
           alt={name}
           fill
           sizes="80px"

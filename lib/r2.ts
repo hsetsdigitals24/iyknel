@@ -69,6 +69,31 @@ export async function uploadProductImage(file: File): Promise<string> {
   return key;
 }
 
+/** Uploads to R2 under categories/<uuid>.<ext> and returns the object key. */
+export async function uploadCategoryImage(file: File): Promise<string> {
+  if (!ALLOWED_TYPES.has(file.type)) {
+    throw new Error(`Unsupported image type: ${file.type}`);
+  }
+  if (file.size > MAX_BYTES) {
+    throw new Error("Image is larger than 5 MB");
+  }
+  const bucket = process.env.R2_BUCKET;
+  if (!bucket) throw new Error("R2_BUCKET not set");
+
+  const key = `categories/${randomUUID()}.${extFor(file.type)}`;
+  const body = Buffer.from(await file.arrayBuffer());
+  await client().send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: file.type,
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+  return key;
+}
+
 /** Uploads the invoice PDF and returns the object key. */
 export async function uploadInvoicePdf(orderNumber: string, buf: Buffer): Promise<string> {
   const bucket = process.env.R2_BUCKET;

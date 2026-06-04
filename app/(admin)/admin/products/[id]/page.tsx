@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+
 import { db } from "@/lib/db";
 import { resolveImages } from "@/lib/r2";
 import { ProductForm, type ProductFormData } from "../product-form";
@@ -32,11 +35,19 @@ export default async function EditProductPage({ params }: { params: { id: string
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Catalog
-        </span>
-        <h1 className="font-serif text-3xl">{product.name}</h1>
+      <header className="space-y-2">
+        <Link
+          href="/admin/products"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to products
+        </Link>
+        <div className="space-y-1">
+          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Catalog
+          </span>
+          <h1 className="font-serif text-3xl">{product.name}</h1>
+        </div>
       </header>
       <ProductForm
         mode="edit"

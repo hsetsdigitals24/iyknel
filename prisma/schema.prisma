@@ -122,10 +122,16 @@ model Address {
 // ---------- Catalog ----------
 
 model Category {
-  id       String    @id @default(cuid())
-  slug     String    @unique
-  name     String
-  products Product[]
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  image       String?
+  sortOrder   Int       @default(100)
+  active      Boolean   @default(true)
+  products    Product[]
+
+  @@index([sortOrder, name])
 }
 
 model Product {

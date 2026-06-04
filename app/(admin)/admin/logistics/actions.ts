@@ -123,6 +123,34 @@ export async function createBandFormAction(formData: FormData): Promise<void> {
   await createBandAction(null, formData);
 }
 
+export async function updateVehicleFormAction(id: string, formData: FormData): Promise<void> {
+  await updateVehicleAction(id, null, formData);
+}
+
+export async function updateBandFormAction(id: string, formData: FormData): Promise<void> {
+  await updateBandAction(id, null, formData);
+}
+
+export async function deleteVehicleAction(id: string): Promise<void> {
+  await requireAdmin();
+  const inUse = await db.logisticsCost.count({ where: { vehicleId: id } });
+  if (inUse > 0) {
+    throw new Error("Vehicle has cost rows. Clear matrix or deactivate instead.");
+  }
+  await db.vehicle.delete({ where: { id } });
+  bump();
+}
+
+export async function deleteBandAction(id: string): Promise<void> {
+  await requireAdmin();
+  const inUse = await db.logisticsCost.count({ where: { distanceBandId: id } });
+  if (inUse > 0) {
+    throw new Error("Band has cost rows. Clear matrix or deactivate instead.");
+  }
+  await db.distanceBand.delete({ where: { id } });
+  bump();
+}
+
 export async function updateCostAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const parsed = costSchema.safeParse({

@@ -13,8 +13,13 @@ import { Label } from "@/components/ui/label";
 import {
   createBandFormAction,
   createVehicleFormAction,
+  deleteBandAction,
+  deleteVehicleAction,
+  updateBandFormAction,
   updateCostAction,
+  updateVehicleFormAction,
 } from "./actions";
+import { ConfirmDeleteButton } from "./row-controls";
 
 export default async function LogisticsPage() {
   const [vehicles, bands, costs] = await Promise.all([
@@ -42,7 +47,7 @@ export default async function LogisticsPage() {
 
       <section className="space-y-3">
         <h2 className="font-serif text-xl">Vehicles</h2>
-        <div className="rounded-md border">
+        <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -51,18 +56,74 @@ export default async function LogisticsPage() {
                 <TableHead className="text-right">Fuel/km</TableHead>
                 <TableHead className="text-right">Sort</TableHead>
                 <TableHead>Active</TableHead>
+                <TableHead className="w-[140px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {vehicles.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell className="font-medium">{v.name}</TableCell>
-                  <TableCell className="text-right tabular-nums">{v.tonnageKg}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {String(v.fuelPerKm)}
+                  <TableCell>
+                    <form
+                      id={`vehicle-${v.id}`}
+                      action={updateVehicleFormAction.bind(null, v.id)}
+                      className="contents"
+                    />
+                    <Input
+                      form={`vehicle-${v.id}`}
+                      name="name"
+                      defaultValue={v.name}
+                      className="h-8"
+                      required
+                    />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{v.sortOrder}</TableCell>
-                  <TableCell>{v.active ? "Yes" : "No"}</TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      form={`vehicle-${v.id}`}
+                      name="tonnageKg"
+                      type="number"
+                      defaultValue={v.tonnageKg}
+                      className="h-8 text-right tabular-nums"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      form={`vehicle-${v.id}`}
+                      name="fuelPerKm"
+                      defaultValue={String(v.fuelPerKm)}
+                      className="h-8 text-right tabular-nums"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      form={`vehicle-${v.id}`}
+                      name="sortOrder"
+                      type="number"
+                      defaultValue={v.sortOrder}
+                      className="h-8 text-right tabular-nums"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <input
+                      form={`vehicle-${v.id}`}
+                      type="checkbox"
+                      name="active"
+                      defaultChecked={v.active}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button form={`vehicle-${v.id}`} type="submit" size="sm">
+                        Save
+                      </Button>
+                      <form action={deleteVehicleAction.bind(null, v.id)}>
+                        <ConfirmDeleteButton label={`Delete ${v.name}`} />
+                      </form>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -90,7 +151,7 @@ export default async function LogisticsPage() {
 
       <section className="space-y-3">
         <h2 className="font-serif text-xl">Distance bands</h2>
-        <div className="rounded-md border">
+        <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -99,16 +160,75 @@ export default async function LogisticsPage() {
                 <TableHead className="text-right">Max km</TableHead>
                 <TableHead className="text-right">Sort</TableHead>
                 <TableHead>Active</TableHead>
+                <TableHead className="w-[140px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {bands.map((b) => (
                 <TableRow key={b.id}>
-                  <TableCell className="font-medium">{b.label}</TableCell>
-                  <TableCell className="text-right tabular-nums">{b.minKm}</TableCell>
-                  <TableCell className="text-right tabular-nums">{b.maxKm}</TableCell>
-                  <TableCell className="text-right tabular-nums">{b.sortOrder}</TableCell>
-                  <TableCell>{b.active ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    <form
+                      id={`band-${b.id}`}
+                      action={updateBandFormAction.bind(null, b.id)}
+                      className="contents"
+                    />
+                    <Input
+                      form={`band-${b.id}`}
+                      name="label"
+                      defaultValue={b.label}
+                      className="h-8"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      form={`band-${b.id}`}
+                      name="minKm"
+                      type="number"
+                      defaultValue={b.minKm}
+                      className="h-8 text-right tabular-nums"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      form={`band-${b.id}`}
+                      name="maxKm"
+                      type="number"
+                      defaultValue={b.maxKm}
+                      className="h-8 text-right tabular-nums"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input
+                      form={`band-${b.id}`}
+                      name="sortOrder"
+                      type="number"
+                      defaultValue={b.sortOrder}
+                      className="h-8 text-right tabular-nums"
+                      required
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <input
+                      form={`band-${b.id}`}
+                      type="checkbox"
+                      name="active"
+                      defaultChecked={b.active}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button form={`band-${b.id}`} type="submit" size="sm">
+                        Save
+                      </Button>
+                      <form action={deleteBandAction.bind(null, b.id)}>
+                        <ConfirmDeleteButton label={`Delete ${b.label}`} />
+                      </form>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

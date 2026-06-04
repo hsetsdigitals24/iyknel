@@ -1,0 +1,85 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+import { requireAdmin } from "@/lib/session";
+import {
+  createCategory,
+  deleteCategory,
+  updateCategory,
+} from "@/lib/categories";
+import { categoryInputSchema, type FormState } from "@/lib/validation";
+
+function parseInput(formData: FormData) {
+  return categoryInputSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug") ?? "",
+    description: formData.get("description") ?? "",
+    sortOrder: formData.get("sortOrder") ?? 100,
+    active: formData.get("active") === "on",
+  });
+}
+
+function fileFrom(formData: FormData, key: string): File | null {
+  const v = formData.get(key);
+  return v instanceof File && v.size > 0 ? v : null;
+}
+
+function bump() {
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/products");
+}
+
+export async function createCategoryAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin();
+  const parsed = parseInput(formData);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Fix the errors below.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    await createCategory(parsed.data, fileFrom(formData, "image"));
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Failed" };
+  }
+  bump();
+  redirect("/admin/categories");
+}
+
+export async function updateCategoryAction(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin();
+  const parsed = parseInput(formData);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Fix the errors below.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  const removeImage = formData.get("removeImage") === "1";
+  try {
+    await updateCategory(id, parsed.data, fileFrom(formData, "image"), removeImage);
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Failed" };
+  }
+  bump();
+  return { ok: true, message: "Category updated." };
+}
+
+export async function deleteCategoryAction(id: string): Promise<void> {
+  await requireAdmin();
+  await deleteCategory(id);
+  bump();
+}

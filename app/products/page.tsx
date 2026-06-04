@@ -52,7 +52,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
 
   const [categories, products, total] = await Promise.all([
     db.category.findMany({
-      orderBy: { name: "asc" },
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       include: { _count: { select: { products: { where: { active: true } } } } },
     }),
     db.product.findMany({

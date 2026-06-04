@@ -16,7 +16,10 @@ import { WhyIyknel } from "@/components/why-iyknel";
 
 export default async function LandingPage() {
   const [categories, products] = await Promise.all([
-    db.category.findMany({ orderBy: { name: "asc" } }),
+    db.category.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
     db.product.findMany({
       where: { active: true },
       orderBy: { createdAt: "desc" },
@@ -24,6 +27,7 @@ export default async function LandingPage() {
       include: { category: { select: { name: true } } },
     }),
   ]);
+  const categoryImageUrls = await Promise.all(categories.map((c) => resolveImage(c.image)));
 
   const session = await getSession();
   const savedIds = session?.user?.id
@@ -78,8 +82,13 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10">
-            {categories.map((c) => (
-              <CategoryTile key={c.id} slug={c.slug} name={c.name} />
+            {categories.map((c, i) => (
+              <CategoryTile
+                key={c.id}
+                slug={c.slug}
+                name={c.name}
+                image={categoryImageUrls[i]}
+              />
             ))}
           </div>
         </section>
