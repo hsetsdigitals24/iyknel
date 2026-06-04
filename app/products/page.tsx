@@ -3,6 +3,8 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { resolveImage } from "@/lib/r2";
+import { getSession } from "@/lib/session";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import { Prisma } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
@@ -63,6 +65,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
   ]);
 
   const productImages = await Promise.all(products.map((p) => resolveImage(p.images[0])));
+  const session = await getSession();
+  const savedIds = session?.user?.id
+    ? await getWishlistProductIds(session.user.id)
+    : new Set<string>();
 
   const activeCategoryName =
     categorySlug && categories.find((c) => c.slug === categorySlug)?.name;
@@ -236,6 +242,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
                   {products.map((p, i) => (
                     <ProductCard
                       key={p.id}
+                      productId={p.id}
                       slug={p.slug}
                       name={p.name}
                       priceKobo={p.priceKobo}
@@ -243,6 +250,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
                       category={p.category?.name}
                       stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces}
                       badge={i % 7 === 0 ? "deal" : i % 11 === 0 ? "bestseller" : null}
+                      wishlisted={savedIds.has(p.id)}
                     />
                   ))}
                 </div>

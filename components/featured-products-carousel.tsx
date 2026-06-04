@@ -18,6 +18,7 @@ type FeaturedProduct = {
   category?: string | null;
   stock?: number;
   badge?: "deal" | "new" | "bestseller" | null;
+  wishlisted?: boolean;
 };
 
 export function FeaturedProductsCarousel({ products }: { products: FeaturedProduct[] }) {
@@ -31,6 +32,7 @@ export function FeaturedProductsCarousel({ products }: { products: FeaturedProdu
             className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
           >
             <ProductCard
+              productId={p.id}
               slug={p.slug}
               name={p.name}
               priceKobo={p.priceKobo}
@@ -38,6 +40,7 @@ export function FeaturedProductsCarousel({ products }: { products: FeaturedProdu
               category={p.category}
               stock={p.stock}
               badge={p.badge ?? null}
+              wishlisted={p.wishlisted}
             />
           </CarouselItem>
         ))}

@@ -2,9 +2,29 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCustomer } from "@/lib/session";
-import { addToWishlist, removeFromWishlist, moveToCart } from "@/lib/wishlist";
+import {
+  addToWishlist,
+  isInWishlist,
+  moveToCart,
+  removeFromWishlist,
+} from "@/lib/wishlist";
 
 type Result = { ok: true } | { ok: false; message: string };
+type ToggleResult =
+  | { ok: true; inWishlist: boolean }
+  | { ok: false; message: string };
+
+export async function toggleWishlistAction(productId: string): Promise<ToggleResult> {
+  const s = await requireCustomer();
+  const had = await isInWishlist(s.user.id, productId);
+  if (had) {
+    await removeFromWishlist(s.user.id, productId);
+  } else {
+    await addToWishlist(s.user.id, productId);
+  }
+  revalidatePath("/wishlist");
+  return { ok: true, inWishlist: !had };
+}
 
 export async function addToWishlistAction(productId: string): Promise<Result> {
   const s = await requireCustomer();

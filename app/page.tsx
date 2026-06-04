@@ -4,6 +4,8 @@ import { BadgeCheck, Banknote, Truck } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { resolveImage } from "@/lib/r2";
+import { getSession } from "@/lib/session";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -23,6 +25,10 @@ export default async function LandingPage() {
     }),
   ]);
 
+  const session = await getSession();
+  const savedIds = session?.user?.id
+    ? await getWishlistProductIds(session.user.id)
+    : new Set<string>();
   const featuredImages = await Promise.all(products.map((p) => resolveImage(p.images[0])));
   const featured = products.map((p, i) => ({
     id: p.id,
@@ -40,6 +46,7 @@ export default async function LandingPage() {
         : i % 11 === 0
         ? ("new" as const)
         : null,
+    wishlisted: savedIds.has(p.id),
   }));
 
   return (

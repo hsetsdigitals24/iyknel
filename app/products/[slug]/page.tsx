@@ -4,6 +4,8 @@ import { CheckCircle2, ChevronRight, ShieldCheck, Truck } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { resolveImage, resolveImages } from "@/lib/r2";
+import { getSession } from "@/lib/session";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import { FREE_LOGISTICS_THRESHOLD_KOBO } from "@/lib/logistics";
 import { formatNaira } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
@@ -40,6 +42,10 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
   const galleryImages = await resolveImages(product.images);
   const relatedImages = await Promise.all(related.map((p) => resolveImage(p.images[0])));
+  const session = await getSession();
+  const savedIds = session?.user?.id
+    ? await getWishlistProductIds(session.user.id)
+    : new Set<string>();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -209,12 +215,14 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 {related.slice(0, 4).map((p, i) => (
                   <ProductCard
                     key={p.id}
+                    productId={p.id}
                     slug={p.slug}
                     name={p.name}
                     priceKobo={p.priceKobo}
                     image={relatedImages[i] ?? undefined}
                     category={p.category?.name}
                     stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces}
+                    wishlisted={savedIds.has(p.id)}
                   />
                 ))}
               </div>

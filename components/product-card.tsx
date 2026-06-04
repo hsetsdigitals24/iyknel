@@ -4,6 +4,7 @@ import { formatNaira } from "@/lib/utils";
 import { WishlistHeartButton } from "@/components/wishlist-heart-button";
 
 type Props = {
+  productId: string;
   slug: string;
   name: string;
   priceKobo: number;
@@ -11,9 +12,20 @@ type Props = {
   category?: string | null;
   badge?: "deal" | "new" | "bestseller" | null;
   stock?: number;
+  wishlisted?: boolean;
 };
 
-export function ProductCard({ slug, name, priceKobo, image, category, badge, stock }: Props) {
+export function ProductCard({
+  productId,
+  slug,
+  name,
+  priceKobo,
+  image,
+  category,
+  badge,
+  stock,
+  wishlisted,
+}: Props) {
   const lowStock = typeof stock === "number" && stock > 0 && stock < 20;
   const outOfStock = typeof stock === "number" && stock <= 0;
 
@@ -52,7 +64,7 @@ export function ProductCard({ slug, name, priceKobo, image, category, badge, sto
           </span>
         )}
 
-        <WishlistHeartButton />
+        <WishlistHeartButton productId={productId} initialActive={wishlisted} />
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">

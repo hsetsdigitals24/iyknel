@@ -19,6 +19,24 @@ export async function listWishlist(userId: string) {
   });
 }
 
+export async function getWishlistProductIds(userId: string): Promise<Set<string>> {
+  const w = await db.wishlist.findUnique({
+    where: { userId },
+    select: { items: { select: { productId: true } } },
+  });
+  return new Set((w?.items ?? []).map((i) => i.productId));
+}
+
+export async function isInWishlist(userId: string, productId: string): Promise<boolean> {
+  const w = await db.wishlist.findUnique({ where: { userId }, select: { id: true } });
+  if (!w) return false;
+  const hit = await db.wishlistItem.findUnique({
+    where: { wishlistId_productId: { wishlistId: w.id, productId } },
+    select: { id: true },
+  });
+  return !!hit;
+}
+
 export async function addToWishlist(userId: string, productId: string) {
   const w = await getOrCreate(userId);
   await db.wishlistItem.upsert({
