@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Info } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 
 import { requireCustomer } from "@/lib/session";
 import { getCartSummary } from "@/lib/cart";
@@ -22,7 +22,13 @@ export default async function CheckoutPage() {
   return (
     <div className="space-y-6">
       <header>
-        <nav className="text-xs text-muted-foreground">
+        <Link
+          href="/cart"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to cart
+        </Link>
+        <nav className="mt-2 text-xs text-muted-foreground">
           <Link href="/cart" className="hover:text-foreground">Cart</Link>
           <span> / </span>
           <span className="text-foreground">Checkout</span>

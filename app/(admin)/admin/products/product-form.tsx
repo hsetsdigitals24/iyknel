@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -155,12 +156,10 @@ export function ProductForm({ initial, categories, action }: Props) {
               const willRemove = !keptImages.includes(key);
               const previewUrl = initial.imageUrls?.[idx] ?? key;
               return (
-                <button
+                <div
                   key={key}
-                  type="button"
-                  onClick={() => toggleRemove(key)}
-                  className={`relative aspect-square overflow-hidden rounded-md border ${
-                    willRemove ? "opacity-30 ring-2 ring-destructive" : ""
+                  className={`group relative aspect-square overflow-hidden rounded-md border ${
+                    willRemove ? "opacity-40 ring-2 ring-destructive" : ""
                   }`}
                 >
                   <Image
@@ -171,11 +170,28 @@ export function ProductForm({ initial, categories, action }: Props) {
                     className="object-cover"
                   />
                   {willRemove && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-destructive/30 text-xs font-semibold text-destructive-foreground">
-                      Remove
+                    <span className="absolute inset-x-0 bottom-0 bg-destructive px-2 py-1 text-center text-[10px] font-semibold uppercase tracking-wider text-destructive-foreground">
+                      Will remove on save
                     </span>
                   )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleRemove(key)}
+                    aria-label={willRemove ? "Undo remove image" : "Remove image"}
+                    title={willRemove ? "Undo remove" : "Remove image"}
+                    className={`absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full shadow ring-1 ring-border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      willRemove
+                        ? "bg-background text-foreground hover:bg-secondary"
+                        : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    }`}
+                  >
+                    {willRemove ? (
+                      <RotateCcw className="h-4 w-4" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -184,7 +200,6 @@ export function ProductForm({ initial, categories, action }: Props) {
             .map((u) => (
               <input key={u} type="hidden" name="removeImages" value={u} />
             ))}
-          <p className="text-xs text-muted-foreground">Click an image to mark it for removal.</p>
         </div>
       )}
 
