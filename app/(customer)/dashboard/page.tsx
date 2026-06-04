@@ -4,7 +4,7 @@ import { ArrowRight, Heart, Package, ShoppingBag, ShoppingCart } from "lucide-re
 import { db } from "@/lib/db";
 import { requireCustomer } from "@/lib/session";
 import { listUnreviewedDeliveredProducts } from "@/lib/reviews";
-import { getDismissedProductIds } from "@/app/(customer)/reviews/actions";
+import { getDismissedProductIds } from "@/app/(customer)/reviews/dismissals";
 import { formatNaira } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/status-pill";
