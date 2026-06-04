@@ -7,6 +7,14 @@ import { AlertTriangle, Minus, Plus, PackagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,15 +90,9 @@ export function OrderEditForm({
   const [addressId, setAddressId] = useState(initialAddressId);
   const [notes, setNotes] = useState(initialNotes);
   const [showNewAddress, setShowNewAddress] = useState(false);
+  const [addMoreOpen, setAddMoreOpen] = useState(false);
 
-  function onAddMore() {
-    if (
-      !window.confirm(
-        "This will move every item in this order back to your cart and cancel the order so you can rebuild it. Continue?",
-      )
-    ) {
-      return;
-    }
+  function confirmAddMore() {
     startAddMore(async () => {
       const res = await restoreOrderToCartAction(orderId);
       if (!res.ok) {
@@ -104,6 +106,7 @@ export function OrderEditForm({
       } else {
         toast.success(`Restored ${res.restored} item${res.restored === 1 ? "" : "s"} to your cart.`);
       }
+      setAddMoreOpen(false);
       router.push("/cart");
       router.refresh();
     });
@@ -412,7 +415,7 @@ export function OrderEditForm({
             variant="outline"
             className="rounded-full"
             disabled={addMorePending || pending}
-            onClick={onAddMore}
+            onClick={() => setAddMoreOpen(true)}
             title="Move every item back to your cart and cancel this order so you can add more products and re-submit."
           >
             <PackagePlus className="mr-2 h-4 w-4" />
@@ -429,6 +432,36 @@ export function OrderEditForm({
           </Button>
         </div>
       </div>
+
+      <Dialog open={addMoreOpen} onOpenChange={(open) => !addMorePending && setAddMoreOpen(open)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move items back to cart?</DialogTitle>
+            <DialogDescription>
+              This will move every item in this order back to your cart and cancel the order so
+              you can rebuild it. Continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={addMorePending}
+              onClick={() => setAddMoreOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={addMorePending}
+              onClick={confirmAddMore}
+            >
+              {addMorePending ? "Restoring…" : "Move items to cart"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
