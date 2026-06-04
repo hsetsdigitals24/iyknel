@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { slugify } from "@/lib/slug";
 import type { FormState } from "@/lib/validation";
 
 export type CategoryFormData = {
@@ -31,27 +32,55 @@ type Props = {
 export function CategoryForm({ mode, initial, action }: Props) {
   const [state, formAction] = useFormState(action, null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [slugTouched, setSlugTouched] = useState(mode === "edit");
   const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;
 
   const hasExistingImage = !!initial?.imageUrl;
 
+  function onNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.value;
+    setName(next);
+    if (!slugTouched) setSlug(slugify(next));
+  }
+
+  function onSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSlug(e.target.value);
+    setSlugTouched(true);
+  }
+
   return (
     <form action={formAction} className="space-y-6" encType="multipart/form-data">
       <div className="grid gap-4 md:grid-cols-2">
-        <Field
-          id="name"
-          label="Name"
-          defaultValue={initial?.name}
-          error={fieldErrors?.name?.[0]}
-          required
-        />
-        <Field
-          id="slug"
-          label="Slug"
-          defaultValue={initial?.slug}
-          placeholder="Leave blank to auto-generate"
-          error={fieldErrors?.slug?.[0]}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            name="name"
+            value={name}
+            onChange={onNameChange}
+            required
+            aria-invalid={!!fieldErrors?.name?.[0]}
+          />
+          {fieldErrors?.name?.[0] && (
+            <p className="text-xs text-destructive">{fieldErrors.name[0]}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="slug">Slug</Label>
+          <Input
+            id="slug"
+            name="slug"
+            value={slug}
+            onChange={onSlugChange}
+            placeholder="Auto-generated from name — edit to override"
+            aria-invalid={!!fieldErrors?.slug?.[0]}
+          />
+          {fieldErrors?.slug?.[0] && (
+            <p className="text-xs text-destructive">{fieldErrors.slug[0]}</p>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
