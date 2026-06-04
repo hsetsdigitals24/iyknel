@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { sendMail } from "@/lib/mail";
+import { friendlyError, logError } from "@/lib/errors";
 
 const QuoteSchema = z.object({
   businessName: z.string().trim().min(2, "Tell us your business name."),
@@ -31,12 +32,7 @@ export async function submitQuote(
   });
 
   if (!parsed.success) {
-    const fieldErrors: QuoteState["fieldErrors"] = {};
-    for (const issue of parsed.error.issues) {
-      const k = issue.path[0] as keyof z.infer<typeof QuoteSchema>;
-      if (!fieldErrors[k]) fieldErrors[k] = issue.message;
-    }
-    return { status: "error", message: "Please fix the highlighted fields.", fieldErrors };
+    return { status: "error", message: friendlyError(parsed.error) };
   }
 
   const to = process.env.ADMIN_NOTIFY_EMAIL;
@@ -48,21 +44,26 @@ export async function submitQuote(
   }
 
   const { businessName, contactName, email, phone, message } = parsed.data;
-  await sendMail({
-    to,
-    subject: `Quote request from ${businessName}`,
-    text: [
-      `Business: ${businessName}`,
-      `Contact: ${contactName}`,
-      `Email: ${email}`,
-      `Phone: ${phone}`,
-      "",
-      message,
-    ].join("\n"),
-  });
+  try {
+    await sendMail({
+      to,
+      subject: `Quote request from ${businessName}`,
+      text: [
+        `Business: ${businessName}`,
+        `Contact: ${contactName}`,
+        `Email: ${email}`,
+        `Phone: ${phone}`,
+        "",
+        message,
+      ].join("\n"),
+    });
+  } catch (e) {
+    logError("quote.submit", e);
+    return { status: "error", message: friendlyError(e) };
+  }
 
   return {
     status: "ok",
-    message: "Thanks — we&rsquo;ll get back within one business day.",
+    message: "Thanks — we'll get back within one business day.",
   };
 }

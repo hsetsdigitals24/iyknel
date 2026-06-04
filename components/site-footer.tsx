@@ -104,6 +104,12 @@ export function SiteFooter() {
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Iyknel. Wholesale FMCG · B2B only.</span>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href="/about" className="hover:text-foreground">
+              About
+            </Link>
+            <Link href="/contact" className="hover:text-foreground">
+              Contact
+            </Link>
             <Link href="/privacy" className="hover:text-foreground">
               Privacy
             </Link>

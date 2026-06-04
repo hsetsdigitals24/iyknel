@@ -8,9 +8,9 @@ import {
   cancelOrderByCustomer,
   editOrder,
   markPaidByCustomer,
-  OrderSubmissionError,
   type EditOrderInput,
 } from "@/lib/orders";
+import { friendlyError, logError } from "@/lib/errors";
 
 type Result = { ok: true } | { ok: false; message: string };
 
@@ -19,8 +19,8 @@ export async function markPaidAction(orderId: string): Promise<Result> {
   try {
     await markPaidByCustomer(s.user.id, orderId);
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("orders.customerAction", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
@@ -45,7 +45,7 @@ export async function editOrderAction(orderId: string, input: EditOrderInput): P
   const s = await requireCustomer();
   const parsed = editSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return { ok: false, message: friendlyError(parsed.error) };
   }
   try {
     await editOrder(s.user.id, orderId, {
@@ -54,8 +54,8 @@ export async function editOrderAction(orderId: string, input: EditOrderInput): P
       notes: parsed.data.notes ?? null,
     });
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("orders.customerAction", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
@@ -76,8 +76,8 @@ export async function cancelOrderByCustomerAction(
   try {
     await cancelOrderByCustomer(s.user.id, orderId, parsed.data.reason);
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("orders.customerAction", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");

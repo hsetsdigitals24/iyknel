@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { resolveImage } from "@/lib/r2";
 import { reviewSchema } from "@/lib/validation";
+import { AppError } from "@/lib/errors";
 
 export const REVIEW_PAGE_SIZE = 10;
 
@@ -176,11 +177,11 @@ export async function upsertReview(input: {
     body: input.body ?? "",
   });
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? "Invalid review");
+    throw new AppError(parsed.error.issues[0]?.message ?? "Please check your review and try again.");
   }
   const eligible = await hasDeliveredProduct(input.userId, input.productId);
   if (!eligible) {
-    throw new Error("You can only review products you have received.");
+    throw new AppError("You can only review products you have received.");
   }
   const body = parsed.data.body && parsed.data.body.length > 0 ? parsed.data.body : null;
 

@@ -8,6 +8,7 @@ import {
   moveToCart,
   removeFromWishlist,
 } from "@/lib/wishlist";
+import { friendlyError, logError } from "@/lib/errors";
 
 type Result = { ok: true } | { ok: false; message: string };
 type ToggleResult =
@@ -16,14 +17,19 @@ type ToggleResult =
 
 export async function toggleWishlistAction(productId: string): Promise<ToggleResult> {
   const s = await requireCustomer();
-  const had = await isInWishlist(s.user.id, productId);
-  if (had) {
-    await removeFromWishlist(s.user.id, productId);
-  } else {
-    await addToWishlist(s.user.id, productId);
+  try {
+    const had = await isInWishlist(s.user.id, productId);
+    if (had) {
+      await removeFromWishlist(s.user.id, productId);
+    } else {
+      await addToWishlist(s.user.id, productId);
+    }
+    revalidatePath("/wishlist");
+    return { ok: true, inWishlist: !had };
+  } catch (e) {
+    logError("wishlist.toggle", e, { productId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
-  revalidatePath("/wishlist");
-  return { ok: true, inWishlist: !had };
 }
 
 export async function addToWishlistAction(productId: string): Promise<Result> {
@@ -45,7 +51,8 @@ export async function moveToCartAction(productId: string): Promise<Result> {
   try {
     await moveToCart(s.user.id, productId);
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Failed" };
+    logError("wishlist.moveToCart", e, { productId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath("/wishlist");
   revalidatePath("/cart");

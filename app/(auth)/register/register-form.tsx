@@ -5,6 +5,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormStateToast } from "@/components/form-state-toast";
 import { registerBusiness } from "./actions";
 
 export function RegisterForm() {
@@ -72,13 +73,8 @@ export function RegisterForm() {
             .
           </span>
         </label>
-        {fieldErrors?.consent?.[0] && (
-          <p className="text-xs text-destructive">{fieldErrors.consent[0]}</p>
-        )}
       </div>
-      {state && !state.ok && !fieldErrors && (
-        <p className="text-sm text-destructive">{state.message}</p>
-      )}
+      <FormStateToast state={state} />
       <SubmitButton />
     </form>
   );

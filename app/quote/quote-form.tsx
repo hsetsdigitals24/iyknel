@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +14,13 @@ const INITIAL: QuoteState = { status: "idle" };
 
 export function QuoteForm() {
   const [state, action] = useFormState(submitQuote, INITIAL);
+  const last = useRef<QuoteState>(INITIAL);
+
+  useEffect(() => {
+    if (state === last.current) return;
+    last.current = state;
+    if (state.status === "error" && state.message) toast.error(state.message);
+  }, [state]);
 
   if (state.status === "ok") {
     return (
@@ -25,10 +34,10 @@ export function QuoteForm() {
   return (
     <form action={action} className="space-y-4 rounded-2xl border bg-card p-6 md:p-8">
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Business name" name="businessName" error={state.fieldErrors?.businessName} />
-        <Field label="Contact person" name="contactName" error={state.fieldErrors?.contactName} />
-        <Field label="Email" name="email" type="email" error={state.fieldErrors?.email} />
-        <Field label="Phone" name="phone" type="tel" error={state.fieldErrors?.phone} />
+        <Field label="Business name" name="businessName" />
+        <Field label="Contact person" name="contactName" />
+        <Field label="Email" name="email" type="email" />
+        <Field label="Phone" name="phone" type="tel" />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="message">What do you need?</Label>
@@ -37,15 +46,8 @@ export function QuoteForm() {
           name="message"
           rows={5}
           placeholder="Tell us product categories, quantities, delivery area…"
-          aria-invalid={!!state.fieldErrors?.message}
         />
-        {state.fieldErrors?.message && (
-          <p className="text-xs text-destructive">{state.fieldErrors.message}</p>
-        )}
       </div>
-      {state.status === "error" && state.message && (
-        <p className="text-sm text-destructive">{state.message}</p>
-      )}
       <SubmitButton />
     </form>
   );
@@ -55,18 +57,15 @@ function Field({
   label,
   name,
   type = "text",
-  error,
 }: {
   label: string;
   name: string;
   type?: string;
-  error?: string;
 }) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} name={name} type={type} aria-invalid={!!error} />
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      <Input id={name} name={name} type={type} />
     </div>
   );
 }

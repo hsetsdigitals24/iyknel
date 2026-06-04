@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { resolveImage } from "@/lib/r2";
+import { AppError } from "@/lib/errors";
 
 export async function getOrCreateCart(userId: string) {
   return db.cart.upsert({
@@ -92,13 +93,13 @@ function validateAgainstProduct(
   qty: Qty,
 ) {
   if (qty.cartons < 0 || qty.pieces < 0) {
-    throw new Error("Quantities cannot be negative.");
+    throw new AppError("Quantities cannot be negative.");
   }
   if (qty.cartons > 0 && product.unitsPerCarton == null) {
-    throw new Error(`${product.name} is sold by the piece only.`);
+    throw new AppError(`${product.name} is sold by the piece only.`);
   }
   if (qty.cartons > product.stockCartons) {
-    throw new Error(
+    throw new AppError(
       product.stockCartons === 0
         ? `${product.name}: no cartons in stock.`
         : `${product.name}: only ${product.stockCartons} carton${product.stockCartons === 1 ? "" : "s"} in stock.`,
@@ -109,7 +110,7 @@ function validateAgainstProduct(
       product.unitsPerCarton != null
         ? ` Try buying by the carton (1 carton = ${product.unitsPerCarton} pcs).`
         : "";
-    throw new Error(
+    throw new AppError(
       `${product.name}: only ${product.stockLoosePieces} loose piece${product.stockLoosePieces === 1 ? "" : "s"} in stock.${suggestion}`,
     );
   }
@@ -117,10 +118,10 @@ function validateAgainstProduct(
 
 export async function addItem(userId: string, productId: string, qty: Qty) {
   if ((qty.cartons | 0) + (qty.pieces | 0) <= 0) {
-    throw new Error("Pick at least one carton or piece.");
+    throw new AppError("Pick at least one carton or piece.");
   }
   const product = await db.product.findUnique({ where: { id: productId } });
-  if (!product || !product.active) throw new Error("Product is unavailable.");
+  if (!product || !product.active) throw new AppError("Product is unavailable.");
 
   const cart = await getOrCreateCart(userId);
   const existing = await db.cartItem.findUnique({
@@ -148,7 +149,7 @@ export async function updateItemQty(userId: string, itemId: string, qty: Qty) {
     where: { id: itemId },
     include: { product: true },
   });
-  if (!item || item.cartId !== cart.id) throw new Error("Cart item not found.");
+  if (!item || item.cartId !== cart.id) throw new AppError("Cart item not found.");
   if ((qty.cartons | 0) <= 0 && (qty.pieces | 0) <= 0) {
     await db.cartItem.delete({ where: { id: itemId } });
     return;

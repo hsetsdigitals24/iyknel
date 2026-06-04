@@ -5,13 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormStateToast } from "@/components/form-state-toast";
 import { resetPassword } from "./actions";
 
 export function ResetForm() {
   const search = useSearchParams();
   const phoneFromQuery = search.get("phone") ?? "";
   const [state, action] = useFormState(resetPassword, null);
-  const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;
 
   return (
     <form action={action} className="space-y-4">
@@ -25,16 +25,10 @@ export function ResetForm() {
           defaultValue={phoneFromQuery}
           autoComplete="tel"
         />
-        {fieldErrors?.phone?.[0] && (
-          <p className="text-xs text-destructive">{fieldErrors.phone[0]}</p>
-        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="code">Reset code</Label>
         <Input id="code" name="code" inputMode="numeric" maxLength={6} required />
-        {fieldErrors?.code?.[0] && (
-          <p className="text-xs text-destructive">{fieldErrors.code[0]}</p>
-        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">New password</Label>
@@ -45,13 +39,8 @@ export function ResetForm() {
           required
           autoComplete="new-password"
         />
-        {fieldErrors?.password?.[0] && (
-          <p className="text-xs text-destructive">{fieldErrors.password[0]}</p>
-        )}
       </div>
-      {state && !state.ok && !fieldErrors && (
-        <p className="text-sm text-destructive">{state.message}</p>
-      )}
+      <FormStateToast state={state} />
       <SubmitButton />
     </form>
   );

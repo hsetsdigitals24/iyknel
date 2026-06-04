@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 import { AuthSessionProvider } from "@/components/session-provider";
 import { WhatsAppFab } from "@/components/whatsapp-fab";
+import { GlobalErrorListener } from "@/components/global-error-listener";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthSessionProvider>{children}</AuthSessionProvider>
         <WhatsAppFab />
         <Toaster position="top-right" richColors />
+        <GlobalErrorListener />
       </body>
     </html>
   );

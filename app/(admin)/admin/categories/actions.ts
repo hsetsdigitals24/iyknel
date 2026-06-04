@@ -10,6 +10,7 @@ import {
   updateCategory,
 } from "@/lib/categories";
 import { categoryInputSchema, type FormState } from "@/lib/validation";
+import { friendlyError, logError } from "@/lib/errors";
 
 function parseInput(formData: FormData) {
   return categoryInputSchema.safeParse({
@@ -39,16 +40,13 @@ export async function createCategoryAction(
   await requireAdmin();
   const parsed = parseInput(formData);
   if (!parsed.success) {
-    return {
-      ok: false,
-      message: "Fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return { ok: false, message: friendlyError(parsed.error) };
   }
   try {
     await createCategory(parsed.data, fileFrom(formData, "image"));
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Failed" };
+    logError("admin.categories.create", e);
+    return { ok: false, message: friendlyError(e) };
   }
   bump();
   redirect("/admin/categories");
@@ -62,17 +60,14 @@ export async function updateCategoryAction(
   await requireAdmin();
   const parsed = parseInput(formData);
   if (!parsed.success) {
-    return {
-      ok: false,
-      message: "Fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return { ok: false, message: friendlyError(parsed.error) };
   }
   const removeImage = formData.get("removeImage") === "1";
   try {
     await updateCategory(id, parsed.data, fileFrom(formData, "image"), removeImage);
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Failed" };
+    logError("admin.categories.update", e, { categoryId: id });
+    return { ok: false, message: friendlyError(e) };
   }
   bump();
   return { ok: true, message: "Category updated." };

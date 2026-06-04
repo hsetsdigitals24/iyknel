@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormStateToast } from "@/components/form-state-toast";
 import { submitOrderAction } from "./actions";
 
 type Address = {
@@ -83,10 +84,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
         <Textarea id="notes" name="notes" rows={3} maxLength={1000} />
       </div>
 
-      {state && !state.ok && !fieldErrors && (
-        <p className="text-sm text-destructive">{state.message}</p>
-      )}
-
+      <FormStateToast state={state} />
       <SubmitButton />
     </form>
   );

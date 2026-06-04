@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +11,14 @@ import { bulkUploadAction, type BulkUploadState } from "./actions";
 
 export function BulkForm() {
   const [state, action] = useFormState<BulkUploadState, FormData>(bulkUploadAction, null);
+  const last = useRef<BulkUploadState>(null);
+
+  useEffect(() => {
+    if (state === last.current) return;
+    last.current = state;
+    if (!state) return;
+    if (!state.ok) toast.error(state.message);
+  }, [state]);
 
   return (
     <form action={action} className="space-y-4" encType="multipart/form-data">
@@ -19,23 +30,21 @@ export function BulkForm() {
           description.
         </p>
       </div>
-      {state && !state.ok && (
-        <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-3">
-          <p className="text-sm font-medium text-destructive">{state.message}</p>
-          {state.rowErrors && state.rowErrors.length > 0 && (
-            <ul className="space-y-1 text-xs">
-              {state.rowErrors.slice(0, 30).map((e) => (
-                <li key={e.rowIndex}>
-                  <span className="font-medium">Row {e.rowIndex}:</span> {e.messages.join("; ")}
-                </li>
-              ))}
-              {state.rowErrors.length > 30 && (
-                <li className="text-muted-foreground">
-                  + {state.rowErrors.length - 30} more…
-                </li>
-              )}
-            </ul>
-          )}
+      {state && !state.ok && state.rowErrors && state.rowErrors.length > 0 && (
+        <div className="space-y-2 rounded-md border bg-secondary/40 p-3">
+          <p className="text-sm font-medium">Rows that need attention</p>
+          <ul className="space-y-1 text-xs">
+            {state.rowErrors.slice(0, 30).map((e) => (
+              <li key={e.rowIndex}>
+                <span className="font-medium">Row {e.rowIndex}:</span> {e.messages.join("; ")}
+              </li>
+            ))}
+            {state.rowErrors.length > 30 && (
+              <li className="text-muted-foreground">
+                + {state.rowErrors.length - 30} more…
+              </li>
+            )}
+          </ul>
         </div>
       )}
       <SubmitButton />

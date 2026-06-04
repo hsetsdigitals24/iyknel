@@ -7,6 +7,7 @@ import {
   uploadCategoryImage,
 } from "@/lib/r2";
 import type { CategoryInput } from "@/lib/validation";
+import { AppError, logError } from "@/lib/errors";
 
 async function uniqueCategorySlug(name: string, ignoreId?: string): Promise<string> {
   const base = slugify(name) || "category";
@@ -82,7 +83,7 @@ export async function updateCategory(
   removeImage?: boolean,
 ) {
   const existing = await db.category.findUnique({ where: { id } });
-  if (!existing) throw new Error("Category not found");
+  if (!existing) throw new AppError("We couldn't find that category — it may have been removed.");
 
   const explicitSlug = (input.slug ?? "").trim();
   const desiredSlug =
@@ -99,7 +100,7 @@ export async function updateCategory(
       try {
         await deleteR2Object(existing.image);
       } catch (e) {
-        console.warn("R2 delete failed (continuing):", e);
+        logError("r2.delete", e);
       }
     }
     imageKey = null;
@@ -128,7 +129,7 @@ export async function deleteCategory(id: string) {
   });
   if (!cat) return;
   if (cat._count.products > 0) {
-    throw new Error(
+    throw new AppError(
       `Category has ${cat._count.products} product${cat._count.products === 1 ? "" : "s"}. Reassign or hide them first.`,
     );
   }
@@ -136,7 +137,7 @@ export async function deleteCategory(id: string) {
     try {
       await deleteR2Object(cat.image);
     } catch (e) {
-      console.warn("R2 delete failed (continuing):", e);
+      logError("r2.delete", e);
     }
   }
   await db.category.delete({ where: { id } });

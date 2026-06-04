@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { uploadProductImage, deleteProductImage } from "@/lib/r2";
+import { AppError, logError } from "@/lib/errors";
 import type { ProductRow } from "@/lib/csv";
 
 export const productInputSchema = z.object({
@@ -102,7 +103,7 @@ export async function updateProduct(
   removeUrls: string[],
 ) {
   const existing = await db.product.findUnique({ where: { id } });
-  if (!existing) throw new Error("Product not found");
+  if (!existing) throw new AppError("We couldn't find that product — it may have been removed.");
   const categoryId = await resolveCategoryId(input.categoryName);
   const slug =
     existing.name === input.name ? existing.slug : await uniqueSlug(input.name, existing.id);
@@ -115,7 +116,7 @@ export async function updateProduct(
     try {
       await deleteProductImage(u);
     } catch (e) {
-      console.warn("R2 delete failed (continuing):", e);
+      logError("r2.delete", e);
     }
   }
   const uploaded: string[] = [];
@@ -238,7 +239,7 @@ export async function deleteProduct(id: string) {
 
   const orderItemCount = await db.orderItem.count({ where: { productId: id } });
   if (orderItemCount > 0) {
-    throw new Error(
+    throw new AppError(
       `Product is referenced by ${orderItemCount} order item${orderItemCount === 1 ? "" : "s"}. Deactivate it instead (uncheck "Visible in catalog").`,
     );
   }
@@ -254,7 +255,7 @@ export async function deleteProduct(id: string) {
     try {
       await deleteProductImage(u);
     } catch (e) {
-      console.warn("R2 delete failed (continuing):", e);
+      logError("r2.delete", e);
     }
   }
 }

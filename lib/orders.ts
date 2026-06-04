@@ -12,6 +12,7 @@ import { formatNaira } from "@/lib/utils";
 import { pickVehicleForWeight, logisticsCostKobo } from "@/lib/logistics";
 import { uploadInvoicePdf, getSignedFileUrl, SIGNED_URL_EXPIRY } from "@/lib/r2";
 import { renderInvoiceToBuffer } from "@/lib/invoice/render";
+import { logError } from "@/lib/errors";
 import {
   bankFromEnv,
   notifyApproved,
@@ -29,7 +30,12 @@ async function nextOrderNumber(): Promise<string> {
   return fmtOrderNum(now.getFullYear(), now.getMonth(), count + 1);
 }
 
-export class OrderSubmissionError extends Error {}
+export class OrderSubmissionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "OrderSubmissionError";
+  }
+}
 
 export type SubmittedOrder = { id: string; number: string };
 
@@ -147,7 +153,7 @@ export async function submitOrder(
 
       // Fire-and-forget side effects after commit.
       void notifyAdminNewOrder(order.number, (await businessName(userId)) ?? "Unknown business").catch(
-        (e) => console.error("admin notify failed:", e),
+        (e) => logError("orders.adminNotify", e),
       );
       await db.auditLog.create({
         data: {
@@ -306,7 +312,7 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
     expiresIn: SIGNED_URL_EXPIRY.email,
   });
   await notifyInvoiceIssued(recipient, order.number, emailPdfUrl, totalKobo).catch((e) =>
-    console.error("invoice email failed:", e),
+    logError("orders.invoiceEmail", e),
   );
   return updated;
 }
@@ -338,7 +344,7 @@ export async function approveOrder(actorId: string, orderId: string) {
     order.totalKobo,
     emailPdfUrl,
     bankFromEnv(),
-  ).catch((e) => console.error("approve notify failed:", e));
+  ).catch((e) => logError("orders.approveNotify", e));
   return updated;
 }
 
@@ -382,7 +388,7 @@ export async function markPaidByAdmin(actorId: string, orderId: string, args: Ma
     return ord;
   });
   const recipient = await loadOrderRecipient(order.userId);
-  await notifyPaid(recipient, order.number).catch((e) => console.error("paid notify failed:", e));
+  await notifyPaid(recipient, order.number).catch((e) => logError("orders.paidNotify", e));
   return updated;
 }
 
@@ -410,7 +416,7 @@ export async function markDispatched(actorId: string, orderId: string, courierNo
   });
   const recipient = await loadOrderRecipient(order.userId);
   await notifyDispatched(recipient, order.number, courierNote).catch((e) =>
-    console.error("dispatch notify failed:", e),
+    logError("orders.dispatchNotify", e),
   );
   return updated;
 }
@@ -434,7 +440,7 @@ export async function markDelivered(actorId: string, orderId: string) {
   });
   const recipient = await loadOrderRecipient(order.userId);
   await notifyDelivered(recipient, order.number).catch((e) =>
-    console.error("deliver notify failed:", e),
+    logError("orders.deliverNotify", e),
   );
   return updated;
 }
@@ -495,7 +501,7 @@ export async function cancelOrder(actorId: string, orderId: string, reason: stri
   });
   const recipient = await loadOrderRecipient(order.userId);
   await notifyCancelled(recipient, order.number, reason).catch((e) =>
-    console.error("cancel notify failed:", e),
+    logError("orders.cancelNotify", e),
   );
   return updated;
 }
@@ -527,7 +533,7 @@ export async function markPaidByCustomer(userId: string, orderId: string) {
       business?.name ?? "Unknown business",
       formatNaira(order.totalKobo || order.subtotalKobo),
     );
-  })().catch((e) => console.error("payment-declared admin notify failed:", e));
+  })().catch((e) => logError("orders.paymentDeclaredNotify", e));
 
   return updated;
 }
@@ -762,7 +768,7 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
       order.number,
       business?.name ?? "Unknown business",
       `Status reset to SUBMITTED; existing invoice cancelled. Please re-issue with the new logistics.\n\nChanges:\n${summary}`,
-    ).catch((e) => console.error("edit admin notify failed:", e));
+    ).catch((e) => logError("orders.editNotify", e));
   }
 }
 

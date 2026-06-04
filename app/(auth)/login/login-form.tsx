@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -8,10 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+function friendlySignInError(code: string | undefined | null): string {
+  if (!code) return "Couldn't sign you in. Please try again.";
+  if (code === "CredentialsSignin") return "Email or password is incorrect.";
+  return "Couldn't sign you in. Please try again.";
+}
+
 export function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -19,17 +24,20 @@ export function LoginForm() {
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
-    setError(null);
     startTransition(async () => {
-      const res = await signIn("credentials", { email, password, redirect: false });
-      if (!res || res.error) {
-        setError("Invalid email or password.");
-        return;
+      try {
+        const res = await signIn("credentials", { email, password, redirect: false });
+        if (!res || res.error) {
+          toast.error(friendlySignInError(res?.error));
+          return;
+        }
+        toast.success("Welcome back.");
+        const next = search.get("callbackUrl") ?? "/dashboard";
+        router.replace(next);
+        router.refresh();
+      } catch {
+        toast.error("Couldn't sign you in. Please try again.");
       }
-      toast.success("Welcome back.");
-      const next = search.get("callbackUrl") ?? "/dashboard";
-      router.replace(next);
-      router.refresh();
     });
   }
 
@@ -62,7 +70,6 @@ export function LoginForm() {
           autoComplete="current-password"
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in…" : "Sign in"}
       </Button>

@@ -10,9 +10,9 @@ import {
   markDelivered,
   markDispatched,
   markPaidByAdmin,
-  OrderSubmissionError,
 } from "@/lib/orders";
 import type { FormState } from "@/lib/validation";
+import { friendlyError, logError } from "@/lib/errors";
 
 const issueSchema = z.object({
   distanceBandId: z.string().min(1, "Pick a distance band"),
@@ -51,11 +51,7 @@ export async function issueInvoiceAction(
     tripCount: formData.get("tripCount") ?? "",
   });
   if (!parsed.success) {
-    return {
-      ok: false,
-      message: "Pick a distance band.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return { ok: false, message: friendlyError(parsed.error) };
   }
   try {
     await issueInvoice(s.user.id, orderId, {
@@ -63,8 +59,8 @@ export async function issueInvoiceAction(
       tripCountOverride: parsed.data.tripCount,
     });
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidate(orderId);
   return { ok: true, message: "Invoice issued." };
@@ -75,8 +71,8 @@ export async function approveOrderAction(orderId: string): Promise<FormState> {
   try {
     await approveOrder(s.user.id, orderId);
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidate(orderId);
   return { ok: true };
@@ -94,11 +90,7 @@ export async function markPaidAction(
     notes: formData.get("notes") ?? "",
   });
   if (!parsed.success) {
-    return {
-      ok: false,
-      message: "Fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return { ok: false, message: friendlyError(parsed.error) };
   }
   try {
     await markPaidByAdmin(s.user.id, orderId, {
@@ -107,8 +99,8 @@ export async function markPaidAction(
       notes: parsed.data.notes || null,
     });
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidate(orderId);
   return { ok: true };
@@ -121,12 +113,12 @@ export async function markDispatchedAction(
 ): Promise<FormState> {
   const s = await requireAdmin();
   const parsed = dispatchSchema.safeParse({ courierNote: formData.get("courierNote") ?? "" });
-  if (!parsed.success) return { ok: false, message: "Invalid note." };
+  if (!parsed.success) return { ok: false, message: friendlyError(parsed.error) };
   try {
     await markDispatched(s.user.id, orderId, parsed.data.courierNote || null);
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidate(orderId);
   return { ok: true };
@@ -137,8 +129,8 @@ export async function markDeliveredAction(orderId: string): Promise<FormState> {
   try {
     await markDelivered(s.user.id, orderId);
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidate(orderId);
   return { ok: true };
@@ -152,17 +144,13 @@ export async function cancelOrderAction(
   const s = await requireAdmin();
   const parsed = cancelSchema.safeParse({ reason: formData.get("reason") });
   if (!parsed.success) {
-    return {
-      ok: false,
-      message: "Reason is required.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return { ok: false, message: friendlyError(parsed.error) };
   }
   try {
     await cancelOrder(s.user.id, orderId, parsed.data.reason);
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidate(orderId);
   return { ok: true };

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormStateToast } from "@/components/form-state-toast";
 import { slugify } from "@/lib/slug";
 import type { FormState } from "@/lib/validation";
 
@@ -210,13 +211,7 @@ export function CategoryForm({ mode, initial, action }: Props) {
         </div>
       )}
 
-      {state && !state.ok && !fieldErrors && (
-        <p className="text-sm text-destructive">{state.message}</p>
-      )}
-      {state && state.ok && state.message && (
-        <p className="text-sm text-success">{state.message}</p>
-      )}
-
+      <FormStateToast state={state} />
       <SubmitButton mode={mode} />
     </form>
   );

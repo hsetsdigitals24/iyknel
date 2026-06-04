@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import { requireCustomer } from "@/lib/session";
 import { upsertReview } from "@/lib/reviews";
+import { friendlyError, logError } from "@/lib/errors";
 
 export type ReviewActionResult =
   | { ok: true }
@@ -39,7 +40,8 @@ export async function submitReviewAction(
       body: body || null,
     });
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Failed" };
+    logError("reviews.submit", e, { productId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath(`/products/${productSlug}`);
   revalidatePath("/dashboard");

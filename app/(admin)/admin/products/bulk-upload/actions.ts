@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/session";
 import { parseProductCsv, type ProductRowError } from "@/lib/csv";
 import { bulkUpsertProducts } from "@/lib/products";
+import { friendlyError, logError } from "@/lib/errors";
 
 export type BulkUploadState =
   | null
@@ -24,7 +25,16 @@ export async function bulkUploadAction(
   if (!parsed.ok) {
     return { ok: false, message: parsed.message, rowErrors: parsed.errors };
   }
-  const { created, updated } = await bulkUpsertProducts(parsed.rows);
+  let created = 0;
+  let updated = 0;
+  try {
+    const res = await bulkUpsertProducts(parsed.rows);
+    created = res.created;
+    updated = res.updated;
+  } catch (e) {
+    logError("admin.products.bulkUpload", e);
+    return { ok: false, message: friendlyError(e) };
+  }
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
   revalidatePath("/products");

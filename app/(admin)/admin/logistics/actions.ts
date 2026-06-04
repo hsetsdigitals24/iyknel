@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
 import type { FormState } from "@/lib/validation";
+import { AppError, friendlyError } from "@/lib/errors";
 
 const vehicleSchema = z.object({
   name: z.string().min(2).max(80),
@@ -34,11 +35,7 @@ function bump() {
 
 function parseFormState(parsed: z.SafeParseReturnType<unknown, unknown>): FormState {
   if (parsed.success) return null;
-  return {
-    ok: false,
-    message: "Fix the errors below.",
-    fieldErrors: parsed.error.flatten().fieldErrors,
-  };
+  return { ok: false, message: friendlyError(parsed.error) };
 }
 
 export async function createVehicleAction(
@@ -135,7 +132,7 @@ export async function deleteVehicleAction(id: string): Promise<void> {
   await requireAdmin();
   const inUse = await db.logisticsCost.count({ where: { vehicleId: id } });
   if (inUse > 0) {
-    throw new Error("Vehicle has cost rows. Clear matrix or deactivate instead.");
+    throw new AppError("Vehicle has cost rows. Clear matrix or deactivate instead.");
   }
   await db.vehicle.delete({ where: { id } });
   bump();
@@ -145,7 +142,7 @@ export async function deleteBandAction(id: string): Promise<void> {
   await requireAdmin();
   const inUse = await db.logisticsCost.count({ where: { distanceBandId: id } });
   if (inUse > 0) {
-    throw new Error("Band has cost rows. Clear matrix or deactivate instead.");
+    throw new AppError("Band has cost rows. Clear matrix or deactivate instead.");
   }
   await db.distanceBand.delete({ where: { id } });
   bump();

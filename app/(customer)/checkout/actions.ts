@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireCustomer } from "@/lib/session";
 import { db } from "@/lib/db";
-import { submitOrder, OrderSubmissionError } from "@/lib/orders";
+import { submitOrder } from "@/lib/orders";
 import type { FormState } from "@/lib/validation";
+import { friendlyError, logError } from "@/lib/errors";
 
 const newAddressSchema = z.object({
   line1: z.string().min(2).max(200),
@@ -32,11 +33,7 @@ export async function submitOrderAction(
       state: formData.get("state"),
     });
     if (!parsed.success) {
-      return {
-        ok: false,
-        message: "Fix the address fields below.",
-        fieldErrors: parsed.error.flatten().fieldErrors,
-      };
+      return { ok: false, message: friendlyError(parsed.error) };
     }
     const created = await db.address.create({
       data: {
@@ -57,8 +54,8 @@ export async function submitOrderAction(
   try {
     order = await submitOrder(s.user.id, { addressId, notes: notes || null });
   } catch (e) {
-    if (e instanceof OrderSubmissionError) return { ok: false, message: e.message };
-    throw e;
+    logError("checkout.submit", e, { userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath("/cart");
   revalidatePath("/orders");

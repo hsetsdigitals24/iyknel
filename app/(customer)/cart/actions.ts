@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireCustomer } from "@/lib/session";
 import { addItem, removeItem, updateItemQty, type Qty } from "@/lib/cart";
+import { friendlyError, logError } from "@/lib/errors";
 
 type Result = { ok: true } | { ok: false; message: string };
 
@@ -26,7 +27,8 @@ export async function addToCartAction(productId: string, qty: Qty): Promise<Resu
   try {
     await addItem(s.user.id, productId, parsed.data);
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Failed to add" };
+    logError("cart.add", e, { productId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath("/cart");
   revalidatePath("/products");
@@ -48,7 +50,8 @@ export async function updateQtyAction(itemId: string, qty: Qty): Promise<Result>
   try {
     await updateItemQty(s.user.id, itemId, parsed.data);
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Failed to update" };
+    logError("cart.update", e, { userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
   }
   revalidatePath("/cart");
   return { ok: true };

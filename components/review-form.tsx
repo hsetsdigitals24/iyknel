@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StarPicker } from "@/components/star-rating";
@@ -30,19 +31,16 @@ export function ReviewForm({
   const [rating, setRating] = useState(initialRating);
   const [body, setBody] = useState(initialBody ?? "");
   const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rating < 1) {
-      setError("Pick a rating between 1 and 5 stars.");
+      toast.error("Pick a rating between 1 and 5 stars.");
       return;
     }
-    setError(null);
     start(async () => {
       const res = await submitReviewAction(productId, productSlug, rating, body);
       if (!res.ok) {
-        setError(res.message);
         toast.error(res.message);
         return;
       }
@@ -71,7 +69,6 @@ export function ReviewForm({
         />
         <p className="text-right text-[10px] text-muted-foreground">{body.length}/1000</p>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel} disabled={pending}>
