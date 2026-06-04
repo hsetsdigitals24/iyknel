@@ -52,13 +52,22 @@ export default function ContactPage() {
                 hint="Best for invoice queries and order changes."
               />
             )}
-            {contact.phone && contact.phoneDisplay && (
+            {contact.phones[0] && (
               <ContactCard
                 icon={<Phone className="h-5 w-5 text-primary" />}
-                title="Phone"
-                primary={contact.phoneDisplay}
-                href={`tel:${contact.phone}`}
+                title="Phone (Office)"
+                primary={contact.phones[0].display}
+                href={contact.phones[0].href}
                 hint="Mon–Sat, 9am–6pm (WAT)."
+              />
+            )}
+            {contact.phones[1] && (
+              <ContactCard
+                icon={<Phone className="h-5 w-5 text-primary" />}
+                title="Phone (Alt.)"
+                primary={contact.phones[1].display}
+                href={contact.phones[1].href}
+                hint="If the office line is busy, try this number."
               />
             )}
             {contact.whatsappUrl && (
@@ -74,7 +83,9 @@ export default function ContactPage() {
             <ContactCard
               icon={<MapPin className="h-5 w-5 text-primary" />}
               title="Office"
-              primary="Lagos, Nigeria"
+              primary={`${contact.address.line1}, ${contact.address.line2}, ${contact.address.lga}, ${contact.address.state}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address.full)}`}
+              external
               hint="Visits by appointment only — please call ahead."
             />
           </div>

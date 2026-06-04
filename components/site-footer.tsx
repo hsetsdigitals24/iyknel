@@ -78,21 +78,31 @@ export function SiteFooter() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Lagos, Nigeria</span>
+              <span>
+                {contact.address.line1}
+                <br />
+                {contact.address.line2}
+                <br />
+                {contact.address.lga}, {contact.address.state}
+              </span>
             </li>
+            {contact.phones.length > 0 && (
+              <li className="flex items-start gap-2">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span className="flex flex-col">
+                  {contact.phones.map((p) => (
+                    <a key={p.e164} href={p.href} className="hover:text-foreground">
+                      {p.display}
+                    </a>
+                  ))}
+                </span>
+              </li>
+            )}
             {contact.email && (
               <li className="flex items-start gap-2">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <a href={`mailto:${contact.email}`} className="hover:text-foreground">
                   {contact.email}
-                </a>
-              </li>
-            )}
-            {contact.phone && (
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <a href={`tel:${contact.phone}`} className="hover:text-foreground">
-                  {contact.phoneDisplay}
                 </a>
               </li>
             )}

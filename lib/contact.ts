@@ -1,12 +1,33 @@
 import "server-only";
 
+export type ContactPhone = {
+  e164: string;
+  display: string;
+  href: string;
+};
+
+export type ContactAddress = {
+  line1: string;
+  line2: string;
+  lga: string;
+  state: string;
+  full: string;
+};
+
 export type Contact = {
   email: string | null;
-  phone: string | null;
-  phoneDisplay: string | null;
+  phones: ContactPhone[];
   whatsapp: string | null;
   whatsappUrl: string | null;
+  address: ContactAddress;
 };
+
+const DEFAULT_EMAIL = "info@iyknel.com";
+const DEFAULT_PHONES_RAW = "08182806282,08114499558";
+const DEFAULT_ADDRESS_LINE1 = "Plot 10 Abesan Estate Road";
+const DEFAULT_ADDRESS_LINE2 = "Abesan Estate, Ipaja";
+const DEFAULT_ADDRESS_LGA = "Alimosho LGA";
+const DEFAULT_ADDRESS_STATE = "Lagos";
 
 function formatPhone(e164: string): string {
   // +2348012345678 -> +234 801 234 5678
@@ -14,15 +35,46 @@ function formatPhone(e164: string): string {
   return `${e164.slice(0, 4)} ${e164.slice(4, 7)} ${e164.slice(7, 10)} ${e164.slice(10)}`;
 }
 
+function to234(raw: string): string | null {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("234")) return `+${digits}`;
+  if (digits.startsWith("0") && digits.length === 11) return `+234${digits.slice(1)}`;
+  if (digits.length === 10) return `+234${digits}`;
+  // Assume already E.164 without country prefix is unsafe — fall back to raw.
+  return raw.startsWith("+") ? raw : null;
+}
+
+function parsePhones(raw: string | undefined | null): ContactPhone[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((local) => {
+      const e164 = to234(local);
+      if (!e164) return null;
+      return { e164, display: formatPhone(e164), href: `tel:${e164}` };
+    })
+    .filter((p): p is ContactPhone => p !== null);
+}
+
 export function getContact(): Contact {
-  const email = process.env.CONTACT_EMAIL?.trim() || null;
-  const phone = process.env.CONTACT_PHONE?.trim() || null;
+  const email = process.env.CONTACT_EMAIL?.trim() || DEFAULT_EMAIL;
+  const phones = parsePhones(process.env.CONTACT_PHONE || DEFAULT_PHONES_RAW);
   const whatsapp = process.env.CONTACT_WHATSAPP?.replace(/\D/g, "") || null;
+
+  const line1 = process.env.CONTACT_ADDRESS_LINE1?.trim() || DEFAULT_ADDRESS_LINE1;
+  const line2 = process.env.CONTACT_ADDRESS_LINE2?.trim() || DEFAULT_ADDRESS_LINE2;
+  const lga = process.env.CONTACT_ADDRESS_LGA?.trim() || DEFAULT_ADDRESS_LGA;
+  const state = process.env.CONTACT_ADDRESS_STATE?.trim() || DEFAULT_ADDRESS_STATE;
+  const full = [line1, line2, lga, state].filter(Boolean).join(", ");
+
   return {
     email,
-    phone,
-    phoneDisplay: phone ? formatPhone(phone) : null,
+    phones,
     whatsapp,
     whatsappUrl: whatsapp ? `https://wa.me/${whatsapp}` : null,
+    address: { line1, line2, lga, state, full },
   };
 }
