@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { RotateCcw, Trash2, X } from "lucide-react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,27 @@ export function CategoryForm({ mode, initial, action }: Props) {
   function onSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSlug(e.target.value);
     setSlugTouched(true);
+  }
+
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pendingUrl) URL.revokeObjectURL(pendingUrl);
+    };
+  }, [pendingUrl]);
+
+  function onImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (pendingUrl) URL.revokeObjectURL(pendingUrl);
+    setPendingUrl(file ? URL.createObjectURL(file) : null);
+  }
+
+  function clearPendingImage() {
+    if (pendingUrl) URL.revokeObjectURL(pendingUrl);
+    setPendingUrl(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
   }
 
   return (
@@ -116,9 +137,38 @@ export function CategoryForm({ mode, initial, action }: Props) {
 
       <div className="space-y-2">
         <Label htmlFor="image">{hasExistingImage ? "Replace image" : "Image"}</Label>
-        <Input id="image" name="image" type="file" accept="image/*" />
+        <Input
+          ref={imageInputRef}
+          id="image"
+          name="image"
+          type="file"
+          accept="image/*"
+          onChange={onImageChange}
+        />
         <p className="text-xs text-muted-foreground">JPG, PNG, or WEBP. Up to 5 MB.</p>
       </div>
+
+      {pendingUrl && (
+        <div className="space-y-2">
+          <Label>
+            Selected image{hasExistingImage ? " (will replace current)" : ""}
+          </Label>
+          <div className="grid grid-cols-3 md:grid-cols-5">
+            <div className="relative aspect-square overflow-hidden rounded-md border ring-2 ring-primary/40">
+              <Image src={pendingUrl} alt="Pending upload" fill sizes="160px" className="object-cover" />
+              <button
+                type="button"
+                onClick={clearPendingImage}
+                aria-label="Clear selected image"
+                title="Clear selected image"
+                className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow ring-1 ring-border transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {hasExistingImage && (
         <div className="space-y-2">

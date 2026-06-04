@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2, X } from "lucide-react";
 import { useFormState, useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,43 @@ export function ProductForm({ initial, categories, action }: Props) {
 
   function toggleRemove(url: string) {
     setKeptImages((prev) => (prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]));
+  }
+
+  const imagesInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingUrls, setPendingUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    return () => {
+      for (const url of pendingUrls) URL.revokeObjectURL(url);
+    };
+  }, [pendingUrls]);
+
+  function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    for (const url of pendingUrls) URL.revokeObjectURL(url);
+    setPendingFiles(files);
+    setPendingUrls(files.map((f) => URL.createObjectURL(f)));
+  }
+
+  function removePendingAt(idx: number) {
+    const next = pendingFiles.filter((_, i) => i !== idx);
+    const url = pendingUrls[idx];
+    if (url) URL.revokeObjectURL(url);
+    setPendingFiles(next);
+    setPendingUrls(pendingUrls.filter((_, i) => i !== idx));
+    if (imagesInputRef.current) {
+      const dt = new DataTransfer();
+      next.forEach((f) => dt.items.add(f));
+      imagesInputRef.current.files = dt.files;
+    }
+  }
+
+  function clearPending() {
+    for (const url of pendingUrls) URL.revokeObjectURL(url);
+    setPendingFiles([]);
+    setPendingUrls([]);
+    if (imagesInputRef.current) imagesInputRef.current.value = "";
   }
 
   return (
@@ -144,9 +181,57 @@ export function ProductForm({ initial, categories, action }: Props) {
 
       <div className="space-y-2">
         <Label htmlFor="images">Add images</Label>
-        <Input id="images" name="images" type="file" accept="image/*" multiple />
+        <Input
+          ref={imagesInputRef}
+          id="images"
+          name="images"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={onPickFiles}
+        />
         <p className="text-xs text-muted-foreground">JPG, PNG, or WEBP. Up to 5 MB each.</p>
       </div>
+
+      {pendingFiles.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Selected to upload</Label>
+            <button
+              type="button"
+              onClick={clearPending}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Clear all
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-3 md:grid-cols-5">
+            {pendingFiles.map((file, idx) => (
+              <div
+                key={`${file.name}-${idx}`}
+                className="relative aspect-square overflow-hidden rounded-md border ring-2 ring-primary/40"
+              >
+                <Image
+                  src={pendingUrls[idx]}
+                  alt={file.name}
+                  fill
+                  sizes="(min-width: 768px) 160px, 33vw"
+                  className="object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePendingAt(idx)}
+                  aria-label={`Remove ${file.name}`}
+                  title={`Remove ${file.name}`}
+                  className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow ring-1 ring-border transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {initial?.images && initial.images.length > 0 && (
         <div className="space-y-2">

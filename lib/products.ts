@@ -232,7 +232,21 @@ export async function bulkUpsertProducts(rows: ProductRow[]) {
 export async function deleteProduct(id: string) {
   const existing = await db.product.findUnique({ where: { id } });
   if (!existing) return;
-  await db.product.delete({ where: { id } });
+
+  const orderItemCount = await db.orderItem.count({ where: { productId: id } });
+  if (orderItemCount > 0) {
+    throw new Error(
+      `Product is referenced by ${orderItemCount} order item${orderItemCount === 1 ? "" : "s"}. Deactivate it instead (uncheck "Visible in catalog").`,
+    );
+  }
+
+  await db.$transaction([
+    db.stockMovement.deleteMany({ where: { productId: id } }),
+    db.cartItem.deleteMany({ where: { productId: id } }),
+    db.wishlistItem.deleteMany({ where: { productId: id } }),
+    db.product.delete({ where: { id } }),
+  ]);
+
   for (const u of existing.images) {
     try {
       await deleteProductImage(u);
