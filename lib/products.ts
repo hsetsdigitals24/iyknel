@@ -28,9 +28,17 @@ export type ProductInput = z.infer<typeof productInputSchema>;
 async function resolveCategoryId(name: string | undefined | null) {
   const clean = (name ?? "").trim();
   if (!clean) return null;
+  const byName = await db.category.findFirst({
+    where: { name: { equals: clean, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (byName) return byName.id;
   const slug = slugify(clean);
-  const existing = await db.category.findUnique({ where: { slug } });
-  if (existing) return existing.id;
+  const bySlug = await db.category.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (bySlug) return bySlug.id;
   const created = await db.category.create({ data: { slug, name: clean } });
   return created.id;
 }
