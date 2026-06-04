@@ -27,6 +27,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     stockLoosePieces: product.stockLoosePieces,
     categoryName: product.category?.name ?? "",
     active: product.active,
+    featured: product.featured,
     images: product.images,
     imageUrls,
   };

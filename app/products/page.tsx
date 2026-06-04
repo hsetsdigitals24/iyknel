@@ -11,7 +11,14 @@ import { ProductCard } from "@/components/product-card";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
-type SP = { q?: string; category?: string; sort?: string; inStock?: string; page?: string };
+type SP = {
+  q?: string;
+  category?: string;
+  sort?: string;
+  inStock?: string;
+  featured?: string;
+  page?: string;
+};
 
 const PAGE_SIZE = 60;
 
@@ -27,6 +34,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
   const categorySlug = searchParams.category?.trim() ?? "";
   const sortKey = (searchParams.sort && SORTS[searchParams.sort]) ? searchParams.sort! : "newest";
   const inStockOnly = searchParams.inStock === "1";
+  const featuredOnly = searchParams.featured === "1";
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1);
 
   const filters: Prisma.ProductWhereInput[] = [];
@@ -43,6 +51,9 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
     filters.push({
       OR: [{ stockCartons: { gt: 0 } }, { stockLoosePieces: { gt: 0 } }],
     });
+  }
+  if (featuredOnly) {
+    filters.push({ featured: true });
   }
   const where: Prisma.ProductWhereInput = {
     active: true,
@@ -81,6 +92,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
       category: categorySlug,
       sort: sortKey,
       inStock: inStockOnly ? "1" : "",
+      featured: featuredOnly ? "1" : "",
       page: page > 1 ? String(page) : "",
       ...overrides,
     };

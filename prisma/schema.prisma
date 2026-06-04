@@ -147,6 +147,7 @@ model Product {
   stockLoosePieces Int           @default(0)
   images      String[]      @default([])
   active      Boolean       @default(true)
+  featured    Boolean       @default(false)
   categoryId  String?
   category    Category?     @relation(fields: [categoryId], references: [id])
   createdAt   DateTime      @default(now())
@@ -159,6 +160,7 @@ model Product {
   reviews       Review[]
 
   @@index([categoryId])
+  @@index([featured, active])
 }
 
 model Review {

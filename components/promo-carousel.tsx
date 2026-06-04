@@ -15,59 +15,17 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-type Slide = {
+export type Slide = {
   eyebrow: string;
   title: string;
   copy: string;
   cta: { label: string; href: string };
   image: string;
-  tint: string; // tailwind gradient classes for background
+  tint: string;
 };
 
-const SLIDES: Slide[] = [
-  {
-    eyebrow: "Bulk rice deals",
-    title: "Stock the shelves. Save the run.",
-    copy: "5kg, 10kg and 25kg bags from Mama Gold, Royal Stallion and Caprice — wholesale prices, doorstep delivery.",
-    cta: { label: "Shop rice & grains", href: "/products?category=pasta-grains" },
-    image: "/placeholders/banner.svg",
-    tint: "from-[#E8EEF7] via-[#F4F7FB] to-background",
-  },
-  {
-    eyebrow: "New arrivals",
-    title: "Baby care, restocked.",
-    copy: "Pampers, Huggies, Cussons, Johnson's — everything for the nursery shelf in one order.",
-    cta: { label: "Browse baby care", href: "/products?category=baby-care" },
-    image: "/placeholders/banner.svg",
-    tint: "from-[#FBE6D2] via-[#FDF3E8] to-background",
-  },
-  {
-    eyebrow: "Same-day Lagos",
-    title: "Office essentials, on demand.",
-    copy: "Pens, paper, files, calculators — order before noon, delivered same day across Lagos mainland.",
-    cta: { label: "Shop office & stationery", href: "/products?category=office-stationery" },
-    image: "/placeholders/banner.svg",
-    tint: "from-[#E8EEF7] via-[#F4F7FB] to-background",
-  },
-  {
-    eyebrow: "Restock Mondays",
-    title: "Free logistics over ₦200,000.",
-    copy: "Weekly restock orders qualify for waived logistics — let us pick the right vehicle for your route.",
-    cta: { label: "Open a wholesale account", href: "/register" },
-    image: "/placeholders/banner.svg",
-    tint: "from-[#FBE6D2] via-[#FDF3E8] to-background",
-  },
-  {
-    eyebrow: "Household clean-up",
-    title: "Cartons of Omo, Hypo & Harpic.",
-    copy: "Refresh shop inventory with detergents, bleach and cleaners from one wholesale invoice.",
-    cta: { label: "Shop household", href: "/products?category=household" },
-    image: "/placeholders/banner.svg",
-    tint: "from-[#E8EEF7] via-[#F4F7FB] to-background",
-  },
-];
-
-export function PromoCarousel() {
+export function PromoCarousel({ slides }: { slides: Slide[] }) {
+  if (slides.length === 0) return null;
   return (
     <Carousel
       opts={{ loop: true, align: "start" }}
@@ -75,7 +33,7 @@ export function PromoCarousel() {
       className="relative"
     >
       <CarouselContent>
-        {SLIDES.map((slide, i) => (
+        {slides.map((slide, i) => (
           <CarouselItem key={slide.title}>
             <div
               className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${slide.tint}`}

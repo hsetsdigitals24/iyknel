@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { resolveImage } from "@/lib/r2";
 import { getSession } from "@/lib/session";
 import { getWishlistProductIds } from "@/lib/wishlist";
+import { buildPromoSlides } from "@/lib/promo";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -15,7 +16,7 @@ import { FeaturedProductsCarousel } from "@/components/featured-products-carouse
 import { WhyIyknel } from "@/components/why-iyknel";
 
 export default async function LandingPage() {
-  const [categories, products] = await Promise.all([
+  const [categories, products, slides] = await Promise.all([
     db.category.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -26,6 +27,7 @@ export default async function LandingPage() {
       take: 14,
       include: { category: { select: { name: true } } },
     }),
+    buildPromoSlides(),
   ]);
   const categoryImageUrls = await Promise.all(categories.map((c) => resolveImage(c.image)));
 
@@ -60,7 +62,7 @@ export default async function LandingPage() {
       <main className="flex-1">
         {/* Hero promo carousel */}
         <section className="container pt-6 md:pt-8">
-          <PromoCarousel />
+          <PromoCarousel slides={slides} />
         </section>
 
         <WhyIyknel />

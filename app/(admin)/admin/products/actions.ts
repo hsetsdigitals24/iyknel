@@ -19,6 +19,7 @@ function parseInput(formData: FormData) {
     stockLoosePieces: formData.get("stockLoosePieces") ?? 0,
     categoryName: formData.get("categoryName") ?? "",
     active: formData.get("active") === "on",
+    featured: formData.get("featured") === "on",
   });
 }
 
@@ -46,6 +47,7 @@ export async function createProductAction(
   }
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/");
   redirect("/admin/products");
 }
 
@@ -72,6 +74,7 @@ export async function updateProductAction(
   revalidatePath("/admin/products");
   revalidatePath(`/admin/products/${id}`);
   revalidatePath("/products");
+  revalidatePath("/");
   redirect("/admin/products");
 }
 
@@ -82,4 +85,5 @@ export async function deleteProductAction(formData: FormData) {
   await deleteProduct(id);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  revalidatePath("/");
 }

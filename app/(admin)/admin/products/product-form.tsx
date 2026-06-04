@@ -22,6 +22,7 @@ export type ProductFormData = {
   stockLoosePieces: number;
   categoryName: string;
   active: boolean;
+  featured: boolean;
   images: string[];
   imageUrls?: string[];
 };
@@ -288,15 +289,26 @@ export function ProductForm({ initial, categories, action }: Props) {
         </div>
       )}
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="active"
-          defaultChecked={initial?.active ?? true}
-          className="h-4 w-4 rounded border-input"
-        />
-        Visible in catalog
-      </label>
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="active"
+            defaultChecked={initial?.active ?? true}
+            className="h-4 w-4 rounded border-input"
+          />
+          Visible in catalog
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="featured"
+            defaultChecked={initial?.featured ?? false}
+            className="h-4 w-4 rounded border-input"
+          />
+          Feature on homepage
+        </label>
+      </div>
 
       {state && !state.ok && !fieldErrors && (
         <p className="text-sm text-destructive">{state.message}</p>

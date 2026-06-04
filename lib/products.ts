@@ -22,6 +22,7 @@ export const productInputSchema = z.object({
   stockLoosePieces: z.coerce.number().int().nonnegative().max(10_000_000),
   categoryName: z.string().max(120).optional().or(z.literal("")),
   active: z.coerce.boolean().optional().default(true),
+  featured: z.coerce.boolean().optional().default(false),
 });
 export type ProductInput = z.infer<typeof productInputSchema>;
 
@@ -77,6 +78,7 @@ export async function createProduct(input: ProductInput, images: File[]) {
       stockLoosePieces: initialPieces,
       images: uploaded,
       active: input.active,
+      featured: input.featured,
       categoryId,
       movements:
         initialCartons > 0 || initialPieces > 0
@@ -135,6 +137,7 @@ export async function updateProduct(
       stockLoosePieces: input.stockLoosePieces,
       images: [...kept, ...uploaded],
       active: input.active,
+      featured: input.featured,
       categoryId,
       movements:
         cartonsDelta !== 0 || piecesDelta !== 0
