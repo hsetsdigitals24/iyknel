@@ -14,8 +14,17 @@ import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
 import { AddToCartForm } from "@/components/add-to-cart-form";
 import { WishlistButton } from "@/components/wishlist-button";
+import { ProductReviews } from "@/components/product-reviews";
+import { StarRating } from "@/components/star-rating";
+import { getProductReviews, REVIEW_PAGE_SIZE } from "@/lib/reviews";
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProductDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { reviewPage?: string };
+}) {
   const product = await db.product.findUnique({
     where: { slug: params.slug },
     include: { category: true },
@@ -46,6 +55,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const savedIds = session?.user?.id
     ? await getWishlistProductIds(session.user.id)
     : new Set<string>();
+
+  const reviewPage = Math.max(1, Number.parseInt(searchParams.reviewPage ?? "1", 10) || 1);
+  const reviewSummary = await getProductReviews(product.id, { page: reviewPage, pageSize: REVIEW_PAGE_SIZE });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -90,6 +102,18 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               <h1 className="font-serif text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
                 {product.name}
               </h1>
+
+              {reviewSummary.total > 0 && (
+                <a
+                  href="#reviews"
+                  className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <StarRating value={reviewSummary.avg} size="sm" />
+                  <span>
+                    {reviewSummary.avg.toFixed(1)} ({reviewSummary.total})
+                  </span>
+                </a>
+              )}
 
               <div className="flex items-baseline gap-3">
                 <p className="text-3xl font-bold tabular-nums text-primary md:text-4xl">
@@ -229,6 +253,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </section>
           )}
         </div>
+
+        <ProductReviews productSlug={product.slug} summary={reviewSummary} />
       </main>
 
       <SiteFooter />

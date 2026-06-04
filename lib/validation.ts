@@ -27,6 +27,18 @@ export const forgotSchema = z.object({
   phone: z.string().regex(phoneRegex, "Enter a valid phone number"),
 });
 
+export const reviewSchema = z.object({
+  productId: z.string().min(1),
+  rating: z.coerce.number().int().min(1, "Pick a rating").max(5),
+  body: z
+    .string()
+    .trim()
+    .max(1000, "Keep it under 1000 characters")
+    .optional()
+    .or(z.literal("")),
+});
+export type ReviewInput = z.infer<typeof reviewSchema>;
+
 export const resetSchema = z.object({
   phone: z.string().regex(phoneRegex),
   code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),

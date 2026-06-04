@@ -17,6 +17,7 @@ import { getSignedFileUrl } from "@/lib/r2";
 import { formatNaira } from "@/lib/utils";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
+import { OrderReviewPanel } from "@/components/order-review-panel";
 import { IPaidButton } from "./i-paid-button";
 import { CancelOrderButton } from "./cancel-button";
 
@@ -48,7 +49,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const order = await db.order.findFirst({
     where: { id: params.id, userId: session.user.id },
     include: {
-      items: true,
+      items: { include: { product: { select: { slug: true } } } },
       address: true,
       invoice: true,
       vehicle: true,
@@ -57,6 +58,29 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     },
   });
   if (!order) notFound();
+
+  let reviewItems: { productId: string; productSlug: string; productName: string; existingRating?: number; existingBody?: string | null }[] = [];
+  if (order.status === "DELIVERED") {
+    const productIds = Array.from(new Set(order.items.map((i) => i.productId)));
+    const existing = await db.review.findMany({
+      where: { userId: session.user.id, productId: { in: productIds } },
+      select: { productId: true, rating: true, body: true },
+    });
+    const byProduct = new Map(existing.map((r) => [r.productId, r]));
+    const seen = new Set<string>();
+    for (const item of order.items) {
+      if (seen.has(item.productId)) continue;
+      seen.add(item.productId);
+      const ex = byProduct.get(item.productId);
+      reviewItems.push({
+        productId: item.productId,
+        productSlug: item.product.slug,
+        productName: item.nameSnapshot,
+        existingRating: ex?.rating,
+        existingBody: ex?.body ?? null,
+      });
+    }
+  }
 
   const showBank = order.status === "AWAITING_PAYMENT" || order.status === "PAYMENT_REVIEW";
   const cancelled = order.status === "CANCELLED";
@@ -175,6 +199,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               ))}
             </ul>
           </section>
+
+          {reviewItems.length > 0 && <OrderReviewPanel items={reviewItems} />}
 
           {order.address && (
             <section className="rounded-2xl border bg-card p-5 text-sm">

@@ -3,10 +3,13 @@ import { ArrowRight, Heart, Package, ShoppingBag, ShoppingCart } from "lucide-re
 
 import { db } from "@/lib/db";
 import { requireCustomer } from "@/lib/session";
+import { listUnreviewedDeliveredProducts } from "@/lib/reviews";
+import { getDismissedProductIds } from "@/app/(customer)/reviews/actions";
 import { formatNaira } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/status-pill";
 import { ClickableTr } from "@/components/clickable-row";
+import { ReviewPromptDialog } from "@/components/review-prompt-dialog";
 
 export default async function CustomerDashboard() {
   const session = await requireCustomer();
@@ -44,8 +47,22 @@ export default async function CustomerDashboard() {
   const cartItemCount = cartLines.reduce((sum, l) => sum + l.totalPieces, 0);
   const cartSubtotalKobo = cartLines.reduce((sum, l) => sum + l.lineKobo, 0);
 
+  const pendingReviews = await listUnreviewedDeliveredProducts(userId);
+  const dismissed = getDismissedProductIds();
+  const promptItems = pendingReviews
+    .filter((p) => !dismissed.has(p.productId))
+    .slice(0, 5)
+    .map((p) => ({
+      productId: p.productId,
+      productSlug: p.productSlug,
+      productName: p.productName,
+      productImage: p.productImage,
+      orderNumber: p.orderNumber,
+    }));
+
   return (
     <div className="space-y-8">
+      <ReviewPromptDialog pending={promptItems} />
       <header className="rounded-2xl border bg-card p-6 md:p-8">
         <span className="text-xs font-semibold uppercase tracking-wider text-primary">
           Welcome back

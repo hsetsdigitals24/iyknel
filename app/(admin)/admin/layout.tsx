@@ -20,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="border-b">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <BrandLogo size="sm" href="/admin" />
+            <BrandLogo size="sm" href="/" />
             <span className="text-sm text-muted-foreground">/ back office</span>
           </div>
           <UserMenu />

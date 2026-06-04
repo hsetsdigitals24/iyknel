@@ -41,6 +41,7 @@ model User {
   auditLogs     AuditLog[]    @relation("AuditActor")
   accounts      Account[]
   sessions      Session[]
+  reviews       Review[]
 }
 
 model Account {
@@ -149,8 +150,27 @@ model Product {
   wishlistItems WishlistItem[]
   orderItems    OrderItem[]
   movements     StockMovement[]
+  reviews       Review[]
 
   @@index([categoryId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int
+  body      String?
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId, createdAt])
+  @@index([productId, published])
 }
 
 // ---------- Cart / Wishlist ----------
