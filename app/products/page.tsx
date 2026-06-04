@@ -27,19 +27,25 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
   const inStockOnly = searchParams.inStock === "1";
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1);
 
+  const filters: Prisma.ProductWhereInput[] = [];
+  if (q) {
+    filters.push({
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { sku: { contains: q, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (inStockOnly) {
+    filters.push({
+      OR: [{ stockCartons: { gt: 0 } }, { stockLoosePieces: { gt: 0 } }],
+    });
+  }
   const where: Prisma.ProductWhereInput = {
     active: true,
-    ...(q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } },
-            { sku: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : {}),
     ...(categorySlug ? { category: { slug: categorySlug } } : {}),
-    ...(inStockOnly ? { stock: { gt: 0 } } : {}),
+    ...(filters.length ? { AND: filters } : {}),
   };
 
   const [categories, products, total] = await Promise.all([
