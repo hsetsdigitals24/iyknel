@@ -20,6 +20,7 @@ import {
   updateVehicleFormAction,
 } from "./actions";
 import { ConfirmDeleteButton } from "./row-controls";
+import { CostCell } from "./cost-cell";
 
 export default async function LogisticsPage() {
   const [vehicles, bands, costs] = await Promise.all([
@@ -286,19 +287,12 @@ export default async function LogisticsPage() {
                     const kobo = costMap.get(`${v.id}__${b.id}`) ?? 0;
                     return (
                       <td key={v.id} className="px-2 py-2 text-right">
-                        <form action={updateCostAction} className="inline">
-                          <input type="hidden" name="vehicleId" value={v.id} />
-                          <input type="hidden" name="distanceBandId" value={b.id} />
-                          <input
-                            type="number"
-                            name="costNaira"
-                            step="0.01"
-                            min={0}
-                            defaultValue={(kobo / 100).toFixed(2)}
-                            onBlur={undefined}
-                            className="h-8 w-28 rounded border border-input bg-transparent px-2 text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
-                          />
-                        </form>
+                        <CostCell
+                          vehicleId={v.id}
+                          distanceBandId={b.id}
+                          defaultValue={(kobo / 100).toFixed(2)}
+                          action={updateCostAction}
+                        />
                       </td>
                     );
                   })}

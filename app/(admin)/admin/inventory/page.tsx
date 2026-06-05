@@ -16,25 +16,48 @@ import { ClickableRow } from "@/components/clickable-row";
 
 const REASONS: StockReason[] = ["RESTOCK", "BULK_UPLOAD", "ORDER", "ADJUSTMENT", "RETURN"];
 
+const PAGE_SIZE = 50;
+
+function buildHref(reason: string | undefined, sku: string, page: number) {
+  const params = new URLSearchParams();
+  if (reason) params.set("reason", reason);
+  if (sku) params.set("sku", sku);
+  if (page > 1) params.set("page", String(page));
+  const s = params.toString();
+  return s ? `/admin/inventory?${s}` : "/admin/inventory";
+}
+
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: { sku?: string; reason?: string };
+  searchParams: { sku?: string; reason?: string; page?: string };
 }) {
   const sku = searchParams.sku?.trim() ?? "";
   const reason = (searchParams.reason as StockReason | undefined) ?? undefined;
+  const pageParam = Number.parseInt(searchParams.page ?? "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  const movements = await db.stockMovement.findMany({
-    where: {
-      ...(reason ? { reason } : {}),
-      ...(sku
-        ? { product: { sku: { contains: sku, mode: "insensitive" } } }
-        : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: { product: true, order: true },
-  });
+  const where = {
+    ...(reason ? { reason } : {}),
+    ...(sku
+      ? { product: { sku: { contains: sku, mode: "insensitive" as const } } }
+      : {}),
+  };
+
+  const [movements, total] = await db.$transaction([
+    db.stockMovement.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      include: { product: true, order: true },
+    }),
+    db.stockMovement.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = (page - 1) * PAGE_SIZE + movements.length;
 
   return (
     <div className="space-y-6">
@@ -138,6 +161,37 @@ export default async function InventoryPage({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {total === 0
+            ? "No results"
+            : `Showing ${rangeStart}–${rangeEnd} of ${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {page > 1 ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(reason, sku, page - 1)}>Previous</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+          )}
+          <span className="tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(reason, sku, page + 1)}>Next</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

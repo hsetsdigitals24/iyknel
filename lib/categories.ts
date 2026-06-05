@@ -32,21 +32,30 @@ export type CategoryListRow = {
 };
 
 export async function listCategoriesWithCounts(
-  q?: string,
-): Promise<CategoryListRow[]> {
-  const cats = await db.category.findMany({
-    where: q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { slug: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    include: { _count: { select: { products: true } } },
-  });
-  return cats.map((c) => ({
+  opts: { q?: string; skip?: number; take?: number } = {},
+): Promise<{ rows: CategoryListRow[]; total: number }> {
+  const { q, skip, take } = opts;
+  const where = q
+    ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" as const } },
+          { slug: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : undefined;
+
+  const [cats, total] = await db.$transaction([
+    db.category.findMany({
+      where,
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      include: { _count: { select: { products: true } } },
+      skip,
+      take,
+    }),
+    db.category.count({ where }),
+  ]);
+
+  const rows = cats.map((c) => ({
     id: c.id,
     slug: c.slug,
     name: c.name,
@@ -55,6 +64,7 @@ export async function listCategoriesWithCounts(
     active: c.active,
     productCount: c._count.products,
   }));
+  return { rows, total };
 }
 
 export async function createCategory(input: CategoryInput, file?: File | null) {

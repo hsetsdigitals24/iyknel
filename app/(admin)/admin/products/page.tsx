@@ -15,25 +15,48 @@ import {
 import { ClickableRow } from "@/components/clickable-row";
 import { deleteProductAction } from "./actions";
 
+const PAGE_SIZE = 50;
+
+function buildHref(q: string, page: number) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (page > 1) params.set("page", String(page));
+  const s = params.toString();
+  return s ? `/admin/products?${s}` : "/admin/products";
+}
+
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: { q?: string; page?: string };
 }) {
   const q = searchParams.q?.trim() ?? "";
-  const products = await db.product.findMany({
-    where: q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { sku: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
-    orderBy: { updatedAt: "desc" },
-    include: { category: true },
-    take: 100,
-  });
+  const pageParam = Number.parseInt(searchParams.page ?? "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
+  const where = q
+    ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" as const } },
+          { sku: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : undefined;
+
+  const [products, total] = await db.$transaction([
+    db.product.findMany({
+      where,
+      orderBy: { updatedAt: "desc" },
+      include: { category: true },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    db.product.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = (page - 1) * PAGE_SIZE + products.length;
 
   return (
     <div className="space-y-6">
@@ -133,6 +156,37 @@ export default async function AdminProductsPage({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {total === 0
+            ? "No results"
+            : `Showing ${rangeStart}–${rangeEnd} of ${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {page > 1 ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(q, page - 1)}>Previous</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+          )}
+          <span className="tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(q, page + 1)}>Next</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

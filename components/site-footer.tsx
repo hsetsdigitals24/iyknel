@@ -113,6 +113,17 @@ export function SiteFooter() {
       <div className="border-t">
         <div className="container flex flex-col items-start justify-between gap-2 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} Iyknel. Wholesale FMCG · B2B only.</span>
+          <span>
+            Developed by{" "}
+            <a
+              href="https://h-sets.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline-offset-2 hover:text-foreground hover:underline"
+            >
+              H-Sets
+            </a>
+          </span>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Link href="/about" className="hover:text-foreground">
               About

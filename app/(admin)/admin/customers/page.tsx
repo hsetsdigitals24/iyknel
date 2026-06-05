@@ -12,32 +12,55 @@ import {
 } from "@/components/ui/table";
 import { ClickableRow } from "@/components/clickable-row";
 
+const PAGE_SIZE = 50;
+
+function buildHref(q: string, page: number) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (page > 1) params.set("page", String(page));
+  const s = params.toString();
+  return s ? `/admin/customers?${s}` : "/admin/customers";
+}
+
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: { q?: string; page?: string };
 }) {
   const q = searchParams.q?.trim() ?? "";
-  const customers = await db.user.findMany({
-    where: {
-      role: "CUSTOMER",
-      ...(q
-        ? {
-            OR: [
-              { email: { contains: q, mode: "insensitive" } },
-              { business: { name: { contains: q, mode: "insensitive" } } },
-              { business: { contactName: { contains: q, mode: "insensitive" } } },
-            ],
-          }
-        : {}),
-    },
-    include: {
-      business: true,
-      _count: { select: { orders: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const pageParam = Number.parseInt(searchParams.page ?? "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
+  const where = {
+    role: "CUSTOMER" as const,
+    ...(q
+      ? {
+          OR: [
+            { email: { contains: q, mode: "insensitive" as const } },
+            { business: { name: { contains: q, mode: "insensitive" as const } } },
+            { business: { contactName: { contains: q, mode: "insensitive" as const } } },
+          ],
+        }
+      : {}),
+  };
+
+  const [customers, total] = await db.$transaction([
+    db.user.findMany({
+      where,
+      include: {
+        business: true,
+        _count: { select: { orders: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    db.user.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = (page - 1) * PAGE_SIZE + customers.length;
 
   return (
     <div className="space-y-6">
@@ -115,6 +138,37 @@ export default async function CustomersPage({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {total === 0
+            ? "No results"
+            : `Showing ${rangeStart}–${rangeEnd} of ${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {page > 1 ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(q, page - 1)}>Previous</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+          )}
+          <span className="tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(q, page + 1)}>Next</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

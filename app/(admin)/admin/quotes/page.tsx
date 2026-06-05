@@ -16,33 +16,47 @@ import {
 
 const STATUSES: QuoteStatus[] = ["PENDING", "RESPONDED", "CLOSED"];
 
+const PAGE_SIZE = 50;
+
 export default async function AdminQuotesPage({
   searchParams,
 }: {
-  searchParams: { status?: string; q?: string };
+  searchParams: { status?: string; q?: string; page?: string };
 }) {
   const q = searchParams.q?.trim() ?? "";
   const statusParam = searchParams.status?.toUpperCase();
   const status = (STATUSES as string[]).includes(statusParam ?? "")
     ? (statusParam as QuoteStatus)
     : undefined;
+  const pageParam = Number.parseInt(searchParams.page ?? "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  const quotes = await db.quoteRequest.findMany({
-    where: {
-      ...(status ? { status } : {}),
-      ...(q
-        ? {
-            OR: [
-              { businessName: { contains: q, mode: "insensitive" } },
-              { contactName: { contains: q, mode: "insensitive" } },
-              { email: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    take: 100,
-  });
+  const where = {
+    ...(status ? { status } : {}),
+    ...(q
+      ? {
+          OR: [
+            { businessName: { contains: q, mode: "insensitive" as const } },
+            { contactName: { contains: q, mode: "insensitive" as const } },
+            { email: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+
+  const [quotes, total] = await db.$transaction([
+    db.quoteRequest.findMany({
+      where,
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    db.quoteRequest.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = (page - 1) * PAGE_SIZE + quotes.length;
 
   return (
     <div className="space-y-6">
@@ -131,14 +145,46 @@ export default async function AdminQuotesPage({
           </TableBody>
         </Table>
       </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {total === 0
+            ? "No results"
+            : `Showing ${rangeStart}–${rangeEnd} of ${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {page > 1 ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={qsHref({ status, q, page: page - 1 })}>Previous</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+          )}
+          <span className="tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={qsHref({ status, q, page: page + 1 })}>Next</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function qsHref(params: { status?: QuoteStatus; q?: string }) {
+function qsHref(params: { status?: QuoteStatus; q?: string; page?: number }) {
   const p = new URLSearchParams();
   if (params.status) p.set("status", params.status);
   if (params.q) p.set("q", params.q);
+  if (params.page && params.page > 1) p.set("page", String(params.page));
   const qs = p.toString();
   return `/admin/quotes${qs ? `?${qs}` : ""}`;
 }

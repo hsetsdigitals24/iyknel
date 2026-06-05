@@ -26,34 +26,57 @@ const STATUSES: OrderStatus[] = [
   "CANCELLED",
 ];
 
+const PAGE_SIZE = 50;
+
+function buildHref(status: string | undefined, q: string, page: number) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (q) params.set("q", q);
+  if (page > 1) params.set("page", String(page));
+  const s = params.toString();
+  return s ? `/admin/orders?${s}` : "/admin/orders";
+}
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: { status?: string; q?: string };
+  searchParams: { status?: string; q?: string; page?: string };
 }) {
   const q = searchParams.q?.trim() ?? "";
   const status = (searchParams.status as OrderStatus | undefined) ?? undefined;
+  const pageParam = Number.parseInt(searchParams.page ?? "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  const orders = await db.order.findMany({
-    where: {
-      ...(status ? { status } : {}),
-      ...(q
-        ? {
-            OR: [
-              { number: { contains: q, mode: "insensitive" } },
-              { user: { business: { name: { contains: q, mode: "insensitive" } } } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { submittedAt: "desc" },
-    take: 100,
-    include: {
-      user: { include: { business: true } },
-      distanceBand: true,
-      vehicle: true,
-    },
-  });
+  const where = {
+    ...(status ? { status } : {}),
+    ...(q
+      ? {
+          OR: [
+            { number: { contains: q, mode: "insensitive" as const } },
+            { user: { business: { name: { contains: q, mode: "insensitive" as const } } } },
+          ],
+        }
+      : {}),
+  };
+
+  const [orders, total] = await db.$transaction([
+    db.order.findMany({
+      where,
+      orderBy: { submittedAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      include: {
+        user: { include: { business: true } },
+        distanceBand: true,
+        vehicle: true,
+      },
+    }),
+    db.order.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = (page - 1) * PAGE_SIZE + orders.length;
 
   return (
     <div className="space-y-6">
@@ -152,6 +175,37 @@ export default async function AdminOrdersPage({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {total === 0
+            ? "No results"
+            : `Showing ${rangeStart}–${rangeEnd} of ${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {page > 1 ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(status, q, page - 1)}>Previous</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+          )}
+          <span className="tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildHref(status, q, page + 1)}>Next</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
