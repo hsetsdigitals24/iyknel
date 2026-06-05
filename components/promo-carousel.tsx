@@ -50,7 +50,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
                     {slide.copy}
                   </p>
                   <div className="pt-2">
-                    <Button asChild size="lg" className="rounded-full">
+                    <Button asChild size="lg" className="rounded-full bg-primary text-white hover:bg-primary/90">
                       <Link href={slide.cta.href}>
                         {slide.cta.label}
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -77,10 +77,10 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
 
       <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 md:px-4">
         <div className="pointer-events-auto">
-          <CarouselPrevious className="h-10 w-10" />
+          <CarouselPrevious className="bg-primary text-white h-10 w-10" />
         </div>
         <div className="pointer-events-auto">
-          <CarouselNext className="h-10 w-10" />
+          <CarouselNext className="bg-primary text-white h-10 w-10" />
         </div>
       </div>
 
