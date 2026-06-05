@@ -121,7 +121,7 @@ export function SiteFooter() {
               rel="noopener noreferrer"
               className="underline-offset-2 hover:text-foreground hover:underline"
             >
-              H-Sets
+              H-SETS
             </a>
           </span>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
