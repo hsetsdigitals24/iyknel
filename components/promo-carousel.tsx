@@ -36,17 +36,17 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
         {slides.map((slide, i) => (
           <CarouselItem key={slide.title}>
             <div
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${slide.tint}`}
+              className="relative overflow-hidden rounded-2xl bg-[#1017ff] text-white"
             >
               <div className="grid items-center gap-6 px-6 py-10 md:grid-cols-2 md:px-12 md:py-16">
                 <div className="space-y-4">
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+                  <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
                     {slide.eyebrow}
                   </span>
                   <h2 className="font-serif text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
                     {slide.title}
                   </h2>
-                  <p className="max-w-md text-base text-muted-foreground md:text-lg">
+                  <p className="max-w-md text-base text-white/80 md:text-lg">
                     {slide.copy}
                   </p>
                   <div className="pt-2">
