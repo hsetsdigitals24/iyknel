@@ -142,7 +142,7 @@ export default async function LandingPage() {
 
         {/* Secondary banner */}
         <section className="container pb-16">
-          <div className="grid overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/95 to-primary text-primary-foreground md:grid-cols-2">
+          <div className="grid overflow-hidden rounded-2xl border bg-[#e81c2c] text-primary-foreground md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/80">
                 For wholesalers & retailers
@@ -168,13 +168,13 @@ export default async function LandingPage() {
                 </Button>
               </div>
             </div>
-            <div className="relative aspect-[5/4] md:aspect-auto">
+            <div className="relative md:aspect-auto">
               <Image
-                src="/placeholders/banner.svg"
+                src="/auth.svg"
                 alt="Wholesale warehouse"
                 fill
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className="object-cover"
+                sizes="(min-width: 568px) 10vw, 30vw"
+                className="object-contain"
               />
             </div>
           </div>

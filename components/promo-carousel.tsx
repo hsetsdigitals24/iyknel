@@ -36,7 +36,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
         {slides.map((slide, i) => (
           <CarouselItem key={slide.title}>
             <div
-              className="relative overflow-hidden rounded-2xl bg-[#1017ff] text-white"
+              className="relative overflow-hidden rounded-2xl bg-[#e81c2c] text-white"
             >
               <div className="grid items-center gap-6 px-6 py-10 md:grid-cols-2 md:px-12 md:py-16">
                 <div className="space-y-4">
@@ -50,7 +50,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
                     {slide.copy}
                   </p>
                   <div className="pt-2">
-                    <Button asChild size="lg" className="rounded-full bg-primary text-white hover:bg-primary/90">
+                    <Button asChild size="lg" className="rounded-full bg-[#fff] text-black hover:bg-primary/90">
                       <Link href={slide.cta.href}>
                         {slide.cta.label}
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -77,14 +77,14 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
 
       <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 md:px-4">
         <div className="pointer-events-auto">
-          <CarouselPrevious className="bg-primary text-white h-10 w-10" />
+          <CarouselPrevious className="bg-[#e8d81c] text-black h-10 w-10" />
         </div>
         <div className="pointer-events-auto">
-          <CarouselNext className="bg-primary text-white h-10 w-10" />
+          <CarouselNext className="bg-[#e8d81c] text-black h-10 w-10" />
         </div>
       </div>
 
-      <CarouselDots className="mt-4" />
+      <CarouselDots className="mt-4 " />
     </Carousel>
   );
 }

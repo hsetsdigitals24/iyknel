@@ -198,7 +198,7 @@ export function CarouselDots({ className }: { className?: string }) {
           onClick={() => scrollTo(i)}
           className={cn(
             "h-1.5 rounded-full transition-all",
-            i === selectedIndex ? "w-6 bg-primary" : "w-1.5 bg-foreground/30 hover:bg-foreground/50",
+            i === selectedIndex ? "w-6 bg-[#e81c2c]" : "w-1.5 bg-foreground/30 hover:bg-foreground/50",
           )}
         />
       ))}
