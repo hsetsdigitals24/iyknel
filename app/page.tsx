@@ -147,7 +147,7 @@ export default async function LandingPage() {
               <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
                 For wholesalers & retailers
               </span>
-              <h3 className="font-serif text-3xl font-semibold leading-tight md:text-5xl">
+              <h3 className="font-serif text-3xl font-semibold leading-tight md:text-5xl text-[#002bd0]">
                 Open a wholesale account in minutes.
               </h3>
               <p className="max-w-md text-white/85">
