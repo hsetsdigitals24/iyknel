@@ -142,27 +142,27 @@ export default async function LandingPage() {
 
         {/* Secondary banner */}
         <section className="container pb-16">
-          <div className="grid overflow-hidden rounded-2xl border bg-[#ffc300] text-white md:grid-cols-2">
+          <div className="grid overflow-hidden rounded-2xl border bg-[#002bd0] text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
                 For wholesalers & retailers
               </span>
-              <h3 className="font-serif text-3xl font-semibold leading-tight md:text-5xl text-[#002bd0]">
-                Open a wholesale account in minutes.
+              <h3 className="font-serif text-3xl font-semibold leading-tight md:text-5xl text-white">
+                Open a wholesale account in minutes. 
               </h3>
               <p className="max-w-md text-white/85">
                 Submit your business details, get verified, and start placing bulk orders. Invoices,
                 logistics and delivery — all handled.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button asChild size="lg" variant="secondary" className="rounded-full bg-[#002bd0] text-white hover:bg-[#002bd0]/90">
+                <Button asChild size="lg" variant="secondary" className="rounded-full bg-[#ffc300] text-white hover:bg-[#002bd0]/90">
                   <Link href="/register">Open an account</Link>
                 </Button>
                 <Button
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-[#002bd0]/40 bg-white text-[#002bd0] hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="rounded-full bg-white text-[#002bd0] hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 >
                   <Link href="/products">Browse catalog</Link>
                 </Button>
