@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { BadgeCheck, Banknote, Truck } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
@@ -7,14 +6,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-12 text-primary-foreground md:flex">
-        <Image
-          src="/placeholders/banner.svg"
-          alt=""
-          fill
-          sizes="50vw"
-          className="object-cover opacity-25"
-          priority
-        />
         <div className="relative z-10">
           <div className="inline-flex items-center rounded-lg bg-background px-3 py-2 shadow-sm">
             <BrandLogo size="lg" priority />

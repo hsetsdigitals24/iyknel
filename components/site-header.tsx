@@ -34,7 +34,7 @@ export async function SiteHeader() {
               type="search"
               name="q"
               placeholder="Search products, brands, categories…"
-              className="h-10 w-full rounded-full border border-input bg-secondary/40 pl-10 pr-4 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="h-10 w-full rounded-full border border-input bg-transparent pl-10 pr-4 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
         </form>
@@ -86,7 +86,7 @@ export async function SiteHeader() {
               type="search"
               name="q"
               placeholder="Search products…"
-              className="h-10 w-full rounded-full border border-input bg-secondary/40 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-10 w-full rounded-full border border-input bg-transparent pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
         </form>

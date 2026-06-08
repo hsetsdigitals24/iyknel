@@ -142,15 +142,15 @@ export default async function LandingPage() {
 
         {/* Secondary banner */}
         <section className="container pb-16">
-          <div className="grid overflow-hidden rounded-2xl border bg-[#e81c2c] text-primary-foreground md:grid-cols-2">
+          <div className="grid overflow-hidden rounded-2xl border bg-[#ffc300] text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/80">
+              <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
                 For wholesalers & retailers
               </span>
               <h3 className="font-serif text-3xl font-semibold leading-tight md:text-5xl">
                 Open a wholesale account in minutes.
               </h3>
-              <p className="max-w-md text-primary-foreground/85">
+              <p className="max-w-md text-white/85">
                 Submit your business details, get verified, and start placing bulk orders. Invoices,
                 logistics and delivery — all handled.
               </p>
@@ -162,7 +162,7 @@ export default async function LandingPage() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="rounded-full border-white/40 bg-transparent text-white hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 >
                   <Link href="/products">Browse catalog</Link>
                 </Button>

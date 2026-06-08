@@ -36,7 +36,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
         {slides.map((slide, i) => (
           <CarouselItem key={slide.title}>
             <div
-              className="relative overflow-hidden rounded-2xl bg-[#e81c2c] text-white"
+              className="relative overflow-hidden rounded-2xl bg-[#002bd0] text-white"
             >
               <div className="grid items-center gap-6 px-6 py-10 md:grid-cols-2 md:px-12 md:py-16">
                 <div className="space-y-4">
