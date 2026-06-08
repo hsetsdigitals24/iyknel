@@ -162,7 +162,7 @@ export default async function LandingPage() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-white/40 bg-transparent text-white hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="rounded-full border-white/40 bg-[#002bd0] text-white hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 >
                   <Link href="/products">Browse catalog</Link>
                 </Button>
