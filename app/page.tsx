@@ -155,14 +155,14 @@ export default async function LandingPage() {
                 logistics and delivery — all handled.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button asChild size="lg" variant="secondary" className="rounded-full">
+                <Button asChild size="lg" variant="secondary" className="rounded-full bg-[#002bd0] text-white hover:bg-[#002bd0]/90">
                   <Link href="/register">Open an account</Link>
                 </Button>
                 <Button
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-white/40 bg-[#002bd0] text-white hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="rounded-full border-[#002bd0]/40 bg-white text-[#002bd0] hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 >
                   <Link href="/products">Browse catalog</Link>
                 </Button>
