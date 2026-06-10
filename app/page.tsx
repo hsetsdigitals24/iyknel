@@ -156,7 +156,7 @@ export default async function LandingPage() {
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button asChild size="lg" variant="secondary" className="rounded-full bg-[#ffc300] text-white hover:bg-[#002bd0]/90">
-                  <Link href="/register">Open an account</Link>
+                  <Link href="/register" className="text-black">Open an account</Link>
                 </Button>
                 <Button
                   asChild

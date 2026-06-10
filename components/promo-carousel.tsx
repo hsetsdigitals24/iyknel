@@ -76,10 +76,10 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
       </CarouselContent>
 
       <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 md:px-4">
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto hidden md:block">
           <CarouselPrevious className="bg-[#ffc300] text-black h-10 w-10" />
         </div>
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto hidden md:block">
           <CarouselNext className="bg-[#ffc300] text-black h-10 w-10" />
         </div>
       </div>
