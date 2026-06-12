@@ -13,6 +13,7 @@ import { PromoCarousel } from "@/components/promo-carousel";
 import { CategoryTile } from "@/components/category-tile";
 import { FeaturedProductsCarousel } from "@/components/featured-products-carousel";
 import { WhyIyknel } from "@/components/why-iyknel";
+import { TrustedPartners } from "@/components/trusted-partners";
 
 type FeaturedProduct = {
   id: string;
@@ -208,8 +209,12 @@ export default async function LandingPage() {
           </section>
         ))}
 
-        <WhyIyknel />
-  
+        {/* Trusted partners */}
+        <TrustedPartners />
+        <br/>
+        <WhyIyknel /> 
+        <br />
+        <br />
         {/* Secondary banner */}
         <section className="container pb-16">
           <div className="grid overflow-hidden rounded-2xl border bg-primary text-white md:grid-cols-2">

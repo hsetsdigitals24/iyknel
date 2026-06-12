@@ -5,6 +5,7 @@ import { Award, Handshake, Mail, MapPin, Phone, ShieldCheck, Sparkles } from "lu
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { TrustedPartners } from "@/components/trusted-partners";
 import { getContact } from "@/lib/contact";
 
 export const metadata: Metadata = {
@@ -227,6 +228,9 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* Trusted partners */}
+        <TrustedPartners />
 
         {/* CTA band */}
         <section className="container pb-16">

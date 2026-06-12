@@ -25,7 +25,7 @@ const POINTS = [
 
 export function WhyIyknel() {
   return (
-    <section className="container py-12">
+    <section className="container py-12 bg-surface-muted mb-4">
       <header className="mb-8 max-w-2xl">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
           Why Iyknel
