@@ -3,9 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 
 let cached: S3Client | null = null;
@@ -35,14 +33,23 @@ function extFor(contentType: string) {
   return "bin";
 }
 
-// R2 / S3 SigV4 caps presigned URLs at 7 days. We use 1 hour for browse-time
-// URLs (page renders) and the full 7 days for URLs we embed in emails.
+// Files are served via R2 public access (R2_PUBLIC_BASE_URL — a pub-*.r2.dev URL
+// or a custom domain bound to the bucket). Public URLs never expire, unlike
+// SigV4 presigned URLs which R2/S3 caps at 7 days. These constants are retained
+// for the (now no-op) `expiresIn` option some callers still pass.
 const ONE_HOUR_SECONDS = 60 * 60;
 const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
 export const SIGNED_URL_EXPIRY = {
   short: ONE_HOUR_SECONDS,
   email: SEVEN_DAYS_SECONDS,
 } as const;
+
+/** Builds a non-expiring public URL for an object key. */
+function publicUrl(key: string): string {
+  const base = process.env.R2_PUBLIC_BASE_URL;
+  if (!base) throw new Error("R2_PUBLIC_BASE_URL not set");
+  return `${base.replace(/\/$/, "")}/${key}`;
+}
 
 /** Uploads to R2 under products/<uuid>.<ext> and returns the object key. */
 export async function uploadProductImage(file: File): Promise<string> {
@@ -95,18 +102,20 @@ export async function uploadCategoryImage(file: File): Promise<string> {
 }
 
 /** Uploads the invoice PDF and returns the object key. */
-export async function uploadInvoicePdf(orderNumber: string, buf: Buffer): Promise<string> {
+export async function uploadInvoicePdf(buf: Buffer): Promise<string> {
   const bucket = process.env.R2_BUCKET;
   if (!bucket) throw new Error("R2_BUCKET not set");
 
-  const key = `invoices/${orderNumber}.pdf`;
+  // Unguessable key: invoices contain customer PII and are served via public
+  // URLs, so we must not key them on the (enumerable) order number.
+  const key = `invoices/${randomUUID()}.pdf`;
   await client().send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: buf,
       ContentType: "application/pdf",
-      CacheControl: "private, max-age=0, must-revalidate",
+      CacheControl: "public, max-age=31536000, immutable",
     }),
   );
   return key;
@@ -128,12 +137,14 @@ function extractKeyFromLegacyUrl(value: string): string | null {
 }
 
 /**
- * Returns a presigned URL for the given object key. If `key` is already a full
- * URL (e.g. Unsplash seed images, legacy public URLs), it is returned unchanged.
+ * Returns a non-expiring public URL for the given object key. If `key` is
+ * already a full URL (e.g. Unsplash seed images, legacy public URLs), it is
+ * returned unchanged. The `expiresIn` option is accepted for backwards
+ * compatibility but ignored — public URLs do not expire.
  */
 export async function getSignedFileUrl(
   key: string,
-  opts?: { expiresIn?: number },
+  _opts?: { expiresIn?: number },
 ): Promise<string> {
   if (looksLikeUrl(key)) {
     // source.unsplash.com is deprecated and no longer resolves. Old seed rows
@@ -142,13 +153,7 @@ export async function getSignedFileUrl(
     if (key.includes("source.unsplash.com")) return "/placeholders/product.svg";
     return key;
   }
-  const bucket = process.env.R2_BUCKET;
-  if (!bucket) throw new Error("R2_BUCKET not set");
-  return getSignedUrl(
-    client(),
-    new GetObjectCommand({ Bucket: bucket, Key: key }),
-    { expiresIn: opts?.expiresIn ?? SIGNED_URL_EXPIRY.short },
-  );
+  return publicUrl(key);
 }
 
 export async function resolveImage(

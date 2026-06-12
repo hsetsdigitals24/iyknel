@@ -34,8 +34,16 @@ export async function SiteHeader() {
               type="search"
               name="q"
               placeholder="Search products, brands, categories…"
-              className="h-10 w-full rounded-full border border-input bg-transparent pl-10 pr-4 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="h-10 w-full rounded-full border border-input bg-transparent pl-10 pr-24 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="absolute right-1 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden lg:inline">Search</span>
+            </button>
           </div>
         </form>
 

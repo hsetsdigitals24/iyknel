@@ -68,7 +68,7 @@ export default async function CustomerDashboard() {
           Welcome back
         </span>
         <h1 className="mt-1 font-serif text-3xl font-semibold tracking-tight md:text-4xl">
-          {business?.name ?? "Your business"}
+          {business?.name ?? "Iyknel Ventures Ltd"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {business?.contactName ? `Hi ${business.contactName}, ` : ""}here&apos;s a quick look at

@@ -49,6 +49,10 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
         "surface-muted": "hsl(var(--surface-muted))",
+        "brand-soft": {
+          DEFAULT: "hsl(var(--brand-soft))",
+          foreground: "hsl(var(--brand-soft-foreground))",
+        },
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",

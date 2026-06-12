@@ -70,6 +70,16 @@ export function SiteFooter() {
                 My orders
               </Link>
             </li>
+             <li>
+              <Link href="/about" className="text-muted-foreground hover:text-foreground">
+                 About us
+              </Link>
+            </li>
+             <li>
+              <Link href="/contact" className="text-muted-foreground hover:text-foreground">
+                 Contact us
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -116,7 +126,7 @@ export function SiteFooter() {
           <span>
             Developed by{" "}
             <a
-              href="https://h-sets.com/"
+              href="https://h-sets.com"
               target="_blank"
               rel="noopener noreferrer"
               className="underline-offset-2 hover:text-foreground hover:underline"
@@ -125,12 +135,8 @@ export function SiteFooter() {
             </a>
           </span>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Link href="/about" className="hover:text-foreground">
-              About
-            </Link>
-            <Link href="/contact" className="hover:text-foreground">
-              Contact
-            </Link>
+           
+          
             <Link href="/privacy" className="hover:text-foreground">
               Privacy
             </Link>

@@ -4,7 +4,7 @@ const POINTS = [
   {
     icon: BadgeCheck,
     title: "B2B accounts only",
-    body: "Every buyer is a verified Nigerian business — RC-registered and address-checked.",
+    body: "Every buyer is a Nigerian business.",
   },
   {
     icon: Truck,
@@ -37,7 +37,9 @@ export function WhyIyknel() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {POINTS.map((p) => (
           <div key={p.title} className="rounded-xl border bg-card p-5">
-            <p.icon className="h-6 w-6 text-primary" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                {p.icon && <p.icon className="h-6 w-6 text-primary" />}
+              </div>
             <h3 className="mt-3 font-serif text-lg font-semibold">{p.title}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{p.body}</p>
           </div>

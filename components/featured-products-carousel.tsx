@@ -1,5 +1,7 @@
 "use client";
 
+import Autoplay from "embla-carousel-autoplay";
+
 import {
   Carousel,
   CarouselContent,
@@ -24,7 +26,13 @@ type FeaturedProduct = {
 export function FeaturedProductsCarousel({ products }: { products: FeaturedProduct[] }) {
   if (products.length === 0) return null;
   return (
-    <Carousel opts={{ align: "start", slidesToScroll: 1 }} className="relative">
+    <Carousel
+      opts={{ align: "start", slidesToScroll: 1, loop: true }}
+      plugins={[
+        Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true }),
+      ]}
+      className="relative"
+    >
       <CarouselContent>
         {products.map((p) => (
           <CarouselItem
@@ -45,7 +53,7 @@ export function FeaturedProductsCarousel({ products }: { products: FeaturedProdu
           </CarouselItem>
         ))}
       </CarouselContent>
-      <div className="absolute -top-14 right-0 flex items-center gap-2">
+      <div className="absolute -bottom-14 right-0 flex items-center gap-2">
         <CarouselPrevious className="static h-9 w-9 translate-y-0" />
         <CarouselNext className="static h-9 w-9 translate-y-0" />
       </div>

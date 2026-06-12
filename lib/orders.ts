@@ -10,7 +10,7 @@ import {
 } from "@/lib/mail";
 import { formatNaira } from "@/lib/utils";
 import { pickVehicleForWeight, logisticsCostKobo } from "@/lib/logistics";
-import { uploadInvoicePdf, getSignedFileUrl, SIGNED_URL_EXPIRY } from "@/lib/r2";
+import { uploadInvoicePdf, getSignedFileUrl, SIGNED_URL_EXPIRY, deleteFile } from "@/lib/r2";
 import { renderInvoiceToBuffer } from "@/lib/invoice/render";
 import { logError } from "@/lib/errors";
 import {
@@ -258,7 +258,8 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
     tripCount,
     bank: bankFromEnv(),
   });
-  const pdfKey = await uploadInvoicePdf(order.number, buf);
+  const previousPdfKey = order.invoice?.pdfKey ?? null;
+  const pdfKey = await uploadInvoicePdf(buf);
 
   const updated = await db.$transaction(async (tx) => {
     const ord = await tx.order.update({
@@ -306,6 +307,11 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
     });
     return ord;
   });
+
+  // Re-issuing writes a fresh UUID key; remove the orphaned old PDF.
+  if (previousPdfKey && previousPdfKey !== pdfKey) {
+    await deleteFile(previousPdfKey).catch((e) => logError("orders.deleteOldInvoice", e));
+  }
 
   const recipient = await loadOrderRecipient(order.userId);
   const emailPdfUrl = await getSignedFileUrl(pdfKey, {

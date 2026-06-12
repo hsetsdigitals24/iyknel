@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeCheck, Banknote, Truck } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { resolveImage } from "@/lib/r2";
@@ -14,6 +13,49 @@ import { PromoCarousel } from "@/components/promo-carousel";
 import { CategoryTile } from "@/components/category-tile";
 import { FeaturedProductsCarousel } from "@/components/featured-products-carousel";
 import { WhyIyknel } from "@/components/why-iyknel";
+
+type FeaturedProduct = {
+  id: string;
+  slug: string;
+  name: string;
+  priceKobo: number;
+  image?: string;
+  category?: string | null;
+  stock?: number;
+  badge?: "deal" | "new" | "bestseller" | null;
+  wishlisted?: boolean;
+};
+
+type ProductRow = {
+  id: string;
+  slug: string;
+  name: string;
+  priceKobo: number;
+  images: string[];
+  stockCartons: number;
+  unitsPerCarton: number | null;
+  stockLoosePieces: number;
+  category?: { name: string } | null;
+};
+
+function mapProduct(
+  p: ProductRow,
+  image: string | null,
+  savedIds: Set<string>,
+  badge: FeaturedProduct["badge"] = null,
+): FeaturedProduct {
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    priceKobo: p.priceKobo,
+    image: image ?? undefined,
+    category: p.category?.name ?? null,
+    stock: p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces,
+    badge,
+    wishlisted: savedIds.has(p.id),
+  };
+}
 
 export default async function LandingPage() {
   const [categories, products, slides] = await Promise.all([
@@ -35,37 +77,58 @@ export default async function LandingPage() {
   const savedIds = session?.user?.id
     ? await getWishlistProductIds(session.user.id)
     : new Set<string>();
+
   const featuredImages = await Promise.all(products.map((p) => resolveImage(p.images[0])));
-  const featured = products.map((p, i) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    priceKobo: p.priceKobo,
-    image: featuredImages[i] ?? undefined,
-    category: p.category?.name ?? null,
-    stock: p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces,
-    badge:
+  const featured = products.map((p, i) =>
+    mapProduct(
+      p,
+      featuredImages[i] ?? null,
+      savedIds,
       i % 7 === 0
-        ? ("deal" as const)
+        ? "deal"
         : i % 5 === 0
-        ? ("bestseller" as const)
+        ? "bestseller"
         : i % 11 === 0
-        ? ("new" as const)
+        ? "new"
         : null,
-    wishlisted: savedIds.has(p.id),
-  }));
+    ),
+  );
+
+  // Per-category product rows (top categories with at least one active product).
+  // Queried sequentially: the pooled DB connection limit is 1, so a parallel
+  // fan-out here exhausts the pool and times out.
+  const categorySections: {
+    id: string;
+    name: string;
+    slug: string;
+    products: FeaturedProduct[];
+  }[] = [];
+  for (const cat of categories.slice(0, 6)) {
+    const prods = await db.product.findMany({
+      where: { active: true, categoryId: cat.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { category: { select: { name: true } } },
+    });
+    if (prods.length === 0) continue;
+    const images = await Promise.all(prods.map((p) => resolveImage(p.images[0])));
+    categorySections.push({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      products: prods.map((p, i) => mapProduct(p, images[i] ?? null, savedIds)),
+    });
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Hero promo carousel */}
+        {/* Hero — contained carousel with background image + dark overlay */}
         <section className="container pt-6 md:pt-8">
           <PromoCarousel slides={slides} />
-        </section>
-
-        <WhyIyknel />
+        </section> 
 
         {/* Category tiles */}
         <section className="container py-12 md:py-16">
@@ -119,30 +182,37 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Trust band */}
-        <section className="container py-12 md:py-14">
-          <div className="grid gap-6 md:grid-cols-3">
-            <TrustItem
-              icon={<Banknote className="h-6 w-6 text-primary" />}
-              title="Bank-transfer checkout"
-              body="No payment gateways. Pay by transfer to your invoice — the back office verifies and clears."
-            />
-            <TrustItem
-              icon={<Truck className="h-6 w-6 text-primary" />}
-              title="Logistics computed"
-              body="Vehicle and price are auto-selected from your order weight and delivery distance. No surprises."
-            />
-            <TrustItem
-              icon={<BadgeCheck className="h-6 w-6 text-primary" />}
-              title="Verified businesses"
-              body="B2B only. Sign up with your business name, RC number and delivery address."
-            />
-          </div>
-        </section>
+        {/* Per-category product rows */}
+        {categorySections.map((section, i) => (
+          <section
+            key={section.id}
+            className={i % 2 === 1 ? "bg-surface-muted" : undefined}
+          >
+            <div className="container py-12 md:py-16">
+              <div className="mb-10 flex items-end justify-between">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    Shop {section.name}
+                  </span>
+                  <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight md:text-3xl">
+                    {section.name}
+                  </h2>
+                </div>
+                <Button asChild variant="outline" className="rounded-full">
+                  <Link href={`/products?category=${section.slug}`}>View more</Link>
+                </Button>
+              </div>
 
+              <FeaturedProductsCarousel products={section.products} />
+            </div>
+          </section>
+        ))}
+
+        <WhyIyknel />
+  
         {/* Secondary banner */}
         <section className="container pb-16">
-          <div className="grid overflow-hidden rounded-2xl border bg-[#002bd0] text-white md:grid-cols-2">
+          <div className="grid overflow-hidden rounded-2xl border bg-primary text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
                 For wholesalers & retailers
@@ -155,14 +225,14 @@ export default async function LandingPage() {
                 logistics and delivery — all handled.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button asChild size="lg" variant="secondary" className="rounded-full bg-[#ffc300] text-white hover:bg-[#002bd0]/90">
-                  <Link href="/register" className="text-black">Open an account</Link>
+                <Button asChild size="lg" variant="secondary" className="rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                  <Link href="/register">Open an account</Link>
                 </Button>
                 <Button
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full bg-white text-[#002bd0] hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="rounded-full bg-white text-primary hover:bg-white/90 hover:text-primary"
                 >
                   <Link href="/products">Browse catalog</Link>
                 </Button>
@@ -182,20 +252,6 @@ export default async function LandingPage() {
       </main>
 
       <SiteFooter />
-    </div>
-  );
-}
-
-function TrustItem({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
-  return (
-    <div className="flex gap-4 rounded-xl border bg-card p-5">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
-        {icon}
-      </div>
-      <div>
-        <h3 className="font-semibold leading-tight">{title}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-      </div>
     </div>
   );
 }
