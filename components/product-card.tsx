@@ -32,7 +32,7 @@ export function ProductCard({
   return (
     <Link
       href={`/products/${slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl border bg-card transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden border bg-card transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
     >
       <div className="relative aspect-square overflow-hidden bg-surface-muted">
         <Image
@@ -68,12 +68,10 @@ export function ProductCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        {category && (
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {category}
-          </p>
-        )}
-        <h3 className="line-clamp-2 text-sm font-medium leading-snug">{name}</h3>
+        <p className="min-h-[14px] truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {category}
+        </p>
+        <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug">{name}</h3>
         <div className="mt-auto flex items-baseline justify-between pt-2">
           <p className="text-base font-bold tabular-nums text-primary">{formatNaira(priceKobo)}</p>
           {lowStock && (

@@ -25,12 +25,13 @@ const POINTS = [
 
 export function WhyIyknel() {
   return (
-    <section className="container py-12 bg-surface-muted mb-4">
-      <header className="mb-8 max-w-2xl">
+    <section className="bg-muted py-12 mb-4">
+      <div className="container">
+        <header className="mb-8 max-w-2xl">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
           Why Iyknel
         </span>
-        <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight md:text-4xl">
+        <h2 className="mt-2 font-serif text-2xl font-semibold tracking-tight md:text-3xl">
           Built for shop owners, not card-tappers.
         </h2>
       </header>
@@ -44,6 +45,7 @@ export function WhyIyknel() {
             <p className="mt-1 text-sm text-muted-foreground">{p.body}</p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

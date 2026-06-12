@@ -12,7 +12,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { CategoryTile } from "@/components/category-tile";
 import { FeaturedProductsCarousel } from "@/components/featured-products-carousel";
-import { WhyIyknel } from "@/components/why-iyknel";
+// import { WhyIyknel } from "@/components/why-iyknel";
 import { TrustedPartners } from "@/components/trusted-partners";
 
 type FeaturedProduct = {
@@ -129,13 +129,13 @@ export default async function LandingPage() {
         {/* Hero — contained carousel with background image + dark overlay */}
         <section className="container pt-6 md:pt-8">
           <PromoCarousel slides={slides} />
-        </section> 
+        </section>
 
         {/* Category tiles */}
         <section className="container py-12 md:py-16">
           <div className="mb-6 flex items-end justify-between">
             <div>
-              <h2 className="font-serif text-2xl font-semibold tracking-tight md:text-3xl">
+              <h2 className="font-serif text-xl font-semibold tracking-tight md:text-2xl">
                 Shop by category
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -149,12 +149,7 @@ export default async function LandingPage() {
 
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10">
             {categories.map((c, i) => (
-              <CategoryTile
-                key={c.id}
-                slug={c.slug}
-                name={c.name}
-                image={categoryImageUrls[i]}
-              />
+              <CategoryTile key={c.id} slug={c.slug} name={c.name} image={categoryImageUrls[i]} />
             ))}
           </div>
         </section>
@@ -162,12 +157,12 @@ export default async function LandingPage() {
         {/* Featured products carousel */}
         <section className="bg-surface-muted">
           <div className="container py-12 md:py-16">
-            <div className="mb-10 flex items-end justify-between">
+            <div className="mb-5 flex items-end justify-between">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                   Featured
                 </span>
-                <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight md:text-3xl">
+                <h2 className="mt-1 font-serif text-xl font-semibold tracking-tight md:text-2xl">
                   Trending in wholesale
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -185,21 +180,18 @@ export default async function LandingPage() {
 
         {/* Per-category product rows */}
         {categorySections.map((section, i) => (
-          <section
-            key={section.id}
-            className={i % 2 === 1 ? "bg-surface-muted" : undefined}
-          >
+          <section key={section.id} className={i % 2 === 1 ? "bg-[#93d9fd]" : "bg-[#93d9fd]"}>
             <div className="container py-12 md:py-16">
-              <div className="mb-10 flex items-end justify-between">
+              <div className="mb-5 flex items-center justify-between bg-white px-4 py-2">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                     Shop {section.name}
                   </span>
-                  <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight md:text-3xl">
+                  <h4 className="mt-1 font-serif text-lg font-semibold tracking-tight md:text-xl">
                     {section.name}
-                  </h2>
+                  </h4>
                 </div>
-                <Button asChild variant="outline" className="rounded-full">
+                <Button className="rounded-full bg-accent text-white hover:bg-primary/100">
                   <Link href={`/products?category=${section.slug}`}>View more</Link>
                 </Button>
               </div>
@@ -211,26 +203,30 @@ export default async function LandingPage() {
 
         {/* Trusted partners */}
         <TrustedPartners />
-        <br/>
-        <WhyIyknel /> 
+
         <br />
         <br />
         {/* Secondary banner */}
-        <section className="container pb-16">
-          <div className="grid overflow-hidden rounded-2xl border bg-primary text-white md:grid-cols-2">
+        <section className="container pb-8">
+          <div className="grid overflow-hidden rounded-2xl border bg-white text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-700/80">
                 For wholesalers & retailers
               </span>
-              <h3 className="font-serif text-3xl font-semibold leading-tight md:text-5xl text-white">
-                Open a wholesale account in minutes. 
+              <h3 className="font-serif text-3xl font-semibold leading-tight text-slate-700 md:text-5xl">
+                Open a wholesale account in minutes.
               </h3>
-              <p className="max-w-md text-white/85">
+              <p className="max-w-md text-slate-700/85">
                 Submit your business details, get verified, and start placing bulk orders. Invoices,
                 logistics and delivery — all handled.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button asChild size="lg" variant="secondary" className="rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                >
                   <Link href="/register">Open an account</Link>
                 </Button>
                 <Button

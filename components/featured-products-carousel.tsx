@@ -6,8 +6,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  // CarouselNext,
+  // CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ProductCard } from "@/components/product-card";
 
@@ -53,10 +53,10 @@ export function FeaturedProductsCarousel({ products }: { products: FeaturedProdu
           </CarouselItem>
         ))}
       </CarouselContent>
-      <div className="absolute -bottom-14 right-0 flex items-center gap-2">
-        <CarouselPrevious className="static h-9 w-9 translate-y-0" />
-        <CarouselNext className="static h-9 w-9 translate-y-0" />
-      </div>
+      {/* <div className="absolute -bottom-14 right-0 flex items-center gap-2">
+        <CarouselPrevious className="static h-9 w-9 translate-y-0 bg-white" />
+        <CarouselNext className="static h-9 w-9 translate-y-0 bg-white" />
+      </div> */}
     </Carousel>
   );
 }
