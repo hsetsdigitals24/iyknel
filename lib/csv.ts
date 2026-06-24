@@ -1,5 +1,6 @@
 import "server-only";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import { z } from "zod";
 
 const optionalUnitsPerCarton = z
@@ -44,6 +45,33 @@ export type ParseResult =
 
 export async function parseProductCsv(input: string | File): Promise<ParseResult> {
   const text = typeof input === "string" ? input : await input.text();
+  return parseCsvText(text);
+}
+
+function isExcel(file: File): boolean {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".xlsx") || name.endsWith(".xls")) return true;
+  return (
+    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    file.type === "application/vnd.ms-excel"
+  );
+}
+
+export async function parseProductFile(file: File): Promise<ParseResult> {
+  if (!isExcel(file)) {
+    return parseCsvText(await file.text());
+  }
+  const buf = await file.arrayBuffer();
+  const workbook = XLSX.read(buf, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  const sheet = sheetName ? workbook.Sheets[sheetName] : undefined;
+  if (!sheet) {
+    return { ok: false, message: "The spreadsheet has no sheets.", errors: [] };
+  }
+  return parseCsvText(XLSX.utils.sheet_to_csv(sheet));
+}
+
+function parseCsvText(text: string): ParseResult {
   const parsed = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,

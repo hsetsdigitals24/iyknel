@@ -51,7 +51,7 @@ function publicUrl(key: string): string {
   return `${base.replace(/\/$/, "")}/${key}`;
 }
 
-/** Uploads to R2 under products/<uuid>.<ext> and returns the object key. */
+/** Uploads to R2 under products/<uuid>.<ext> and returns the public CDN URL. */
 export async function uploadProductImage(file: File): Promise<string> {
   if (!ALLOWED_TYPES.has(file.type)) {
     throw new Error(`Unsupported image type: ${file.type}`);
@@ -73,10 +73,10 @@ export async function uploadProductImage(file: File): Promise<string> {
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
-  return key;
+  return publicUrl(key);
 }
 
-/** Uploads to R2 under categories/<uuid>.<ext> and returns the object key. */
+/** Uploads to R2 under categories/<uuid>.<ext> and returns the public CDN URL. */
 export async function uploadCategoryImage(file: File): Promise<string> {
   if (!ALLOWED_TYPES.has(file.type)) {
     throw new Error(`Unsupported image type: ${file.type}`);
@@ -98,7 +98,7 @@ export async function uploadCategoryImage(file: File): Promise<string> {
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
-  return key;
+  return publicUrl(key);
 }
 
 /** Uploads the invoice PDF and returns the object key. */

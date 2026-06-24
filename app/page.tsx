@@ -126,9 +126,16 @@ export default async function LandingPage() {
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Hero — contained carousel with background image + dark overlay */}
-        <section className="container pt-6 md:pt-8">
-          <PromoCarousel slides={slides} />
+        {/* Hero — background image band with the promo carousel layered on top */}
+        <section
+          className="relative bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/background.jpeg')" }}
+        >
+          {/* subtle overlay so the carousel edges read cleanly over any image */}
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="container relative pb-8 pt-6 md:pb-12 md:pt-8">
+            <PromoCarousel slides={slides} />
+          </div>
         </section>
 
         {/* Category tiles */}
@@ -155,7 +162,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Featured products carousel */}
-        <section className="bg-surface-muted">
+        <section className="bg-[#93d9fd]">
           <div className="container py-12 md:py-16">
             <div className="mb-5 flex items-end justify-between">
               <div>
@@ -208,7 +215,7 @@ export default async function LandingPage() {
         <br />
         {/* Secondary banner */}
         <section className="container pb-8">
-          <div className="grid overflow-hidden rounded-2xl border bg-white text-white md:grid-cols-2">
+          <div className="grid overflow-hidden rounded-2xl bg-[#93d9fd] text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-700/80">
                 For wholesalers & retailers

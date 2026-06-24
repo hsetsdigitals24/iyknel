@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/session";
-import { parseProductCsv, type ProductRowError } from "@/lib/csv";
+import { parseProductFile, type ProductRowError } from "@/lib/csv";
 import { bulkUpsertProducts } from "@/lib/products";
 import { friendlyError, logError } from "@/lib/errors";
 
@@ -19,9 +19,9 @@ export async function bulkUploadAction(
   await requireAdmin();
   const file = formData.get("csv");
   if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, message: "Pick a CSV file to upload." };
+    return { ok: false, message: "Pick a CSV or Excel file to upload." };
   }
-  const parsed = await parseProductCsv(file);
+  const parsed = await parseProductFile(file);
   if (!parsed.ok) {
     return { ok: false, message: parsed.message, rowErrors: parsed.errors };
   }

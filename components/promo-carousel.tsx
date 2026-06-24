@@ -35,7 +35,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
       <CarouselContent>
         {slides.map((slide, i) => (
           <CarouselItem key={slide.title}>
-            <div className="relative h-[58vh] min-h-[380px] overflow-hidden rounded-2xl text-white">
+            <div className="relative h-[58vh] min-h-[380px] overflow-hidden text-white">
               <Image
                 src={slide.image}
                 alt={slide.title}

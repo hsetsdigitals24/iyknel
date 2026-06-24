@@ -23,11 +23,17 @@ export function BulkForm() {
   return (
     <form action={action} className="space-y-4" encType="multipart/form-data">
       <div className="space-y-2">
-        <Label htmlFor="csv">CSV file</Label>
-        <Input id="csv" name="csv" type="file" accept=".csv,text/csv" required />
+        <Label htmlFor="csv">CSV or Excel file</Label>
+        <Input
+          id="csv"
+          name="csv"
+          type="file"
+          accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xls,application/vnd.ms-excel"
+          required
+        />
         <p className="text-xs text-muted-foreground">
-          Required headers: sku, name, category, price_naira, weight_grams, stock_delta,
-          description.
+          Required headers: sku, name, category, price_naira, weight_grams, units_per_carton,
+          cartons_delta, pieces_delta, description.
         </p>
       </div>
       {state && !state.ok && state.rowErrors && state.rowErrors.length > 0 && (

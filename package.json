@@ -14,7 +14,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "backfill:image-urls": "tsx scripts/backfill-image-urls.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -49,6 +50,7 @@
     "sonner": "^1.7.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^3.23.8"
   },
   "devDependencies": {
