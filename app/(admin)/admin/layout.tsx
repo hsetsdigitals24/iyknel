@@ -37,7 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ];
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-card">
       <header className="border-b bg-card">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
