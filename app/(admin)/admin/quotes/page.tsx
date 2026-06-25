@@ -98,7 +98,7 @@ export default async function AdminQuotesPage({
         )}
       </form>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

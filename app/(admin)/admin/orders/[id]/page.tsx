@@ -58,7 +58,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
 
       <div className="grid gap-6 md:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <section className="rounded-md border">
+          <section className="rounded-md border bg-card">
             <header className="border-b px-4 py-3 font-medium">Items</header>
             <ul className="divide-y">
               {order.items.map((it) => (
@@ -96,7 +96,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           </section>
 
           {order.address && (
-            <section className="rounded-md border p-4 text-sm">
+            <section className="rounded-md border bg-card p-4 text-sm">
               <h3 className="mb-2 font-medium">Delivery address</h3>
               <div>{order.address.line1}</div>
               {order.address.line2 && (
@@ -109,14 +109,14 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           )}
 
           {order.notes && (
-            <section className="rounded-md border p-4 text-sm">
+            <section className="rounded-md border bg-card p-4 text-sm">
               <h3 className="mb-1 font-medium">Notes</h3>
               <p className="text-muted-foreground">{order.notes}</p>
             </section>
           )}
 
           {order.payments.length > 0 && (
-            <section className="rounded-md border">
+            <section className="rounded-md border bg-card">
               <header className="border-b px-4 py-3 font-medium">Payments</header>
               <ul className="divide-y text-sm">
                 {order.payments.map((p) => (
@@ -154,7 +154,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
             </section>
           )}
 
-          <section className="rounded-md border">
+          <section className="rounded-md border bg-card">
             <header className="border-b px-4 py-3 font-medium">Audit log</header>
             {auditLogs.length === 0 ? (
               <p className="px-4 py-6 text-sm text-muted-foreground">No events yet.</p>
@@ -174,7 +174,7 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
           </section>
         </div>
 
-        <aside className="h-fit space-y-5 rounded-md border p-5">
+        <aside className="h-fit space-y-5 rounded-md border bg-card p-5">
           <h2 className="font-serif text-xl">Summary</h2>
           <Row label="Subtotal" value={formatNaira(order.subtotalKobo)} />
           <Row

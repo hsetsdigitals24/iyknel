@@ -48,7 +48,7 @@ export default async function LogisticsPage() {
 
       <section className="space-y-3">
         <h2 className="font-serif text-xl">Vehicles</h2>
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto rounded-md border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -130,7 +130,7 @@ export default async function LogisticsPage() {
             </TableBody>
           </Table>
         </div>
-        <details className="rounded-md border p-4">
+        <details className="rounded-md border bg-card p-4">
           <summary className="cursor-pointer text-sm font-medium">Add vehicle</summary>
           <form action={createVehicleFormAction} className="mt-3 grid gap-3 md:grid-cols-2">
             <Field id="name" label="Name" required />
@@ -152,7 +152,7 @@ export default async function LogisticsPage() {
 
       <section className="space-y-3">
         <h2 className="font-serif text-xl">Distance bands</h2>
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto rounded-md border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -235,7 +235,7 @@ export default async function LogisticsPage() {
             </TableBody>
           </Table>
         </div>
-        <details className="rounded-md border p-4">
+        <details className="rounded-md border bg-card p-4">
           <summary className="cursor-pointer text-sm font-medium">Add distance band</summary>
           <form action={createBandFormAction} className="mt-3 grid gap-3 md:grid-cols-2">
             <Field id="label" label="Label (e.g. 60-80km)" required />
@@ -262,7 +262,7 @@ export default async function LogisticsPage() {
         <p className="text-xs text-muted-foreground">
           Press Tab/Enter after editing a cell to save it.
         </p>
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto rounded-md border bg-card">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">

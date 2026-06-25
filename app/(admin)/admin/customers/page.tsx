@@ -88,7 +88,7 @@ export default async function CustomersPage({
         )}
       </form>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

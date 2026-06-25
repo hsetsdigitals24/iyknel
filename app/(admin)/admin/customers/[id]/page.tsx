@@ -69,7 +69,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         {orders.length === 0 ? (
           <p className="text-sm text-muted-foreground">No orders yet.</p>
         ) : (
-          <ul className="divide-y rounded-md border">
+          <ul className="divide-y rounded-md border bg-card">
             {orders.map((o) => (
               <li key={o.id}>
                 <Link
@@ -93,7 +93,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {customer.addresses.map((a) => (
-              <li key={a.id} className="rounded-md border p-4 text-sm">
+              <li key={a.id} className="rounded-md border bg-card p-4 text-sm">
                 <div>{a.line1}</div>
                 {a.line2 && <div className="text-muted-foreground">{a.line2}</div>}
                 <div className="text-muted-foreground">
@@ -110,7 +110,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border p-4">
+    <div className="rounded-md border bg-card p-4">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl tabular-nums">{value}</p>
     </div>

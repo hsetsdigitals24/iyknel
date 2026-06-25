@@ -93,7 +93,7 @@ export default async function InventoryPage({
         )}
       </form>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
