@@ -15,7 +15,11 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "backfill:image-urls": "tsx scripts/backfill-image-urls.ts"
+    "backfill:image-urls": "tsx scripts/backfill-image-urls.ts",
+    "db:wipe-catalog": "tsx scripts/wipe-catalog.ts",
+    "build:product-upload": "tsx scripts/build-product-upload.ts",
+    "attach:product-images": "tsx scripts/attach-product-images.ts",
+    "fix:image-host": "tsx scripts/fix-image-host.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

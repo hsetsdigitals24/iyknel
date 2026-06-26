@@ -16,3 +16,8 @@ coverage/
 next-env.d.ts
 .env*.local
 .env*
+
+# Bulk product-image import (large local assets, generated report)
+product-images/
+image-attach-report.csv
+Iyknel Website*.zip
