@@ -54,6 +54,21 @@ export const resetSchema = z.object({
   password: z.string().min(8).max(72),
 });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: z.string().min(8, "Use at least 8 characters").max(72),
+    confirmPassword: z.string().min(1, "Confirm your new password"),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: "New passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine((d) => d.newPassword !== d.currentPassword, {
+    message: "New password must be different from the current one",
+    path: ["newPassword"],
+  });
+
 export type FormState =
   | { ok: true; message?: string }
   | { ok: false; message: string; fieldErrors?: Record<string, string[]> }
