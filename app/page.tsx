@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PromoCarousel } from "@/components/promo-carousel";
-import { CategoryTile } from "@/components/category-tile";
 import { FeaturedProductsCarousel } from "@/components/featured-products-carousel";
+import { ProductCard } from "@/components/product-card";
 // import { WhyIyknel } from "@/components/why-iyknel";
 import { TrustedPartners } from "@/components/trusted-partners";
 
@@ -63,6 +63,7 @@ export default async function LandingPage() {
     db.category.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      include: { _count: { select: { products: { where: { active: true } } } } },
     }),
     db.product.findMany({
       where: { active: true },
@@ -72,8 +73,6 @@ export default async function LandingPage() {
     }),
     buildPromoSlides(),
   ]);
-  const categoryImageUrls = await Promise.all(categories.map((c) => resolveImage(c.image)));
-
   const session = await getSession();
   const savedIds = session?.user?.id
     ? await getWishlistProductIds(session.user.id)
@@ -95,23 +94,35 @@ export default async function LandingPage() {
     ),
   );
 
-  // Per-category product rows (top categories with at least one active product).
-  // Queried sequentially: the pooled DB connection limit is 1, so a parallel
-  // fan-out here exhausts the pool and times out.
+  // Per-category product rows (every active category with at least 5 active
+  // products). Fetched in a single query and grouped in memory: the pooled DB
+  // connection limit is 1, so a per-category fan-out would exhaust the pool, and
+  // one round-trip scales regardless of how many categories qualify.
+  const allActiveProducts = await db.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: "desc" },
+    include: { category: { select: { name: true } } },
+  });
+
+  const productsByCategory = new Map<string, typeof allActiveProducts>();
+  for (const p of allActiveProducts) {
+    if (!p.categoryId) continue;
+    const bucket = productsByCategory.get(p.categoryId);
+    if (bucket) bucket.push(p);
+    else productsByCategory.set(p.categoryId, [p]);
+  }
+
   const categorySections: {
     id: string;
     name: string;
     slug: string;
     products: FeaturedProduct[];
   }[] = [];
-  for (const cat of categories.slice(0, 6)) {
-    const prods = await db.product.findMany({
-      where: { active: true, categoryId: cat.id },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: { category: { select: { name: true } } },
-    });
-    if (prods.length === 0) continue;
+  for (const cat of categories) {
+    const all = productsByCategory.get(cat.id) ?? [];
+    // Hide any category with fewer than 5 active products.
+    if (all.length < 5) continue;
+    const prods = all.slice(0, 10);
     const images = await Promise.all(prods.map((p) => resolveImage(p.images[0])));
     categorySections.push({
       id: cat.id,
@@ -139,8 +150,8 @@ export default async function LandingPage() {
         </section>
 
         {/* Category tiles */}
-        <section className="container py-12 md:py-16">
-          <div className="mb-6 flex items-end justify-between">
+        <section className="container py-8 md:py-10">
+          <div className="mb-4 flex items-end justify-between">
             <div>
               <h2 className="font-serif text-xl font-semibold tracking-tight md:text-2xl">
                 Shop by category
@@ -154,16 +165,60 @@ export default async function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10">
-            {categories.map((c, i) => (
-              <CategoryTile key={c.id} slug={c.slug} name={c.name} image={categoryImageUrls[i]} />
-            ))}
+          <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+            {/* Category sidebar */}
+            <aside className="lg:sticky lg:top-24 lg:h-fit">
+              <div className="rounded-xl border bg-card p-5">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Category
+                </h3>
+                <ul className="space-y-1">
+                  <li>
+                    <Link
+                      href="/products"
+                      className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-secondary"
+                    >
+                      <span>All categories</span>
+                    </Link>
+                  </li>
+                  {categories.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={`/products?category=${c.slug}`}
+                        className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-secondary"
+                      >
+                        <span className="truncate">{c.name}</span>
+                        <span className="text-xs text-muted-foreground">{c._count.products}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
+
+            {/* Product grid */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              {featured.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  productId={p.id}
+                  slug={p.slug}
+                  name={p.name}
+                  priceKobo={p.priceKobo}
+                  image={p.image}
+                  category={p.category}
+                  stock={p.stock}
+                  badge={p.badge ?? null}
+                  wishlisted={p.wishlisted}
+                />
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Featured products carousel */}
         <section className="bg-[#93d9fd]">
-          <div className="container py-12 md:py-16">
+          <div className="container py-2 md:py-10">
             <div className="mb-5 flex items-end justify-between">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -188,7 +243,7 @@ export default async function LandingPage() {
         {/* Per-category product rows */}
         {categorySections.map((section, i) => (
           <section key={section.id} className={i % 2 === 1 ? "bg-[#93d9fd]" : "bg-[#93d9fd]"}>
-            <div className="container py-12 md:py-16">
+            <div className="container py-2 md:py-4">
               <div className="mb-5 flex items-center justify-between bg-white px-4 py-2">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -211,10 +266,8 @@ export default async function LandingPage() {
         {/* Trusted partners */}
         <TrustedPartners />
 
-        <br />
-        <br />
         {/* Secondary banner */}
-        <section className="container pb-8">
+        <section className="container py-8">
           <div className="grid overflow-hidden rounded-2xl bg-[#93d9fd] text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-700/80">

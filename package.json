@@ -19,7 +19,8 @@
     "db:wipe-catalog": "tsx scripts/wipe-catalog.ts",
     "build:product-upload": "tsx scripts/build-product-upload.ts",
     "attach:product-images": "tsx scripts/attach-product-images.ts",
-    "fix:image-host": "tsx scripts/fix-image-host.ts"
+    "fix:image-host": "tsx scripts/fix-image-host.ts",
+    "compress:r2-images": "tsx scripts/compress-r2-images.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -71,6 +72,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "prisma": "^5.22.0",
+    "sharp": "^0.35.2",
     "tailwindcss": "^3.4.14",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
