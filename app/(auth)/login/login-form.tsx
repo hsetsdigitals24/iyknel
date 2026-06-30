@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 function friendlySignInError(code: string | undefined | null): string {
@@ -62,10 +63,9 @@ export function LoginForm() {
             Forgot?
           </a>
         </div>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           required
           autoComplete="current-password"
         />

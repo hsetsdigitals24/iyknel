@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { FormStateToast } from "@/components/form-state-toast";
 import { changePassword } from "./actions";
@@ -22,20 +22,18 @@ export function ChangePasswordForm() {
     <form ref={formRef} action={action} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="currentPassword">Current password</Label>
-        <Input
+        <PasswordInput
           id="currentPassword"
           name="currentPassword"
-          type="password"
           required
           autoComplete="current-password"
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="newPassword">New password</Label>
-        <Input
+        <PasswordInput
           id="newPassword"
           name="newPassword"
-          type="password"
           required
           autoComplete="new-password"
           aria-invalid={!!fieldErrors?.newPassword?.[0]}
@@ -46,10 +44,9 @@ export function ChangePasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirm new password</Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           required
           autoComplete="new-password"
           aria-invalid={!!fieldErrors?.confirmPassword?.[0]}

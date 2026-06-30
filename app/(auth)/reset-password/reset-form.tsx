@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { FormStateToast } from "@/components/form-state-toast";
 import { resetPassword } from "./actions";
@@ -32,10 +33,9 @@ export function ResetForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">New password</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           required
           autoComplete="new-password"
         />

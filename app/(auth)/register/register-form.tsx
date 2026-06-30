@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { FormStateToast } from "@/components/form-state-toast";
 import { registerBusiness } from "./actions";
@@ -97,7 +98,11 @@ function Field({
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} name={id} type={type} aria-invalid={!!error} {...rest} />
+      {type === "password" ? (
+        <PasswordInput id={id} name={id} aria-invalid={!!error} {...rest} />
+      ) : (
+        <Input id={id} name={id} type={type} aria-invalid={!!error} {...rest} />
+      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );

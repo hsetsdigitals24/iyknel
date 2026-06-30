@@ -125,6 +125,28 @@ function looksLikeUrl(value: string): boolean {
   return /^https?:\/\//i.test(value);
 }
 
+/**
+ * If `value` is a full URL on the (non-public) R2 S3 API endpoint
+ * (`*.r2.cloudflarestorage.com`), return its object key so it can be re-pointed at
+ * the public base. Handles both the virtual-hosted form
+ * (`<bucket>.<acct>.r2.cloudflarestorage.com/<key>`) and the path-style form
+ * (`<acct>.r2.cloudflarestorage.com/<bucket>/<key>`). Returns null otherwise.
+ */
+function keyFromR2EndpointUrl(value: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return null;
+  }
+  if (!url.hostname.endsWith(".r2.cloudflarestorage.com")) return null;
+  const path = url.pathname.replace(/^\//, "");
+  const isVirtualHosted = url.hostname.split(".").length >= 5;
+  if (isVirtualHosted) return path || null;
+  const slash = path.indexOf("/");
+  return slash >= 0 ? path.slice(slash + 1) || null : null;
+}
+
 function extractKeyFromLegacyUrl(value: string): string | null {
   const publicBase = process.env.R2_PUBLIC_BASE_URL;
   if (publicBase && value.startsWith(publicBase)) {
@@ -151,6 +173,10 @@ export async function getSignedFileUrl(
     // still contain those URLs; swap them for the local placeholder so pages
     // don't 500 from next/image rejecting an unconfigured remote host.
     if (key.includes("source.unsplash.com")) return "/placeholders/product.svg";
+    // Repair URLs stored against the non-public S3 API endpoint by re-pointing
+    // them at the public base. No-op for already-public URLs.
+    const endpointKey = keyFromR2EndpointUrl(key);
+    if (endpointKey) return publicUrl(endpointKey);
     return key;
   }
   return publicUrl(key);
