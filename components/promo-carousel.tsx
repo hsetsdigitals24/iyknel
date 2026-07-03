@@ -6,6 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BLUR_DATA_URL } from "@/lib/image-placeholder";
 import {
   Carousel,
   CarouselContent,
@@ -42,6 +43,8 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
                 fill
                 priority={i === 0}
                 sizes="100vw"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 className="object-cover"
               />
               {/* Dark overlay for legibility */}
@@ -59,7 +62,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
                   <p className="max-w-md text-base text-white/85 md:text-lg">
                     {slide.copy}
                   </p>
-                  <div className="pt-2">
+                  <div className="">
                     <Button asChild size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
                       <Link href={slide.cta.href}>
                         {slide.cta.label}
@@ -75,7 +78,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
         ))}
       </CarouselContent>
 
-      <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center">
+      {/* <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center">
         <div className="container flex w-full items-center justify-between">
           <div className="pointer-events-auto hidden md:block">
             <CarouselPrevious className="bg-secondary text-secondary-foreground h-10 w-10" />
@@ -84,7 +87,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
             <CarouselNext className="bg-secondary text-secondary-foreground h-10 w-10" />
           </div>
         </div>
-      </div>
+      </div> */}
 
       <CarouselDots className="mt-4 " />
     </Carousel>

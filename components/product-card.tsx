@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatNaira } from "@/lib/utils";
+import { BLUR_DATA_URL } from "@/lib/image-placeholder";
 import { WishlistHeartButton } from "@/components/wishlist-heart-button";
 
 type Props = {
@@ -40,6 +41,8 @@ export function ProductCard({
           alt={name}
           fill
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
@@ -73,7 +76,9 @@ export function ProductCard({
         </p>
         <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug">{name}</h3>
         <div className="mt-auto flex items-baseline justify-between pt-2">
-          <p className="text-base font-bold tabular-nums text-primary">{formatNaira(priceKobo)}</p>
+          <p className="text-base font-bold tabular-nums text-[#0099ff]">
+            {formatNaira(priceKobo)}
+          </p>
           {lowStock && (
             <span className="text-[10px] font-semibold uppercase tracking-wider text-warning">
               Low stock

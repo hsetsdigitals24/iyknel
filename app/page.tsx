@@ -15,6 +15,7 @@ import { FeaturedProductsCarousel } from "@/components/featured-products-carouse
 import { ProductCard } from "@/components/product-card";
 // import { WhyIyknel } from "@/components/why-iyknel";
 import { TrustedPartners } from "@/components/trusted-partners";
+import { ArrowRight } from "lucide-react";
 
 type FeaturedProduct = {
   id: string;
@@ -157,12 +158,10 @@ export default async function LandingPage() {
 
       <main className="flex-1">
         {/* Hero — background image band with the promo carousel layered on top */}
-        <section
-          className="relative bg-cover bg-center bg-no-repeat" 
-        >
+        <section className="relative bg-cover bg-center bg-no-repeat">
           {/* subtle overlay so the carousel edges read cleanly over any image */}
-          <div className="absolute inset-0 bg-black/20" />
-          <div className="relative pb-8 pt-6 md:pb-12 md:pt-8">
+          <div className="absolute inset-0 bg-[#fff]" />
+          <div className="relative">
             <PromoCarousel slides={slides} />
           </div>
         </section>
@@ -241,7 +240,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Featured products carousel */}
-        <section className="bg-[#93d9fd]">
+        <section className="bg-[#eaeaea]">
           <div className="container py-2 md:py-10">
             <div className="mb-5 flex items-end justify-between">
               <div>
@@ -255,9 +254,14 @@ export default async function LandingPage() {
                   Hand-picked top sellers across categories.
                 </p>
               </div>
-              <Button asChild variant="outline" className="rounded-full">
-                <Link href="/products">Browse all products</Link>
-              </Button>
+              {/* <Button asChild variant="outline" className="rounded-full"> */}
+              <Link href="/products">
+                <span className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                  Browse all products
+                  <ArrowRight className="ml-1 inline h-3 w-3" />
+                </span>
+              </Link>
+              {/* </Button> */}
             </div>
 
             <FeaturedProductsCarousel products={featured} />
@@ -266,8 +270,8 @@ export default async function LandingPage() {
 
         {/* Per-category product rows */}
         {categorySections.map((section, i) => (
-          <section key={section.id} className={i % 2 === 1 ? "bg-[#ccc]" : ""}>
-            <div className="container py-2 md:py-4">
+          <section key={section.id} className={i % 2 === 1 ? "bg-[#eaeaea]" : ""}>
+            <div className="container py-4 md:py-8">
               <div className="mb-5 flex items-center justify-between bg-white px-4 py-2">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -277,9 +281,13 @@ export default async function LandingPage() {
                     {section.name}
                   </h4>
                 </div>
-                <Button className="rounded-full bg-accent text-white hover:bg-primary/100">
-                  <Link href={`/products?category=${section.slug}`}>View more</Link>
-                </Button>
+                <Link href={`/products?category=${section.slug}`}>
+                  <span className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    View more
+                    <ArrowRight className="ml-1 inline h-3 w-3" />
+                  </span>
+                </Link>
+               
               </div>
 
               <FeaturedProductsCarousel products={section.products} />
