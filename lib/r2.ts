@@ -3,6 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
 
@@ -156,6 +157,30 @@ function extractKeyFromLegacyUrl(value: string): string | null {
   const match = value.match(/r2\.cloudflarestorage\.com\/[^/]+\/(.+?)(?:\?|$)/);
   if (match) return match[1];
   return null;
+}
+
+/**
+ * Resolve a stored image value (public URL or bare key) to its R2 object key,
+ * or null if it isn't one of ours. Used by the self-hosted image route so it can
+ * fetch originals via the S3 API (bypassing the rate-limited r2.dev host).
+ */
+export function keyFromPublicUrl(value: string): string | null {
+  if (!looksLikeUrl(value)) {
+    // Already a bare key like "products/abc.jpg".
+    return value.replace(/^\//, "") || null;
+  }
+  return extractKeyFromLegacyUrl(value) ?? keyFromR2EndpointUrl(value);
+}
+
+/** Download an object's bytes by key via the S3 API (not the r2.dev host). */
+export async function getObjectBytes(key: string): Promise<Buffer> {
+  const bucket = process.env.R2_BUCKET;
+  if (!bucket) throw new Error("R2_BUCKET not set");
+  const res = await client().send(
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+  );
+  if (!res.Body) throw new Error(`Empty object body for ${key}`);
+  return Buffer.from(await res.Body.transformToByteArray());
 }
 
 /**

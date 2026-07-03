@@ -156,7 +156,10 @@ export default async function LandingPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="flex-1">
+      {/* [&>section]:transform-gpu forces each section onto its own stable GPU
+          layer, working around a Chrome bug where large sections blank out while
+          scrolling and only repaint when scrolled back into view. */}
+      <main className="flex-1 [&>section]:transform-gpu">
         {/* Hero — background image band with the promo carousel layered on top */}
         <section className="relative bg-cover bg-center bg-no-repeat">
           {/* subtle overlay so the carousel edges read cleanly over any image */}
