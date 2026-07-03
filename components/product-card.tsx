@@ -76,7 +76,7 @@ export function ProductCard({
         </p>
         <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug">{name}</h3>
         <div className="mt-auto flex items-baseline justify-between pt-2">
-          <p className="text-base font-bold tabular-nums text-[#0099ff]">
+          <p className="text-base font-bold tabular-nums text-[#002ad1]">
             {formatNaira(priceKobo)}
           </p>
           {lowStock && (
