@@ -53,7 +53,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
               <div className="relative flex h-full flex-col justify-center py-10 md:py-16">
                 <div className="container">
                   <div className="max-w-xl space-y-4">
-                  <span className="inline-flex bg-[#ffc300] items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600 backdrop-blur">
+                  <span className="inline-flex bg-[#ffc300] items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600 backdrop-blur">
                     {slide.eyebrow}
                   </span>
                   <h2 className="font-serif text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
