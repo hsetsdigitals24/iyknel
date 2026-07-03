@@ -1,0 +1,104 @@
+sku,name,category,price_naira,active
+DEDOXPR500,Dependox Preservative 500g x 24 (carton),Baking Items,89000.00,true
+STBAPO454,STK baking powder 454g x 18 (carton),Baking Powder,54500.00,true
+HWHT5,Honeywell Wheat  5kg,Ball food,5700.00,true
+HWHT1,Honeywell Wheat 1kgx 10,Ball food,11300.00,true
+HWHT2,Honeywell Wheat 2kg x 5,Ball food,11250.00,true
+MGFL50,Mamagold Flour 50kg,Ball food,52000.00,true
+MGSMN10,Mamagold Semolina 10kg,Ball food,14000.00,true
+MGSMN1,Mamagold Semolina 1kg x 10,Ball food,14300.00,true
+MGSMN2,Mamagold Semolina 2kg x 5,Ball food,14300.00,true
+MGSMN5,Mamagold Semolina 5kg,Ball food,7100.00,true
+COTEA2,Costa Tea 2gx25x40 (Carton),Beverages,14500.00,true
+GPSPB250,Golden penny  Bread Spread  250g x 24 (Carton),Butter,18500.00,true
+GPSPB900,Golden penny  Bread Spread  900g x 6 (Carton),Butter,13500.00,true
+GPSPB450,Golden penny Bread Spread 450g x 12 (Carton),Butter,14500.00,true
+JSB15K,Jubi Margarine 15kg (Carton),Butter,34200.00,true
+JSB250,Jubi Margarine 250g x 60 (Carton),Butter,41500.00,true
+KGSP250,Kings  Bread spread 250g by 24 (Carton),Butter,17600.00,true
+KGSP450,Kings Bread spread 450g by 12 (Carton),Butter,25300.00,true
+MMDSP250,Mamador  Bread spread 250g by 24 (Carton),Butter,18200.00,true
+MMDSP450,Mamador  Bread spread 450g by 12 (Carton),Butter,26100.00,true
+SOBUT15,Sonia butter 15kg (carton),Butter,29500.00,true
+TARBU10,Taroona Butter 10kg,Butter,48500.00,true
+TPBT10,Topper Margarine bucket 10kg,Butter,59500.00,true
+ALDYSAR5,All day Sardine 125g x 50 (Carton),Canned Food,41000.00,true
+BLPLSAR5,Blue Pearl Sardine 125g x 50 (Carton),Canned Food,41000.00,true
+CPSAR5,Cinpak Sardine 125g x 50 (Carton),Canned Food,41000.00,true
+CSTSAR5,Costa Sardine 125g x 50 (Carton),Canned Food,41000.00,true
+FVSTSAR5,Five Star Sardine 125g x 50 (Carton),Canned Food,40500.00,true
+GMKRL50,Geisha Mackerel 155g x 50 (Carton),Canned Food,39000.00,true
+GMKRLB50,Geisha Mackerel 425 x 50 (Carton),Canned Food,49000.00,true
+PRNSAR,Prince Sardine 125g x 50 (Carton),Canned Food,48000.00,true
+VALCSAR5,Vallencia Sardine 125g x 50 (Carton),Canned Food,39500.00,true
+AMDCRF600,Amaizing day Cereal 600g x 12 (Carton),Cereal,25000.00,true
+AMDCSA45,Amaizing day cereal 45g x 100 (Carton),Cereal,17400.00,true
+COCRM12,Costa Creamer 12g x 200 (Carton),Creamer,13000.00,true
+BIGBR50,Big Bull Rice 50kg,Grains,55000.00,true
+MAMAR50,Mama Africa Rice 50kg,Grains,54000.00,true
+PRONI50,Proudly Nigeria Rice 50kg,Grains,55000.00,true
+MUPUCLLE15,Multi purpose Cleaner  Lemeon 1.5ltr x 6  (carton),Home Use,14200.00,true
+MUPUCLLE3,Multi purpose Cleaner  Lemon 3ltr x 4  (carton),Home Use,15300.00,true
+MUPUCLLA15,Multi purpose Cleaner Lavenda 1.5ltr x 6 (carton),Home Use,14200.00,true
+MUPUCLLA3,Multi purpose Cleaner Lavenda 3ltr x 4(carton),Home Use,15300.00,true
+MUPUCLTA15,Multi purpose Cleaner Tangerine 1.5ltr x 6 (carton),Home Use,14200.00,true
+MUPUCLTA3,Multi purpose Cleaner Tangerine 3ltr x 4 (carton),Home Use,15300.00,true
+NOBLE1,Novex Bleach 1ltr x 12 (carton),Home Use,20000.00,true
+NOBLE500,Novex Bleach 500ml x 24 (carton),Home Use,21000.00,true
+NOBLSA75,Novex Bleach 75ml x 100 sachet (carton),Home Use,7500.00,true
+NODIAP950,Novex Dishwash Apple 950ml x 12 (carton),Home Use,19500.00,true
+NODILE950,Novex Dishwash Lemeon 950ml x 12 (carton),Home Use,19500.00,true
+NOGLCL500,Novex Glass Cleaner 500ml x 12 (carton),Home Use,10800.00,true
+NOTOCL800,Novex Toilet Cleaner 800ml x 12 (carton),Home Use,27000.00,true
+SLCKP5,Slap Cockroach powder 5gx50x 12 (carton),Insecticides,25500.00,true
+SLINST300,Slap Insecticides 300ml x 24 (carton),Insecticides,39000.00,true
+SLINST600,Slap Insecticides 600ml x 12 (carton),Insecticides,26000.00,true
+GPSO4,Golden Penny Soya oil 4ltr x 6 (carton),Oil,73600.00,true
+GPVO27,Golden Penny Vegetable  oil 2.7ltr x6 (carton),Oil,38700.00,true
+GPVO4,Golden Penny Vegetable  oil 4ltr x 6 (carton),Oil,87500.00,true
+GPVO5,Golden Penny Vegetable  oil 5ltr x 4 (carton),Oil,68100.00,true
+GPVO75,Golden Penny Vegetable  oil 750ml x 12 (carton),Oil,17700.00,true
+GPVO1,Golden Penny Vegetable oil 1ltr x12 (carton),Oil,28200.00,true
+GPSOI1,Golden Penny soya oil 1ltr x12 (carton),Oil,45800.00,true
+GPSOI27,Golden Penny soya oil 2.7ltr x6 (carton),Oil,51800.00,true
+GPSOI5,Golden Penny soya oil 5ltr x 4 (carton),Oil,61600.00,true
+GPSOI750,Golden Penny soya oil 750ml x 12 (carton),Oil,31000.00,true
+TEOIL14,Golden Terra Soya oil 1.4ltr x 6 (carton),Oil,34000.00,true
+TEOIL25,Golden Terra Soya oil 25ltr,Oil,62500.00,true
+TEOIL5,Golden Terra Soya oil 5ltr x4 (carton),Oil,60700.00,true
+GOYOIL250,Goya  Extra Virgin oil 250ml x 25 (carton),Oil,123500.00,true
+GOYOIL96,Goya Extra Virgin oil 96ml x 36 (carton),Oil,80000.00,true
+GRND1,Grand  Pure Soya Oil 1ltr x 12 (carton),Oil,43700.00,true
+GRND5,Grand  Pure Soya Oil 5ltr x 4 (carton),Oil,70200.00,true
+GRND18,Grand  pure Soya oil 18ltrs,Oil,70300.00,true
+GRND3,Grand Pure Soya Oil 3ltrs x 6 (carton),Oil,66900.00,true
+GRND10,Grand oil 10lt,Oil,36000.00,true
+GRND25,Grand oil 25ltrs,Oil,82700.00,true
+MADO15,Mamador Vegetable Oil  1.5ltr x 6 (carton),Oil,32800.00,true
+MADO25,Mamador Vegetable Oil 2.5ltr x 4 (carton),Oil,35500.00,true
+MADO35,Mamador Vegetable Oil 3.5ltr x 4 (carton),Oil,50500.00,true
+MADO900,Mamador Vegetable Oil 900ml x 12 (carton),Oil,41900.00,true
+OKBAN2,Okomu Banga Red Palm Oil  2ltr x 6 (Pack),Oil,36500.00,true
+OKBAN4,Okomu Banga Red Palm Oil 4ltr x 6 (carton),Oil,68500.00,true
+POLS1L,Power oil lite soya 1ltr x 12 (carton),Oil,47000.00,true
+POLS3L,Power oil lite soya 3ltr x 6 (carton),Oil,70000.00,true
+SNLO19,Sunola Soya Oil 1.9litres x 8 (Carton),Oil,52500.00,true
+SNLO1L,Sunola Soya Oil 1ltrs x 12 (Carton),Oil,66000.00,true
+SNLO45,Sunola Soya Oil 4.5ltrs x 4 (Carton),Oil,58000.00,true
+SNLO5,Sunola Soya Oil 5ltr x4 (Carton),Oil,64000.00,true
+SNLO27,Sunola soya Oil 2.7ltrs x 6 (Carton),Oil,53500.00,true
+CRSPSLIM20,Crown Spaghetti Slim 500g x 20 (Pack),Pasta,17600.00,true
+CRSPFAT20,Crown Spaghetti fat 500g x 20 (Pack),Pasta,17600.00,true
+MMSPGSLIM20,Mamapride Spaghetti Slim 500g x 20 (Pack),Pasta,15300.00,true
+MMSPGFAT20,Mamapride Spaghetti fat 500g x 20 (Pack),Pasta,15300.00,true
+DSLT50,Dangote Refined Salt 50kg,Salt,17800.00,true
+MCS20,Mr Chef salt 1kg x 20,Salt,7800.00,true
+MCS80,Mr Chef salt 250g x 80,Salt,8400.00,true
+MCS40,Mr Chef salt 500g x 40,Salt,8100.00,true
+CUTOS,Cotonou Sugar 50kg,Sugar,64000.00,true
+GPCS50,Golden Penny White Cube sugar 500g x 50,Sugar,52500.00,true
+GPSS1K,Golden penny Granulated White Sugar 1kg x 10,Sugar,15200.00,true
+GPSS250,Golden penny Granulated White Sugar 250g x 40,Sugar,15200.00,true
+GPSS500,Golden penny Granulated White Sugar 500g x 20,Sugar,15200.00,true
+STROYE500,STK Royal yeast  500g x 20 (carton),Yeast,59000.00,true
+VERYE500,Vera yeast 500g x 20 (carton),Yeast,55000.00,true

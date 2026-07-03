@@ -47,8 +47,9 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
               {/* Dark overlay for legibility */}
               <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
 
-              <div className="relative flex h-full flex-col justify-center px-6 py-10 md:px-12 md:py-16">
-                <div className="max-w-xl space-y-4">
+              <div className="relative flex h-full flex-col justify-center py-10 md:py-16">
+                <div className="container">
+                  <div className="max-w-xl space-y-4">
                   <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
                     {slide.eyebrow}
                   </span>
@@ -66,6 +67,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
                       </Link>
                     </Button>
                   </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -73,12 +75,14 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
         ))}
       </CarouselContent>
 
-      <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 md:px-4">
-        <div className="pointer-events-auto hidden md:block">
-          <CarouselPrevious className="bg-secondary text-secondary-foreground h-10 w-10" />
-        </div>
-        <div className="pointer-events-auto hidden md:block">
-          <CarouselNext className="bg-secondary text-secondary-foreground h-10 w-10" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center">
+        <div className="container flex w-full items-center justify-between">
+          <div className="pointer-events-auto hidden md:block">
+            <CarouselPrevious className="bg-secondary text-secondary-foreground h-10 w-10" />
+          </div>
+          <div className="pointer-events-auto hidden md:block">
+            <CarouselNext className="bg-secondary text-secondary-foreground h-10 w-10" />
+          </div>
         </div>
       </div>
 

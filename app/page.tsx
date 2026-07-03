@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { db } from "@/lib/db";
+import { categoryIcon } from "@/lib/category-icon";
 import { resolveImage } from "@/lib/r2";
 import { getSession } from "@/lib/session";
 import { getWishlistProductIds } from "@/lib/wishlist";
@@ -69,7 +70,17 @@ export default async function LandingPage() {
       where: { active: true },
       orderBy: { createdAt: "desc" },
       take: 14,
-      include: { category: { select: { name: true } } },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        priceKobo: true,
+        images: true,
+        stockCartons: true,
+        unitsPerCarton: true,
+        stockLoosePieces: true,
+        category: { select: { name: true } },
+      },
     }),
     buildPromoSlides(),
   ]);
@@ -95,22 +106,30 @@ export default async function LandingPage() {
   );
 
   // Per-category product rows (every active category with at least 5 active
-  // products). Fetched in a single query and grouped in memory: the pooled DB
-  // connection limit is 1, so a per-category fan-out would exhaust the pool, and
-  // one round-trip scales regardless of how many categories qualify.
-  const allActiveProducts = await db.product.findMany({
-    where: { active: true },
-    orderBy: { createdAt: "desc" },
-    include: { category: { select: { name: true } } },
-  });
-
-  const productsByCategory = new Map<string, typeof allActiveProducts>();
-  for (const p of allActiveProducts) {
-    if (!p.categoryId) continue;
-    const bucket = productsByCategory.get(p.categoryId);
-    if (bucket) bucket.push(p);
-    else productsByCategory.set(p.categoryId, [p]);
-  }
+  // products). One bounded query per category, run in parallel — the pool
+  // (connection_limit=10) comfortably absorbs the fan-out, and each query pulls
+  // at most 10 rows with only the fields the card renders instead of the whole
+  // catalog. Fetching 10 also lets us hide categories with fewer than 5.
+  const perCategory = await Promise.all(
+    categories.map((cat) =>
+      db.product.findMany({
+        where: { active: true, categoryId: cat.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          priceKobo: true,
+          images: true,
+          stockCartons: true,
+          unitsPerCarton: true,
+          stockLoosePieces: true,
+          category: { select: { name: true } },
+        },
+      }),
+    ),
+  );
 
   const categorySections: {
     id: string;
@@ -118,11 +137,11 @@ export default async function LandingPage() {
     slug: string;
     products: FeaturedProduct[];
   }[] = [];
-  for (const cat of categories) {
-    const all = productsByCategory.get(cat.id) ?? [];
+  for (let ci = 0; ci < categories.length; ci++) {
+    const cat = categories[ci];
+    const prods = perCategory[ci];
     // Hide any category with fewer than 5 active products.
-    if (all.length < 5) continue;
-    const prods = all.slice(0, 10);
+    if (prods.length < 5) continue;
     const images = await Promise.all(prods.map((p) => resolveImage(p.images[0])));
     categorySections.push({
       id: cat.id,
@@ -139,12 +158,11 @@ export default async function LandingPage() {
       <main className="flex-1">
         {/* Hero — background image band with the promo carousel layered on top */}
         <section
-          className="relative bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/background.jpeg')" }}
+          className="relative bg-cover bg-center bg-no-repeat" 
         >
           {/* subtle overlay so the carousel edges read cleanly over any image */}
           <div className="absolute inset-0 bg-black/20" />
-          <div className="container relative pb-8 pt-6 md:pb-12 md:pt-8">
+          <div className="relative pb-8 pt-6 md:pb-12 md:pt-8">
             <PromoCarousel slides={slides} />
           </div>
         </section>
@@ -181,17 +199,23 @@ export default async function LandingPage() {
                       <span>All categories</span>
                     </Link>
                   </li>
-                  {categories.map((c) => (
-                    <li key={c.id}>
-                      <Link
-                        href={`/products?category=${c.slug}`}
-                        className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-secondary"
-                      >
-                        <span className="truncate">{c.name}</span>
-                        <span className="text-xs text-muted-foreground">{c._count.products}</span>
-                      </Link>
-                    </li>
-                  ))}
+                  {categories.map((c) => {
+                    const Icon = categoryIcon({ name: c.name, slug: c.slug });
+                    return (
+                      <li key={c.id}>
+                        <Link
+                          href={`/products?category=${c.slug}`}
+                          className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-secondary"
+                        >
+                          <span className="flex min-w-0 items-center gap-2">
+                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{c.name}</span>
+                          </span>
+                          <span className="text-xs text-muted-foreground">{c._count.products}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </aside>
@@ -242,7 +266,7 @@ export default async function LandingPage() {
 
         {/* Per-category product rows */}
         {categorySections.map((section, i) => (
-          <section key={section.id} className={i % 2 === 1 ? "bg-[#93d9fd]" : "bg-[#93d9fd]"}>
+          <section key={section.id} className={i % 2 === 1 ? "bg-[#ccc]" : ""}>
             <div className="container py-2 md:py-4">
               <div className="mb-5 flex items-center justify-between bg-white px-4 py-2">
                 <div>

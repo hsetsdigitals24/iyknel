@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { db } from "@/lib/db";
+import { categoryIcon } from "@/lib/category-icon";
 import { resolveImage } from "@/lib/r2";
 import { getSession } from "@/lib/session";
 import { getWishlistProductIds } from "@/lib/wishlist";
@@ -67,11 +68,25 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       include: { _count: { select: { products: { where: { active: true } } } } },
     }),
+    // Cumulative "Load more": page N renders the first N×PAGE_SIZE rows in one
+    // server render (there is no client-side accumulation), so `take` grows with
+    // the page. We only project the fields the card needs to keep the payload
+    // small over the remote DB link.
     db.product.findMany({
       where,
       orderBy: SORTS[sortKey],
-      include: { category: true },
       take: page * PAGE_SIZE,
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        priceKobo: true,
+        images: true,
+        stockCartons: true,
+        unitsPerCarton: true,
+        stockLoosePieces: true,
+        category: { select: { name: true } },
+      },
     }),
     db.product.count({ where }),
   ]);
@@ -180,7 +195,9 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
                       <span>All categories</span>
                     </Link>
                   </li>
-                  {categories.map((c) => (
+                  {categories.map((c) => {
+                    const Icon = categoryIcon({ name: c.name, slug: c.slug });
+                    return (
                     <li key={c.id}>
                       <Link
                         href={baseParams({ category: c.slug })}
@@ -190,13 +207,17 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
                             : "hover:bg-secondary"
                         }`}
                       >
-                        <span className="truncate">{c.name}</span>
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="truncate">{c.name}</span>
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {c._count.products}
                         </span>
                       </Link>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
 

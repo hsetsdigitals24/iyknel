@@ -7,8 +7,6 @@ import { WhatsAppFab } from "@/components/whatsapp-fab";
 import { GlobalErrorListener } from "@/components/global-error-listener";
 import "./globals.css";
 
-export const dynamic = "force-dynamic";
-
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
 
@@ -21,7 +19,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={cn(sans.variable, serif.variable)} suppressHydrationWarning>
-      <body className="min-h-screen font-sans antialiased bg-[#93d9fd] text-foreground">
+      <body className="min-h-screen font-sans antialiased text-foreground">
         <AuthSessionProvider>{children}</AuthSessionProvider>
         <WhatsAppFab />
         <Toaster position="top-right" richColors />

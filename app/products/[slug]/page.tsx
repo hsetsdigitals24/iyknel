@@ -27,7 +27,7 @@ export default async function ProductDetailPage({
 }) {
   const product = await db.product.findUnique({
     where: { slug: params.slug },
-    include: { category: true },
+    include: { category: { select: { name: true, slug: true } } },
   });
   if (!product || !product.active) notFound();
 
@@ -36,28 +36,42 @@ export default async function ProductDetailPage({
   const inStock = totalPiecesAvailable > 0;
   const lowStock = inStock && totalPiecesAvailable < 20;
 
-  const related = product.categoryId
-    ? await db.product.findMany({
-        where: {
-          active: true,
-          categoryId: product.categoryId,
-          NOT: { id: product.id },
-        },
-        orderBy: { createdAt: "desc" },
-        include: { category: true },
-        take: 8,
-      })
-    : [];
+  const reviewPage = Math.max(1, Number.parseInt(searchParams.reviewPage ?? "1", 10) || 1);
+
+  // Related products, session, and reviews only depend on the product we already
+  // have — run all three round-trips in parallel instead of serially.
+  const [related, session, reviewSummary] = await Promise.all([
+    product.categoryId
+      ? db.product.findMany({
+          where: {
+            active: true,
+            categoryId: product.categoryId,
+            NOT: { id: product.id },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 4,
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            priceKobo: true,
+            images: true,
+            stockCartons: true,
+            unitsPerCarton: true,
+            stockLoosePieces: true,
+            category: { select: { name: true } },
+          },
+        })
+      : Promise.resolve([]),
+    getSession(),
+    getProductReviews(product.id, { page: reviewPage, pageSize: REVIEW_PAGE_SIZE }),
+  ]);
 
   const galleryImages = await resolveImages(product.images);
   const relatedImages = await Promise.all(related.map((p) => resolveImage(p.images[0])));
-  const session = await getSession();
   const savedIds = session?.user?.id
     ? await getWishlistProductIds(session.user.id)
     : new Set<string>();
-
-  const reviewPage = Math.max(1, Number.parseInt(searchParams.reviewPage ?? "1", 10) || 1);
-  const reviewSummary = await getProductReviews(product.id, { page: reviewPage, pageSize: REVIEW_PAGE_SIZE });
 
   return (
     <div className="flex min-h-screen flex-col">
