@@ -31,7 +31,7 @@ export function TrustedPartners({
   // and up to 5 visible, repeat the set so it can scroll continuously.
   const slides = Array.from({ length: 3 }, () => partners).flat();
   return (
-    <section className={className ?? "bg-white"}>
+    <section className={className ?? "bg-[#f1f1f1]"}>
       <div className="container py-12 md:py-16">
         <div className="mb-8 text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
@@ -51,11 +51,8 @@ export function TrustedPartners({
         >
           <CarouselContent>
             {slides.map((p, i) => (
-              <CarouselItem
-                key={`${p.name}-${i}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
-              >
-                <div className="flex h-24 items-center justify-center bg-card p-4">
+              <CarouselItem key={`${p.name}-${i}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4">
+                <div className="flex h-24 items-center justify-center p-4">
                   <div className="relative h-full w-full">
                     <Image
                       src={p.logo}
@@ -63,7 +60,7 @@ export function TrustedPartners({
                       fill
                       sizes="(min-width: 1024px) 20vw, 50vw"
                       className="object-contain opacity-80 transition hover:opacity-100"
-                    />,
+                    />
                   </div>
                 </div>
               </CarouselItem>

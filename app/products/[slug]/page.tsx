@@ -107,7 +107,7 @@ export default async function ProductDetailPage({
               {product.category && (
                 <Link
                   href={`/products?category=${product.category.slug}`}
-                  className="inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/15"
+                  className="inline-flex w-fit items-center rounded-full bg-secondary/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/15"
                 >
                   {product.category.name}
                 </Link>

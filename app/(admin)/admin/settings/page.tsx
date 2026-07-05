@@ -1,8 +1,30 @@
+import Link from "next/link";
+
+import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ChangePasswordForm } from "./change-password-form";
+import { deleteAdminAction } from "./admins/actions";
+import { ConfirmDeleteAdminButton } from "./admins/row-controls";
 
 export default async function AdminSettingsPage() {
-  await requireAdmin();
+  const session = await requireAdmin();
+
+  const admins = await db.user.findMany({
+    where: { role: "ADMIN" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, name: true, email: true, phone: true, createdAt: true },
+  });
+  const isLastAdmin = admins.length <= 1;
 
   return (
     <div className="space-y-8">
@@ -21,6 +43,79 @@ export default async function AdminSettingsPage() {
           </p>
         </div>
         <ChangePasswordForm />
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">Admin accounts</h2>
+            <p className="text-sm text-muted-foreground">
+              People who can access the back office.
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/admin/settings/admins/new">New admin</Link>
+          </Button>
+        </div>
+
+        <div className="rounded-md border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Added</TableHead>
+                <TableHead className="w-[140px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {admins.map((a) => {
+                const isSelf = a.id === session.user.id;
+                return (
+                  <TableRow key={a.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/settings/admins/${a.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {a.name ?? "—"}
+                        </Link>
+                        {isSelf && <Badge variant="secondary">You</Badge>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{a.email}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {a.phone ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {a.createdAt.toLocaleDateString("en-NG", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/admin/settings/admins/${a.id}`}>Edit</Link>
+                        </Button>
+                        {!isSelf && !isLastAdmin && (
+                          <form action={deleteAdminAction.bind(null, a.id)}>
+                            <ConfirmDeleteAdminButton
+                              label={`Delete ${a.name ?? a.email}`}
+                            />
+                          </form>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </section>
     </div>
   );

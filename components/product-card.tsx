@@ -71,7 +71,7 @@ export function ProductCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <p className="truncate rounded-xl bg-[#ffc300] w-fit px-4 py-[.3rem] text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="truncate rounded-xl bg-[#ffc300] w-fit px-4 py-[.2rem] text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {category}
         </p>
         <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug">{name}</h3>

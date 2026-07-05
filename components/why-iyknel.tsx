@@ -25,7 +25,7 @@ const POINTS = [
 
 export function WhyIyknel() {
   return (
-    <section className="bg-muted py-12 mb-4">
+    <section className="bg-[#fff] py-12 mb-4">
       <div className="container">
         <header className="mb-8 max-w-2xl">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">

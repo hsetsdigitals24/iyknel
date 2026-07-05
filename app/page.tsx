@@ -61,7 +61,7 @@ function mapProduct(
 }
 
 export default async function LandingPage() {
-  const [categories, products, slides] = await Promise.all([
+  const [categories, products] = await Promise.all([
     db.category.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -151,7 +151,48 @@ export default async function LandingPage() {
       products: prods.map((p, i) => mapProduct(p, images[i] ?? null, savedIds)),
     });
   }
-
+  const slides = [
+    {
+      eyebrow: "Oils",
+      title: "Cooking oils, by the carton",
+      copy: "Power Oil, King's and Laziz in retail and bulk sizes — priced for volume, delivered to your store.",
+      cta: { label: "Shop oils", href: "/products?category=oil" },
+      image: "/slider/oils.jpeg",
+      tint: "from-amber-950/70",
+    },
+    {
+      eyebrow: "Dairy & Creamer",
+      title: "Dano milk, always in stock",
+      copy: "Full cream milk powder in sachets and cartons, ready for your shelves.",
+      cta: { label: "Shop creamer", href: "/products?category=creamer" },
+      image: "/slider/creamer.jpeg",
+      tint: "from-sky-950/70",
+    },
+    {
+      eyebrow: "Noodles",
+      title: "Indomie moves fast. Stay stocked.",
+      copy: "Chicken, Onion Chicken and Oriental — single packs to super-pack cartons.",
+      cta: { label: "Shop noodles", href: "/products?category=noodles" },
+      image: "/slider/noodles.jpeg",
+      tint: "from-red-950/70",
+    },
+    {
+      eyebrow: "Pasta & Flour",
+      title: "Golden Penny pasta & swallow staples",
+      copy: "Spaghetti, twist, yam and beans flour — the staples your customers ask for daily.",
+      cta: { label: "Shop pasta", href: "/products?category=pasta" },
+      image: "/slider/pasta.jpeg",
+      tint: "from-orange-950/70",
+    },
+    {
+      eyebrow: "Seasoning & Spices",
+      title: "Season every sale",
+      copy: "Sonia tomato paste and pepper, AACE curry and thyme — stocked in full cartons.",
+      cta: { label: "Shop spices", href: "/products?category=spices" },
+      image: "/slider/seasoning.jpeg",
+      tint: "from-emerald-950/70",
+    },
+  ];
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
@@ -163,7 +204,7 @@ export default async function LandingPage() {
         {/* Hero — background image band with the promo carousel layered on top */}
         <section className="relative bg-cover bg-center bg-no-repeat">
           {/* subtle overlay so the carousel edges read cleanly over any image */}
-          <div className="absolute inset-0 bg-[#fff]" />
+          <div className="absolute inset-0 bg-white" />
           <div className="relative">
             <PromoCarousel slides={slides} />
           </div>
@@ -243,7 +284,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Featured products carousel */}
-        <section className="bg-[#eaeaea]">
+        <section className="bg-white">
           <div className="container py-2 md:py-10">
             <div className="mb-5 flex items-end justify-between">
               <div>
@@ -273,9 +314,9 @@ export default async function LandingPage() {
 
         {/* Per-category product rows */}
         {categorySections.map((section, i) => (
-          <section key={section.id} className={i % 2 === 1 ? "bg-[#eaeaea]" : ""}>
+          <section key={section.id} className={i % 2 === 1 ? "" : ""}>
             <div className="container py-4 md:py-8">
-              <div className="mb-5 flex items-center justify-between bg-white px-4 py-2">
+              <div className="mb-5 flex items-center justify-between px-4 py-2">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                     Shop {section.name}
@@ -303,7 +344,7 @@ export default async function LandingPage() {
 
         {/* Secondary banner */}
         <section className="container py-8">
-          <div className="grid overflow-hidden rounded-2xl bg-[#93d9fd] text-white md:grid-cols-2">
+          <div className="grid overflow-hidden rounded-2xl bg-[#92d9fd] text-white md:grid-cols-2">
             <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-700/80">
                 For wholesalers & retailers
@@ -328,7 +369,7 @@ export default async function LandingPage() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full bg-white text-primary hover:bg-white/90 hover:text-primary"
+                  className="rounded-full bg-white text-slate-700 hover:bg-white/90 hover:text-primary"
                 >
                   <Link href="/products">Browse catalog</Link>
                 </Button>

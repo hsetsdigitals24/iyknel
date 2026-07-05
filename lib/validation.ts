@@ -69,6 +69,49 @@ export const changePasswordSchema = z
     path: ["newPassword"],
   });
 
+export const adminCreateSchema = z
+  .object({
+    name: z.string().trim().min(2, "Name is required").max(120),
+    email: z.string().trim().email("Enter a valid email"),
+    phone: z
+      .string()
+      .trim()
+      .regex(phoneRegex, "Enter a valid phone number")
+      .optional()
+      .or(z.literal("")),
+    password: z.string().min(8, "Use at least 8 characters").max(72),
+    confirmPassword: z.string().min(1, "Confirm the password"),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+export type AdminCreateInput = z.infer<typeof adminCreateSchema>;
+
+export const adminUpdateSchema = z
+  .object({
+    name: z.string().trim().min(2, "Name is required").max(120),
+    email: z.string().trim().email("Enter a valid email"),
+    phone: z
+      .string()
+      .trim()
+      .regex(phoneRegex, "Enter a valid phone number")
+      .optional()
+      .or(z.literal("")),
+    newPassword: z
+      .string()
+      .min(8, "Use at least 8 characters")
+      .max(72)
+      .optional()
+      .or(z.literal("")),
+    confirmPassword: z.string().optional().or(z.literal("")),
+  })
+  .refine((d) => !d.newPassword || d.newPassword === d.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+export type AdminUpdateInput = z.infer<typeof adminUpdateSchema>;
+
 export type FormState =
   | { ok: true; message?: string }
   | { ok: false; message: string; fieldErrors?: Record<string, string[]> }

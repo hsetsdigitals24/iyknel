@@ -30,7 +30,7 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
   return (
     <Carousel
       opts={{ loop: true, align: "start" }}
-      plugins={[Autoplay({ delay: 5500, stopOnInteraction: true })]}
+      plugins={[Autoplay({ delay: 5500, stopOnInteraction: false })]}
       className="relative"
     >
       <CarouselContent>
@@ -77,17 +77,6 @@ export function PromoCarousel({ slides }: { slides: Slide[] }) {
           </CarouselItem>
         ))}
       </CarouselContent>
-
-      {/* <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center">
-        <div className="container flex w-full items-center justify-between">
-          <div className="pointer-events-auto hidden md:block">
-            <CarouselPrevious className="bg-secondary text-secondary-foreground h-10 w-10" />
-          </div>
-          <div className="pointer-events-auto hidden md:block">
-            <CarouselNext className="bg-secondary text-secondary-foreground h-10 w-10" />
-          </div>
-        </div>
-      </div> */}
 
       <CarouselDots className="mt-4 " />
     </Carousel>

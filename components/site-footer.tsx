@@ -16,7 +16,7 @@ const CATEGORY_LINKS = [
 export function SiteFooter() {
   const contact = getContact();
   return (
-    <footer className="mt-16 border-t bg-surface-muted">
+    <footer className="mt-16 border-t bg-[#f8f8f8]">
       <div className="container grid gap-10 py-12 md:grid-cols-4">
         <div className="space-y-3">
           <BrandLogo size="md" />
@@ -70,14 +70,14 @@ export function SiteFooter() {
                 My orders
               </Link>
             </li>
-             <li>
+            <li>
               <Link href="/about" className="text-muted-foreground hover:text-foreground">
-                 About us
+                About us
               </Link>
             </li>
-             <li>
+            <li>
               <Link href="/contact" className="text-muted-foreground hover:text-foreground">
-                 Contact us
+                Contact us
               </Link>
             </li>
           </ul>
@@ -135,8 +135,6 @@ export function SiteFooter() {
             </a>
           </span>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-           
-          
             <Link href="/privacy" className="hover:text-foreground">
               Privacy
             </Link>
