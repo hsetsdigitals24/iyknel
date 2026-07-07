@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
 import { UserMenu } from "@/components/user-menu";
 import { BrandLogo } from "@/components/brand-logo";
+import { NotificationBell } from "@/components/notification-bell";
 
 type NavItem = {
   href: string;
@@ -19,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       where: { status: { in: ["SUBMITTED", "AWAITING_APPROVAL", "PAYMENT_REVIEW"] } },
     }),
     db.product.count({
-      where: { active: true, stockCartons: 0, stockLoosePieces: 0 },
+      where: { active: true, stockCartons: 0, stockLoosePacks: 0 },
     }),
     db.quoteRequest.count({ where: { status: "PENDING" } }),
   ]);
@@ -45,7 +46,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <BrandLogo size="sm" href="/" />
             <span className="text-sm text-muted-foreground">/ back office</span>
           </div>
-          <UserMenu />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <UserMenu />
+          </div>
         </div>
       </header>
       <div className="container grid flex-1 gap-10 py-10 md:grid-cols-[200px_1fr]">

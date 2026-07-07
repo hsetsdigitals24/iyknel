@@ -28,7 +28,7 @@ export default async function CartPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {cart.lines.length === 0
             ? "Nothing here yet — add products to start an order."
-            : `${cart.itemCount} pcs across ${cart.lines.length} product${cart.lines.length === 1 ? "" : "s"}${cart.cartonCount > 0 ? ` · ${cart.cartonCount} carton${cart.cartonCount === 1 ? "" : "s"}` : ""}`}
+            : `${cart.itemCount} packs across ${cart.lines.length} product${cart.lines.length === 1 ? "" : "s"}${cart.cartonCount > 0 ? ` · ${cart.cartonCount} carton${cart.cartonCount === 1 ? "" : "s"}` : ""}`}
         </p>
       </header>
 
@@ -59,7 +59,7 @@ export default async function CartPage() {
               <dl className="space-y-2 text-sm">
                 <Row label="Subtotal" value={formatNaira(cart.subtotalKobo)} />
                 <Row label="Cartons" value={String(cart.cartonCount)} />
-                <Row label="Total pieces" value={String(cart.itemCount)} />
+                <Row label="Total packs" value={String(cart.itemCount)} />
                 <Row
                   label="Total weight"
                   value={`${(cart.weightGrams / 1000).toFixed(2)} kg`}

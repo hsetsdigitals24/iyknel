@@ -12,10 +12,10 @@ type Result = { ok: true } | { ok: false; message: string };
 const qtySchema = z
   .object({
     cartons: z.coerce.number().int().min(0).max(10_000),
-    pieces: z.coerce.number().int().min(0).max(10_000),
+    packs: z.coerce.number().int().min(0).max(10_000),
   })
-  .refine((v) => v.cartons + v.pieces > 0, {
-    message: "Pick at least one carton or piece.",
+  .refine((v) => v.cartons + v.packs > 0, {
+    message: "Pick at least one carton or pack.",
   });
 
 export async function addToCartAction(productId: string, qty: Qty): Promise<Result> {
@@ -41,7 +41,7 @@ export async function updateQtyAction(itemId: string, qty: Qty): Promise<Result>
   const parsed = z
     .object({
       cartons: z.coerce.number().int().min(0).max(10_000),
-      pieces: z.coerce.number().int().min(0).max(10_000),
+      packs: z.coerce.number().int().min(0).max(10_000),
     })
     .safeParse(qty);
   if (!parsed.success) {

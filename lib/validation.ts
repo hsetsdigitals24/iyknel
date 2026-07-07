@@ -112,6 +112,14 @@ export const adminUpdateSchema = z
   });
 export type AdminUpdateInput = z.infer<typeof adminUpdateSchema>;
 
+export const whatsappContactSchema = z.object({
+  label: z.string().trim().min(1, "Label is required").max(60),
+  phone: z.string().trim().regex(phoneRegex, "Enter a valid phone number"),
+  sortOrder: z.coerce.number().int().min(0).max(10_000).default(100),
+  active: z.coerce.boolean().optional().default(true),
+});
+export type WhatsappContactInput = z.infer<typeof whatsappContactSchema>;
+
 export type FormState =
   | { ok: true; message?: string }
   | { ok: false; message: string; fieldErrors?: Record<string, string[]> }

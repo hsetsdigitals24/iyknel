@@ -34,11 +34,11 @@ type ItemInput = {
   weightGramsSnap: number;
   unitsPerCartonSnap: number | null;
   quantityCartons: number;
-  quantityPieces: number;
+  quantityPacks: number;
   // Spare stock currently available to grow into (excluding what this order
   // already reserves — the engine handles deltas).
   stockCartonsAvailable: number;
-  stockLoosePiecesAvailable: number;
+  stockLoosePacksAvailable: number;
 };
 
 type AddressInput = {
@@ -53,7 +53,7 @@ type AddressInput = {
 type LineState = {
   itemId: string;
   cartons: number;
-  pieces: number;
+  packs: number;
 };
 
 type Props = {
@@ -83,7 +83,7 @@ export function OrderEditForm({
     items.map((it) => ({
       itemId: it.itemId,
       cartons: it.quantityCartons,
-      pieces: it.quantityPieces,
+      packs: it.quantityPacks,
     })),
   );
   const [addressList, setAddressList] = useState<AddressInput[]>(addresses);
@@ -145,23 +145,23 @@ export function OrderEditForm({
 
   const itemsChanged = lines.some((l) => {
     const it = items.find((i) => i.itemId === l.itemId)!;
-    return l.cartons !== it.quantityCartons || l.pieces !== it.quantityPieces;
+    return l.cartons !== it.quantityCartons || l.packs !== it.quantityPacks;
   });
   const willResetStatus = itemsChanged && status !== "SUBMITTED";
 
   const totals = items.reduce(
     (acc, it) => {
       const l = lines.find((ln) => ln.itemId === it.itemId)!;
-      const totalPieces = l.cartons * (it.unitsPerCartonSnap ?? 0) + l.pieces;
-      acc.subtotalKobo += totalPieces * it.priceKoboSnap;
-      acc.weightGrams += totalPieces * it.weightGramsSnap;
-      acc.pieces += totalPieces;
+      const totalPacks = l.cartons * (it.unitsPerCartonSnap ?? 0) + l.packs;
+      acc.subtotalKobo += totalPacks * it.priceKoboSnap;
+      acc.weightGrams += totalPacks * it.weightGramsSnap;
+      acc.packs += totalPacks;
       return acc;
     },
-    { subtotalKobo: 0, weightGrams: 0, pieces: 0 },
+    { subtotalKobo: 0, weightGrams: 0, packs: 0 },
   );
 
-  const allEmpty = lines.every((l) => l.cartons === 0 && l.pieces === 0);
+  const allEmpty = lines.every((l) => l.cartons === 0 && l.packs === 0);
 
   function setLine(itemId: string, next: Partial<LineState>) {
     setLines((prev) =>
@@ -217,12 +217,12 @@ export function OrderEditForm({
         <ul className="divide-y">
           {items.map((it) => {
             const line = lines.find((l) => l.itemId === it.itemId)!;
-            const totalPieces =
-              line.cartons * (it.unitsPerCartonSnap ?? 0) + line.pieces;
+            const totalPacks =
+              line.cartons * (it.unitsPerCartonSnap ?? 0) + line.packs;
             const canCartons = it.unitsPerCartonSnap != null;
             const maxCartons = it.quantityCartons + it.stockCartonsAvailable;
-            const maxPieces = it.quantityPieces + it.stockLoosePiecesAvailable;
-            const removed = line.cartons === 0 && line.pieces === 0;
+            const maxPacks = it.quantityPacks + it.stockLoosePacksAvailable;
+            const removed = line.cartons === 0 && line.packs === 0;
             return (
               <li key={it.itemId} className={`p-4 sm:p-5 ${removed ? "opacity-60" : ""}`}>
                 <div className="flex gap-4">
@@ -242,12 +242,12 @@ export function OrderEditForm({
                       <div>
                         <p className="font-medium leading-snug">{it.name}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          {it.sku} · {formatNaira(it.priceKoboSnap)} per piece
-                          {canCartons && <> · 1 carton = {it.unitsPerCartonSnap} pcs</>}
+                          {it.sku} · {formatNaira(it.priceKoboSnap)} per pack
+                          {canCartons && <> · 1 carton = {it.unitsPerCartonSnap} packs</>}
                         </p>
                       </div>
                       <p className="shrink-0 text-base font-bold tabular-nums text-primary">
-                        {formatNaira(totalPieces * it.priceKoboSnap)}
+                        {formatNaira(totalPacks * it.priceKoboSnap)}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
@@ -261,18 +261,18 @@ export function OrderEditForm({
                         />
                       )}
                       <Stepper
-                        label="Pieces"
-                        value={line.pieces}
-                        max={maxPieces}
+                        label="Packs"
+                        value={line.packs}
+                        max={maxPacks}
                         disabled={pending}
-                        onChange={(n) => setLine(it.itemId, { pieces: n })}
+                        onChange={(n) => setLine(it.itemId, { packs: n })}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         disabled={pending || removed}
-                        onClick={() => setLine(it.itemId, { cartons: 0, pieces: 0 })}
+                        onClick={() => setLine(it.itemId, { cartons: 0, packs: 0 })}
                         className="text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="mr-1 h-3.5 w-3.5" />
@@ -285,7 +285,7 @@ export function OrderEditForm({
                       </p>
                     ) : (
                       <p className="text-xs text-muted-foreground">
-                        {totalPieces} pcs total
+                        {totalPacks} packs total
                       </p>
                     )}
                   </div>
@@ -397,7 +397,7 @@ export function OrderEditForm({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-5">
         <div className="text-sm">
           <p className="text-muted-foreground">
-            {totals.pieces} pcs · {(totals.weightGrams / 1000).toFixed(2)} kg
+            {totals.packs} packs · {(totals.weightGrams / 1000).toFixed(2)} kg
           </p>
           <p className="mt-1 text-xl font-bold tabular-nums text-primary">
             {formatNaira(totals.subtotalKobo)}

@@ -18,15 +18,15 @@ export type CartLine = {
   slug: string;
   image: string | null;
   quantityCartons: number;
-  quantityPieces: number;
-  totalPieces: number;
+  quantityPacks: number;
+  totalPacks: number;
   unitsPerCarton: number | null;
   unitPriceKobo: number;
   unitWeightGrams: number;
   lineSubtotalKobo: number;
   lineWeightGrams: number;
   stockCartons: number;
-  stockLoosePieces: number;
+  stockLoosePacks: number;
 };
 
 export type CartSummary = {
@@ -34,14 +34,14 @@ export type CartSummary = {
   lines: CartLine[];
   subtotalKobo: number;
   weightGrams: number;
-  itemCount: number; // total pieces across all lines
+  itemCount: number; // total packs across all lines
   cartonCount: number; // total cartons across all lines
 };
 
-export type Qty = { cartons: number; pieces: number };
+export type Qty = { cartons: number; packs: number };
 
-export function totalPiecesFor(unitsPerCarton: number | null, qty: Qty): number {
-  return qty.cartons * (unitsPerCarton ?? 0) + qty.pieces;
+export function totalPacksFor(unitsPerCarton: number | null, qty: Qty): number {
+  return qty.cartons * (unitsPerCarton ?? 0) + qty.packs;
 }
 
 export async function getCartSummary(userId: string): Promise<CartSummary> {
@@ -56,9 +56,9 @@ export async function getCartSummary(userId: string): Promise<CartSummary> {
   );
   const lines: CartLine[] = items.map((i, idx) => {
     const upc = i.product.unitsPerCarton;
-    const totalPieces = totalPiecesFor(upc, {
+    const totalPacks = totalPacksFor(upc, {
       cartons: i.quantityCartons,
-      pieces: i.quantityPieces,
+      packs: i.quantityPacks,
     });
     return {
       itemId: i.id,
@@ -67,15 +67,15 @@ export async function getCartSummary(userId: string): Promise<CartSummary> {
       slug: i.product.slug,
       image: imageUrls[idx],
       quantityCartons: i.quantityCartons,
-      quantityPieces: i.quantityPieces,
-      totalPieces,
+      quantityPacks: i.quantityPacks,
+      totalPacks,
       unitsPerCarton: upc,
       unitPriceKobo: i.product.priceKobo,
       unitWeightGrams: i.product.weightGrams,
-      lineSubtotalKobo: i.product.priceKobo * totalPieces,
-      lineWeightGrams: i.product.weightGrams * totalPieces,
+      lineSubtotalKobo: i.product.priceKobo * totalPacks,
+      lineWeightGrams: i.product.weightGrams * totalPacks,
       stockCartons: i.product.stockCartons,
-      stockLoosePieces: i.product.stockLoosePieces,
+      stockLoosePacks: i.product.stockLoosePacks,
     };
   });
   return {
@@ -83,20 +83,20 @@ export async function getCartSummary(userId: string): Promise<CartSummary> {
     lines,
     subtotalKobo: lines.reduce((s, l) => s + l.lineSubtotalKobo, 0),
     weightGrams: lines.reduce((s, l) => s + l.lineWeightGrams, 0),
-    itemCount: lines.reduce((s, l) => s + l.totalPieces, 0),
+    itemCount: lines.reduce((s, l) => s + l.totalPacks, 0),
     cartonCount: lines.reduce((s, l) => s + l.quantityCartons, 0),
   };
 }
 
 function validateAgainstProduct(
-  product: { unitsPerCarton: number | null; stockCartons: number; stockLoosePieces: number; name: string },
+  product: { unitsPerCarton: number | null; stockCartons: number; stockLoosePacks: number; name: string },
   qty: Qty,
 ) {
-  if (qty.cartons < 0 || qty.pieces < 0) {
+  if (qty.cartons < 0 || qty.packs < 0) {
     throw new AppError("Quantities cannot be negative.");
   }
   if (qty.cartons > 0 && product.unitsPerCarton == null) {
-    throw new AppError(`${product.name} is sold by the piece only.`);
+    throw new AppError(`${product.name} is sold by the pack only.`);
   }
   if (qty.cartons > product.stockCartons) {
     throw new AppError(
@@ -105,20 +105,20 @@ function validateAgainstProduct(
         : `${product.name}: only ${product.stockCartons} carton${product.stockCartons === 1 ? "" : "s"} in stock.`,
     );
   }
-  if (qty.pieces > product.stockLoosePieces) {
+  if (qty.packs > product.stockLoosePacks) {
     const suggestion =
       product.unitsPerCarton != null
-        ? ` Try buying by the carton (1 carton = ${product.unitsPerCarton} pcs).`
+        ? ` Try buying by the carton (1 carton = ${product.unitsPerCarton} packs).`
         : "";
     throw new AppError(
-      `${product.name}: only ${product.stockLoosePieces} loose piece${product.stockLoosePieces === 1 ? "" : "s"} in stock.${suggestion}`,
+      `${product.name}: only ${product.stockLoosePacks} loose pack${product.stockLoosePacks === 1 ? "" : "s"} in stock.${suggestion}`,
     );
   }
 }
 
 export async function addItem(userId: string, productId: string, qty: Qty) {
-  if ((qty.cartons | 0) + (qty.pieces | 0) <= 0) {
-    throw new AppError("Pick at least one carton or piece.");
+  if ((qty.cartons | 0) + (qty.packs | 0) <= 0) {
+    throw new AppError("Pick at least one carton or pack.");
   }
   const product = await db.product.findUnique({ where: { id: productId } });
   if (!product || !product.active) throw new AppError("Product is unavailable.");
@@ -128,17 +128,17 @@ export async function addItem(userId: string, productId: string, qty: Qty) {
     where: { cartId_productId: { cartId: cart.id, productId } },
   });
   const newCartons = (existing?.quantityCartons ?? 0) + qty.cartons;
-  const newPieces = (existing?.quantityPieces ?? 0) + qty.pieces;
-  validateAgainstProduct(product, { cartons: newCartons, pieces: newPieces });
+  const newPacks = (existing?.quantityPacks ?? 0) + qty.packs;
+  validateAgainstProduct(product, { cartons: newCartons, packs: newPacks });
 
   await db.cartItem.upsert({
     where: { cartId_productId: { cartId: cart.id, productId } },
-    update: { quantityCartons: newCartons, quantityPieces: newPieces },
+    update: { quantityCartons: newCartons, quantityPacks: newPacks },
     create: {
       cartId: cart.id,
       productId,
       quantityCartons: newCartons,
-      quantityPieces: newPieces,
+      quantityPacks: newPacks,
     },
   });
 }
@@ -150,14 +150,14 @@ export async function updateItemQty(userId: string, itemId: string, qty: Qty) {
     include: { product: true },
   });
   if (!item || item.cartId !== cart.id) throw new AppError("Cart item not found.");
-  if ((qty.cartons | 0) <= 0 && (qty.pieces | 0) <= 0) {
+  if ((qty.cartons | 0) <= 0 && (qty.packs | 0) <= 0) {
     await db.cartItem.delete({ where: { id: itemId } });
     return;
   }
   validateAgainstProduct(item.product, qty);
   await db.cartItem.update({
     where: { id: itemId },
-    data: { quantityCartons: qty.cartons, quantityPieces: qty.pieces },
+    data: { quantityCartons: qty.cartons, quantityPacks: qty.packs },
   });
 }
 

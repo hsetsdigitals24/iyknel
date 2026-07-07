@@ -61,7 +61,7 @@ export type InvoiceProps = {
     skuSnapshot: string;
     quantity: number;
     quantityCartons: number;
-    quantityPieces: number;
+    quantityPacks: number;
     unitsPerCartonSnap: number | null;
     priceKoboSnap: number;
   }>;
@@ -129,8 +129,8 @@ export function InvoiceDocument(props: InvoiceProps) {
                   (it.unitsPerCartonSnap != null ? ` (${it.unitsPerCartonSnap}/ctn)` : ""),
               );
             }
-            if (it.quantityPieces > 0) {
-              parts.push(`${it.quantityPieces} pc${it.quantityPieces === 1 ? "" : "s"}`);
+            if (it.quantityPacks > 0) {
+              parts.push(`${it.quantityPacks} pack${it.quantityPacks === 1 ? "" : "s"}`);
             }
             return (
               <View style={styles.tr} key={i}>
@@ -151,6 +151,10 @@ export function InvoiceDocument(props: InvoiceProps) {
           <View style={styles.totalsRow}>
             <Text style={styles.totalsLabel}>Subtotal</Text>
             <Text style={styles.totalsValue}>{fmt(props.subtotalKobo)}</Text>
+          </View>
+          <View style={styles.totalsRow}>
+            <Text style={styles.totalsLabel}>Total weight</Text>
+            <Text style={styles.totalsValue}>{(props.weightGrams / 1000).toFixed(2)} kg</Text>
           </View>
           <View style={styles.totalsRow}>
             <Text style={styles.totalsLabel}>

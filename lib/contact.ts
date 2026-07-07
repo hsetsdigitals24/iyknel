@@ -1,5 +1,9 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
+import { db } from "@/lib/db";
+
 export type ContactPhone = {
   e164: string;
   display: string;
@@ -57,6 +61,57 @@ function parsePhones(raw: string | undefined | null): ContactPhone[] {
       return { e164, display: formatPhone(e164), href: `tel:${e164}` };
     })
     .filter((p): p is ContactPhone => p !== null);
+}
+
+export type WhatsappContactView = {
+  id: string;
+  label: string;
+  display: string;
+  waUrl: string;
+};
+
+export const WHATSAPP_CONTACTS_TAG = "whatsapp-contacts";
+
+// Normalize any accepted phone format to wa.me digits, e.g. "2348012345678".
+export function toWhatsappDigits(raw: string): string | null {
+  const e164 = to234(raw);
+  if (!e164) return null;
+  return e164.replace(/\D/g, "");
+}
+
+const listActiveWhatsappContacts = unstable_cache(
+  () =>
+    db.whatsappContact.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { id: true, label: true, phone: true },
+    }),
+  [WHATSAPP_CONTACTS_TAG],
+  { tags: [WHATSAPP_CONTACTS_TAG] },
+);
+
+export async function getWhatsappContacts(): Promise<WhatsappContactView[]> {
+  const rows = await listActiveWhatsappContacts();
+  if (rows.length > 0) {
+    return rows.map((r) => ({
+      id: r.id,
+      label: r.label,
+      display: formatPhone(`+${r.phone}`),
+      waUrl: `https://wa.me/${r.phone}`,
+    }));
+  }
+
+  // Fall back to the single env-configured number until contacts are added.
+  const digits = process.env.CONTACT_WHATSAPP?.replace(/\D/g, "");
+  if (!digits) return [];
+  return [
+    {
+      id: "env",
+      label: "Chat with us",
+      display: formatPhone(`+${digits}`),
+      waUrl: `https://wa.me/${digits}`,
+    },
+  ];
 }
 
 export function getContact(): Contact {

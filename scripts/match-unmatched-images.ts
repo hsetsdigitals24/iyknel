@@ -95,7 +95,7 @@ async function uploadImage(filePath: string, contentType: string): Promise<strin
 // ---- tokenisation (mirrors attach-product-images.ts) ----
 
 const STOP = new Set([
-  "foods", "food", "by", "x", "carton", "cartons", "pack", "pcs", "rf", "sup",
+  "foods", "food", "by", "x", "carton", "cartons", "pack", "packs", "pcs", "rf", "sup",
   "and", "the", "premium", "tin", "bucket",
 ]);
 

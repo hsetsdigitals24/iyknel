@@ -15,15 +15,22 @@ import {
 import { ChangePasswordForm } from "./change-password-form";
 import { deleteAdminAction } from "./admins/actions";
 import { ConfirmDeleteAdminButton } from "./admins/row-controls";
+import { deleteWhatsappContactAction } from "./whatsapp/actions";
+import { ConfirmDeleteContactButton } from "./whatsapp/row-controls";
 
 export default async function AdminSettingsPage() {
   const session = await requireAdmin();
 
-  const admins = await db.user.findMany({
-    where: { role: "ADMIN" },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, email: true, phone: true, createdAt: true },
-  });
+  const [admins, whatsappContacts] = await Promise.all([
+    db.user.findMany({
+      where: { role: "ADMIN" },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true, email: true, phone: true, createdAt: true },
+    }),
+    db.whatsappContact.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    }),
+  ]);
   const isLastAdmin = admins.length <= 1;
 
   return (
@@ -113,6 +120,73 @@ export default async function AdminSettingsPage() {
                   </TableRow>
                 );
               })}
+            </TableBody>
+          </Table>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">WhatsApp contacts</h2>
+            <p className="text-sm text-muted-foreground">
+              Phone lines shown on the floating WhatsApp chat button.
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/admin/settings/whatsapp/new">New contact</Link>
+          </Button>
+        </div>
+
+        <div className="rounded-md border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Label</TableHead>
+                <TableHead>Number</TableHead>
+                <TableHead>Sort</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[140px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {whatsappContacts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No contacts yet — the button falls back to the CONTACT_WHATSAPP
+                    number.
+                  </TableCell>
+                </TableRow>
+              )}
+              {whatsappContacts.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <Link
+                      href={`/admin/settings/whatsapp/${c.id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {c.label}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">+{c.phone}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.sortOrder}</TableCell>
+                  <TableCell>
+                    <Badge variant={c.active ? "secondary" : "outline"}>
+                      {c.active ? "Active" : "Hidden"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/admin/settings/whatsapp/${c.id}`}>Edit</Link>
+                      </Button>
+                      <form action={deleteWhatsappContactAction.bind(null, c.id)}>
+                        <ConfirmDeleteContactButton label={`Delete ${c.label}`} />
+                      </form>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

@@ -14,7 +14,7 @@ type Props = {
   productId: string;
   unitsPerCarton: number | null;
   stockCartons: number;
-  stockLoosePieces: number;
+  stockLoosePacks: number;
   priceKobo: number;
   className?: string;
 };
@@ -23,7 +23,7 @@ export function AddToCartForm({
   productId,
   unitsPerCarton,
   stockCartons,
-  stockLoosePieces,
+  stockLoosePacks,
   priceKobo,
   className,
 }: Props) {
@@ -31,18 +31,18 @@ export function AddToCartForm({
   const { status } = useSession();
   const [pending, start] = useTransition();
   const [cartons, setCartons] = useState(0);
-  const [pieces, setPieces] = useState(unitsPerCarton ? 0 : Math.min(1, stockLoosePieces));
+  const [packs, setPacks] = useState(unitsPerCarton ? 0 : Math.min(1, stockLoosePacks));
 
   const canCartons = unitsPerCarton != null;
-  const totalPieces = cartons * (unitsPerCarton ?? 0) + pieces;
-  const lineTotalKobo = totalPieces * priceKobo;
-  const noStock = stockCartons === 0 && stockLoosePieces === 0;
+  const totalPacks = cartons * (unitsPerCarton ?? 0) + packs;
+  const lineTotalKobo = totalPacks * priceKobo;
+  const noStock = stockCartons === 0 && stockLoosePacks === 0;
 
   function clampCartons(n: number) {
     return Math.max(0, Math.min(n, stockCartons));
   }
-  function clampPieces(n: number) {
-    return Math.max(0, Math.min(n, stockLoosePieces));
+  function clampPacks(n: number) {
+    return Math.max(0, Math.min(n, stockLoosePacks));
   }
 
   function onAdd() {
@@ -50,17 +50,17 @@ export function AddToCartForm({
       router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
-    if (totalPieces <= 0) {
-      toast.error("Pick at least one carton or piece.");
+    if (totalPacks <= 0) {
+      toast.error("Pick at least one carton or pack.");
       return;
     }
     start(async () => {
-      const res = await addToCartAction(productId, { cartons, pieces });
+      const res = await addToCartAction(productId, { cartons, packs });
       if (!res.ok) toast.error(res.message);
       else {
         toast.success("Added to cart");
         setCartons(0);
-        setPieces(0);
+        setPacks(0);
       }
     });
   }
@@ -83,17 +83,17 @@ export function AddToCartForm({
           />
         )}
         <Stepper
-          label="Pieces"
-          value={pieces}
-          onChange={(n) => setPieces(clampPieces(n))}
-          max={stockLoosePieces}
-          disabled={stockLoosePieces === 0}
+          label="Packs"
+          value={packs}
+          onChange={(n) => setPacks(clampPacks(n))}
+          max={stockLoosePacks}
+          disabled={stockLoosePacks === 0}
           helper={
-            stockLoosePieces === 0
+            stockLoosePacks === 0
               ? canCartons
-                ? "No loose pieces — buy by carton"
+                ? "No loose packs — buy by carton"
                 : "Out of stock"
-              : `${stockLoosePieces} piece${stockLoosePieces === 1 ? "" : "s"} available`
+              : `${stockLoosePacks} pack${stockLoosePacks === 1 ? "" : "s"} available`
           }
         />
       </div>
@@ -102,12 +102,12 @@ export function AddToCartForm({
         <div className="text-muted-foreground">
           {canCartons && (
             <>
-              <span className="font-medium text-foreground">1 carton = {unitsPerCarton} pcs</span>
+              <span className="font-medium text-foreground">1 carton = {unitsPerCarton} packs</span>
               <span className="mx-2">·</span>
             </>
           )}
           <span>
-            Total: <span className="font-semibold text-foreground">{totalPieces} pcs</span>
+            Total: <span className="font-semibold text-foreground">{totalPacks} packs</span>
           </span>
         </div>
         <div className="text-base font-bold tabular-nums text-primary">
@@ -119,7 +119,7 @@ export function AddToCartForm({
         type="button"
         size="lg"
         className="mt-4 w-full rounded-full sm:w-auto sm:px-8"
-        disabled={pending || noStock || totalPieces <= 0}
+        disabled={pending || noStock || totalPacks <= 0}
         onClick={onAdd}
       >
         <ShoppingCart className="mr-2 h-4 w-4" />

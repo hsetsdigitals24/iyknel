@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { uploadProductImage, deleteProductImage } from "@/lib/r2";
 import { AppError, logError } from "@/lib/errors";
+import { checkLowStockAndNotify } from "@/lib/in-app-notifications";
 import type { ProductRow } from "@/lib/csv";
 
 export const productInputSchema = z.object({
@@ -20,7 +21,7 @@ export const productInputSchema = z.object({
     .optional()
     .transform((v) => (v === "" || v == null ? null : (v as number))),
   stockCartons: z.coerce.number().int().nonnegative().max(10_000_000),
-  stockLoosePieces: z.coerce.number().int().nonnegative().max(10_000_000),
+  stockLoosePacks: z.coerce.number().int().nonnegative().max(10_000_000),
   categoryName: z.string().max(120).optional().or(z.literal("")),
   active: z.coerce.boolean().optional().default(true),
   featured: z.coerce.boolean().optional().default(false),
@@ -65,7 +66,7 @@ export async function createProduct(input: ProductInput, images: File[]) {
     if (f.size > 0) uploaded.push(await uploadProductImage(f));
   }
   const initialCartons = input.stockCartons;
-  const initialPieces = input.stockLoosePieces;
+  const initialPacks = input.stockLoosePacks;
   return db.product.create({
     data: {
       sku: input.sku,
@@ -76,17 +77,17 @@ export async function createProduct(input: ProductInput, images: File[]) {
       weightGrams: input.weightGrams,
       unitsPerCarton: input.unitsPerCarton,
       stockCartons: initialCartons,
-      stockLoosePieces: initialPieces,
+      stockLoosePacks: initialPacks,
       images: uploaded,
       active: input.active,
       featured: input.featured,
       categoryId,
       movements:
-        initialCartons > 0 || initialPieces > 0
+        initialCartons > 0 || initialPacks > 0
           ? {
               create: {
                 deltaCartons: initialCartons,
-                deltaPieces: initialPieces,
+                deltaPacks: initialPacks,
                 reason: "RESTOCK",
                 note: "Initial stock",
               },
@@ -109,7 +110,7 @@ export async function updateProduct(
     existing.name === input.name ? existing.slug : await uniqueSlug(input.name, existing.id);
 
   const cartonsDelta = input.stockCartons - existing.stockCartons;
-  const piecesDelta = input.stockLoosePieces - existing.stockLoosePieces;
+  const packsDelta = input.stockLoosePacks - existing.stockLoosePacks;
 
   const kept = existing.images.filter((u) => !removeUrls.includes(u));
   for (const u of removeUrls) {
@@ -124,7 +125,7 @@ export async function updateProduct(
     if (f.size > 0) uploaded.push(await uploadProductImage(f));
   }
 
-  return db.product.update({
+  const product = await db.product.update({
     where: { id },
     data: {
       sku: input.sku,
@@ -135,17 +136,17 @@ export async function updateProduct(
       weightGrams: input.weightGrams,
       unitsPerCarton: input.unitsPerCarton,
       stockCartons: input.stockCartons,
-      stockLoosePieces: input.stockLoosePieces,
+      stockLoosePacks: input.stockLoosePacks,
       images: [...kept, ...uploaded],
       active: input.active,
       featured: input.featured,
       categoryId,
       movements:
-        cartonsDelta !== 0 || piecesDelta !== 0
+        cartonsDelta !== 0 || packsDelta !== 0
           ? {
               create: {
                 deltaCartons: cartonsDelta,
-                deltaPieces: piecesDelta,
+                deltaPacks: packsDelta,
                 reason: "ADJUSTMENT",
                 note: "Manual adjustment",
               },
@@ -153,11 +154,16 @@ export async function updateProduct(
           : undefined,
     },
   });
+  if (cartonsDelta < 0) {
+    void checkLowStockAndNotify([id]).catch((e) => logError("notifications.lowStock", e));
+  }
+  return product;
 }
 
 export async function bulkUpsertProducts(rows: ProductRow[]) {
   let created = 0;
   let updated = 0;
+  const decreasedIds: string[] = [];
 
   for (const row of rows) {
     const categoryId = await resolveCategoryId(row.category);
@@ -165,7 +171,7 @@ export async function bulkUpsertProducts(rows: ProductRow[]) {
     const existing = await db.product.findUnique({ where: { sku: row.sku } });
 
     const cartonsDelta = row.cartons_delta;
-    const piecesDelta = row.pieces_delta;
+    const packsDelta = row.packs_delta;
     const upc = row.units_per_carton ?? null;
 
     if (existing) {
@@ -179,17 +185,17 @@ export async function bulkUpsertProducts(rows: ProductRow[]) {
             weightGrams: row.weight_grams,
             unitsPerCarton: upc,
             stockCartons: existing.stockCartons + cartonsDelta,
-            stockLoosePieces: existing.stockLoosePieces + piecesDelta,
+            stockLoosePacks: existing.stockLoosePacks + packsDelta,
             categoryId,
           },
         }),
-        ...(cartonsDelta !== 0 || piecesDelta !== 0
+        ...(cartonsDelta !== 0 || packsDelta !== 0
           ? [
               db.stockMovement.create({
                 data: {
                   productId: existing.id,
                   deltaCartons: cartonsDelta,
-                  deltaPieces: piecesDelta,
+                  deltaPacks: packsDelta,
                   reason: "BULK_UPLOAD",
                   note: `CSV upsert`,
                 },
@@ -198,6 +204,7 @@ export async function bulkUpsertProducts(rows: ProductRow[]) {
           : []),
       ]);
       updated += 1;
+      if (cartonsDelta < 0) decreasedIds.push(existing.id);
     } else {
       const slug = await uniqueSlug(row.name);
       const product = await db.product.create({
@@ -210,14 +217,14 @@ export async function bulkUpsertProducts(rows: ProductRow[]) {
           weightGrams: row.weight_grams,
           unitsPerCarton: upc,
           stockCartons: cartonsDelta,
-          stockLoosePieces: piecesDelta,
+          stockLoosePacks: packsDelta,
           categoryId,
           movements:
-            cartonsDelta > 0 || piecesDelta > 0
+            cartonsDelta > 0 || packsDelta > 0
               ? {
                   create: {
                     deltaCartons: cartonsDelta,
-                    deltaPieces: piecesDelta,
+                    deltaPacks: packsDelta,
                     reason: "BULK_UPLOAD",
                     note: "CSV initial stock",
                   },
@@ -228,6 +235,12 @@ export async function bulkUpsertProducts(rows: ProductRow[]) {
       created += 1;
       void product;
     }
+  }
+
+  if (decreasedIds.length > 0) {
+    void checkLowStockAndNotify(decreasedIds).catch((e) =>
+      logError("notifications.lowStock", e),
+    );
   }
 
   return { created, updated };

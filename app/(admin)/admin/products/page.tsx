@@ -127,13 +127,13 @@ export default async function AdminProductsPage({
                   <TableCell className="text-right tabular-nums">
                     {p.unitsPerCarton != null ? (
                       <span className="inline-flex flex-col items-end leading-tight">
-                        <span>{p.stockCartons}c + {p.stockLoosePieces}p</span>
+                        <span>{p.stockCartons}c + {p.stockLoosePacks}p</span>
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          {p.stockCartons * p.unitsPerCarton + p.stockLoosePieces} pcs
+                          {p.stockCartons * p.unitsPerCarton + p.stockLoosePacks} packs
                         </span>
                       </span>
                     ) : (
-                      <>{p.stockLoosePieces} pcs</>
+                      <>{p.stockLoosePacks} packs</>
                     )}
                   </TableCell>
                   <TableCell>

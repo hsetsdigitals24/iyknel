@@ -33,7 +33,7 @@ export function BulkForm() {
         />
         <p className="text-xs text-muted-foreground">
           Required headers: sku, name, category, price_naira, weight_grams, units_per_carton,
-          cartons_delta, pieces_delta, description.
+          cartons_delta, packs_delta, description.
         </p>
       </div>
       {state && !state.ok && state.rowErrors && state.rowErrors.length > 0 && (

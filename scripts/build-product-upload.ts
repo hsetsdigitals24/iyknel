@@ -8,11 +8,11 @@
  * the exact headers the importer requires (see lib/csv.ts):
  *
  *   sku, name, category, price_naira, weight_grams, units_per_carton,
- *   cartons_delta, pieces_delta, description
+ *   cartons_delta, packs_delta, description
  *
  * Transformations:
  *   - weight_kg → weight_grams  (× 1000, rounded to an integer)
- *   - cartons/Pieces_delta      → pieces_delta (loose pieces); cartons_delta = 0
+ *   - cartons/Pieces_delta      → packs_delta (loose packs); cartons_delta = 0
  *   - Sort_brands               → dropped (no brand field in the schema)
  *   - duplicate SKUs            → 2nd+ occurrence suffixed (-2, -3, …) so nothing is
  *                                 silently overwritten by the SKU-keyed upsert
@@ -41,7 +41,7 @@ const HEADERS = [
   "weight_grams",
   "units_per_carton",
   "cartons_delta",
-  "pieces_delta",
+  "packs_delta",
   "description",
 ] as const;
 
@@ -53,7 +53,7 @@ const rowSchema = z.object({
   price_naira: z.coerce.number().nonnegative().max(10_000_000),
   weight_grams: z.coerce.number().int().nonnegative().max(50_000_000),
   cartons_delta: z.coerce.number().int().min(0).max(10_000_000),
-  pieces_delta: z.coerce.number().int().min(0).max(10_000_000),
+  packs_delta: z.coerce.number().int().min(0).max(10_000_000),
   description: z.string().max(2000).optional().or(z.literal("")),
 });
 
@@ -101,7 +101,7 @@ function main() {
     const category = str(r[3]);
     // r[4] = Sort_brands — intentionally dropped
     const weightKg = num(r[5]);
-    const piecesDelta = num(r[6]);
+    const packsDelta = num(r[6]);
     const description = str(r[7]);
 
     // Deduplicate SKUs: keep the first as-is, suffix later collisions.
@@ -121,7 +121,7 @@ function main() {
       weight_grams: Number.isFinite(weightKg) ? Math.round(weightKg * 1000) : NaN,
       units_per_carton: "" as const,
       cartons_delta: 0,
-      pieces_delta: Number.isFinite(piecesDelta) ? Math.round(piecesDelta) : 0,
+      packs_delta: Number.isFinite(packsDelta) ? Math.round(packsDelta) : 0,
       description,
     };
 

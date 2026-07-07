@@ -64,9 +64,9 @@ export default async function EditOrderPage({ params }: { params: { id: string }
           weightGramsSnap: it.weightGramsSnap,
           unitsPerCartonSnap: it.unitsPerCartonSnap,
           quantityCartons: it.quantityCartons,
-          quantityPieces: it.quantityPieces,
+          quantityPacks: it.quantityPacks,
           stockCartonsAvailable: it.product.stockCartons,
-          stockLoosePiecesAvailable: it.product.stockLoosePieces,
+          stockLoosePacksAvailable: it.product.stockLoosePacks,
         }))}
         addresses={addresses.map((a) => ({
           id: a.id,

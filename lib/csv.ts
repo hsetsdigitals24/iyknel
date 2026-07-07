@@ -16,7 +16,7 @@ export const productRowSchema = z.object({
   weight_grams: z.coerce.number().int().nonnegative().max(50_000_000),
   units_per_carton: optionalUnitsPerCarton,
   cartons_delta: z.coerce.number().int().min(0).max(10_000_000).default(0),
-  pieces_delta: z.coerce.number().int().min(0).max(10_000_000).default(0),
+  packs_delta: z.coerce.number().int().min(0).max(10_000_000).default(0),
   description: z.string().max(2000).optional().or(z.literal("")),
 });
 export type ProductRow = z.infer<typeof productRowSchema>;
@@ -31,7 +31,7 @@ const REQUIRED_HEADERS = [
   "weight_grams",
   "units_per_carton",
   "cartons_delta",
-  "pieces_delta",
+  "packs_delta",
   "description",
 ] as const;
 

@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import { parseProductCsv, parseProductFile } from "./csv";
 
 const HEADER =
-  "sku,name,category,price_naira,weight_grams,units_per_carton,cartons_delta,pieces_delta,description";
+  "sku,name,category,price_naira,weight_grams,units_per_carton,cartons_delta,packs_delta,description";
 
 describe("parseProductCsv", () => {
   it("parses a valid 2-row CSV", async () => {

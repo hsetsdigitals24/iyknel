@@ -22,6 +22,18 @@ import {
   notifyInvoiceIssued,
   notifyPaid,
 } from "@/lib/notifications";
+import {
+  checkLowStockAndNotify,
+  inAppAdminNewOrder,
+  inAppAdminOrderEdited,
+  inAppAdminPaymentDeclared,
+  inAppApproved,
+  inAppCancelled,
+  inAppDelivered,
+  inAppDispatched,
+  inAppInvoiceIssued,
+  inAppPaid,
+} from "@/lib/in-app-notifications";
 
 async function nextOrderNumber(): Promise<string> {
   const now = new Date();
@@ -63,10 +75,10 @@ export async function submitOrder(
   let weightGrams = 0;
   const lines = cart.items.map((it) => {
     const upc = it.product.unitsPerCarton;
-    const totalPieces = it.quantityCartons * (upc ?? 0) + it.quantityPieces;
-    return { it, upc, totalPieces };
+    const totalPacks = it.quantityCartons * (upc ?? 0) + it.quantityPacks;
+    return { it, upc, totalPacks };
   });
-  for (const { it, totalPieces } of lines) {
+  for (const { it, totalPacks } of lines) {
     if (!it.product.active) {
       throw new OrderSubmissionError(`${it.product.name} is no longer available.`);
     }
@@ -75,16 +87,16 @@ export async function submitOrder(
         `${it.product.name}: only ${it.product.stockCartons} carton(s) in stock.`,
       );
     }
-    if (it.quantityPieces > it.product.stockLoosePieces) {
+    if (it.quantityPacks > it.product.stockLoosePacks) {
       throw new OrderSubmissionError(
-        `${it.product.name}: only ${it.product.stockLoosePieces} loose piece(s) in stock.`,
+        `${it.product.name}: only ${it.product.stockLoosePacks} loose pack(s) in stock.`,
       );
     }
-    if (totalPieces <= 0) {
+    if (totalPacks <= 0) {
       throw new OrderSubmissionError(`${it.product.name}: invalid quantity.`);
     }
-    subtotalKobo += it.product.priceKobo * totalPieces;
-    weightGrams += it.product.weightGrams * totalPieces;
+    subtotalKobo += it.product.priceKobo * totalPacks;
+    weightGrams += it.product.weightGrams * totalPacks;
   }
 
   let attempt = 0;
@@ -105,16 +117,16 @@ export async function submitOrder(
             totalKobo: subtotalKobo,
             weightGrams,
             items: {
-              create: lines.map(({ it, upc, totalPieces }) => ({
+              create: lines.map(({ it, upc, totalPacks }) => ({
                 productId: it.product.id,
                 nameSnapshot: it.product.name,
                 skuSnapshot: it.product.sku,
                 priceKoboSnap: it.product.priceKobo,
                 weightGramsSnap: it.product.weightGrams,
                 quantityCartons: it.quantityCartons,
-                quantityPieces: it.quantityPieces,
+                quantityPacks: it.quantityPacks,
                 unitsPerCartonSnap: upc,
-                quantity: totalPieces,
+                quantity: totalPacks,
               })),
             },
           },
@@ -126,11 +138,11 @@ export async function submitOrder(
             where: {
               id: it.product.id,
               stockCartons: { gte: it.quantityCartons },
-              stockLoosePieces: { gte: it.quantityPieces },
+              stockLoosePacks: { gte: it.quantityPacks },
             },
             data: {
               stockCartons: { decrement: it.quantityCartons },
-              stockLoosePieces: { decrement: it.quantityPieces },
+              stockLoosePacks: { decrement: it.quantityPacks },
             },
           });
           if (upd.count !== 1) {
@@ -140,7 +152,7 @@ export async function submitOrder(
             data: {
               productId: it.product.id,
               deltaCartons: -it.quantityCartons,
-              deltaPieces: -it.quantityPieces,
+              deltaPacks: -it.quantityPacks,
               reason: "ORDER",
               orderId: created.id,
             },
@@ -152,8 +164,15 @@ export async function submitOrder(
       });
 
       // Fire-and-forget side effects after commit.
-      void notifyAdminNewOrder(order.number, (await businessName(userId)) ?? "Unknown business").catch(
+      const bizName = (await businessName(userId)) ?? "Unknown business";
+      void notifyAdminNewOrder(order.number, bizName).catch(
         (e) => logError("orders.adminNotify", e),
+      );
+      void inAppAdminNewOrder(order.id, order.number, bizName).catch((e) =>
+        logError("notifications.inApp", e),
+      );
+      void checkLowStockAndNotify(lines.map((l) => l.it.product.id)).catch((e) =>
+        logError("notifications.lowStock", e),
       );
       await db.auditLog.create({
         data: {
@@ -245,7 +264,7 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
       skuSnapshot: i.skuSnapshot,
       quantity: i.quantity,
       quantityCartons: i.quantityCartons,
-      quantityPieces: i.quantityPieces,
+      quantityPacks: i.quantityPacks,
       unitsPerCartonSnap: i.unitsPerCartonSnap,
       priceKoboSnap: i.priceKoboSnap,
     })),
@@ -320,6 +339,9 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
   await notifyInvoiceIssued(recipient, order.number, emailPdfUrl, totalKobo).catch((e) =>
     logError("orders.invoiceEmail", e),
   );
+  void inAppInvoiceIssued(order.userId, order.id, order.number, totalKobo).catch((e) =>
+    logError("notifications.inApp", e),
+  );
   return updated;
 }
 
@@ -351,6 +373,9 @@ export async function approveOrder(actorId: string, orderId: string) {
     emailPdfUrl,
     bankFromEnv(),
   ).catch((e) => logError("orders.approveNotify", e));
+  void inAppApproved(order.userId, order.id, order.number, order.totalKobo).catch((e) =>
+    logError("notifications.inApp", e),
+  );
   return updated;
 }
 
@@ -395,6 +420,9 @@ export async function markPaidByAdmin(actorId: string, orderId: string, args: Ma
   });
   const recipient = await loadOrderRecipient(order.userId);
   await notifyPaid(recipient, order.number).catch((e) => logError("orders.paidNotify", e));
+  void inAppPaid(order.userId, order.id, order.number).catch((e) =>
+    logError("notifications.inApp", e),
+  );
   return updated;
 }
 
@@ -424,6 +452,9 @@ export async function markDispatched(actorId: string, orderId: string, courierNo
   await notifyDispatched(recipient, order.number, courierNote).catch((e) =>
     logError("orders.dispatchNotify", e),
   );
+  void inAppDispatched(order.userId, order.id, order.number).catch((e) =>
+    logError("notifications.inApp", e),
+  );
   return updated;
 }
 
@@ -447,6 +478,9 @@ export async function markDelivered(actorId: string, orderId: string) {
   const recipient = await loadOrderRecipient(order.userId);
   await notifyDelivered(recipient, order.number).catch((e) =>
     logError("orders.deliverNotify", e),
+  );
+  void inAppDelivered(order.userId, order.id, order.number).catch((e) =>
+    logError("notifications.inApp", e),
   );
   return updated;
 }
@@ -474,14 +508,14 @@ export async function cancelOrder(actorId: string, orderId: string, reason: stri
           where: { id: it.productId },
           data: {
             stockCartons: { increment: it.quantityCartons },
-            stockLoosePieces: { increment: it.quantityPieces },
+            stockLoosePacks: { increment: it.quantityPacks },
           },
         });
         await tx.stockMovement.create({
           data: {
             productId: it.productId,
             deltaCartons: it.quantityCartons,
-            deltaPieces: it.quantityPieces,
+            deltaPacks: it.quantityPacks,
             reason: "RETURN",
             orderId: order.id,
             note: "Order cancelled",
@@ -509,6 +543,9 @@ export async function cancelOrder(actorId: string, orderId: string, reason: stri
   await notifyCancelled(recipient, order.number, reason).catch((e) =>
     logError("orders.cancelNotify", e),
   );
+  void inAppCancelled(order.userId, order.id, order.number, reason).catch((e) =>
+    logError("notifications.inApp", e),
+  );
   return updated;
 }
 
@@ -534,11 +571,12 @@ export async function markPaidByCustomer(userId: string, orderId: string) {
   // Fire-and-forget admin notification.
   void (async () => {
     const business = await db.business.findUnique({ where: { userId } });
-    return notifyAdminPaymentDeclared(
-      order.number,
-      business?.name ?? "Unknown business",
-      formatNaira(order.totalKobo || order.subtotalKobo),
+    const name = business?.name ?? "Unknown business";
+    const totalDueText = formatNaira(order.totalKobo || order.subtotalKobo);
+    await inAppAdminPaymentDeclared(order.id, order.number, name, totalDueText).catch((e) =>
+      logError("notifications.inApp", e),
     );
+    return notifyAdminPaymentDeclared(order.number, name, totalDueText);
   })().catch((e) => logError("orders.paymentDeclaredNotify", e));
 
   return updated;
@@ -553,7 +591,7 @@ const CUSTOMER_CANCELLABLE = [
 ] as const;
 
 export type EditOrderInput = {
-  items: { itemId: string; cartons: number; pieces: number }[];
+  items: { itemId: string; cartons: number; packs: number }[];
   addressId: string;
   notes: string | null;
 };
@@ -580,34 +618,34 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
   const updates: Array<{
     item: (typeof order.items)[number];
     newCartons: number;
-    newPieces: number;
-    newTotalPieces: number;
+    newPacks: number;
+    newTotalPacks: number;
     cartonsDelta: number;
-    piecesDelta: number;
+    packsDelta: number;
     remove: boolean;
   }> = [];
 
   for (const it of order.items) {
     const next = byId.get(it.id);
     const newCartons = next ? Math.max(0, Math.trunc(next.cartons)) : it.quantityCartons;
-    const newPieces = next ? Math.max(0, Math.trunc(next.pieces)) : it.quantityPieces;
-    const newTotalPieces = newCartons * (it.unitsPerCartonSnap ?? 0) + newPieces;
+    const newPacks = next ? Math.max(0, Math.trunc(next.packs)) : it.quantityPacks;
+    const newTotalPacks = newCartons * (it.unitsPerCartonSnap ?? 0) + newPacks;
     const cartonsDelta = newCartons - it.quantityCartons;
-    const piecesDelta = newPieces - it.quantityPieces;
-    const remove = newCartons === 0 && newPieces === 0;
-    if (remove || cartonsDelta !== 0 || piecesDelta !== 0) itemsChanged = true;
+    const packsDelta = newPacks - it.quantityPacks;
+    const remove = newCartons === 0 && newPacks === 0;
+    if (remove || cartonsDelta !== 0 || packsDelta !== 0) itemsChanged = true;
     updates.push({
       item: it,
       newCartons,
-      newPieces,
-      newTotalPieces,
+      newPacks,
+      newTotalPacks,
       cartonsDelta,
-      piecesDelta,
+      packsDelta,
       remove,
     });
     if (!remove) {
-      subtotalKobo += it.priceKoboSnap * newTotalPieces;
-      weightGrams += it.weightGramsSnap * newTotalPieces;
+      subtotalKobo += it.priceKoboSnap * newTotalPacks;
+      weightGrams += it.weightGramsSnap * newTotalPacks;
     }
   }
 
@@ -630,14 +668,14 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
           where: { id: u.item.productId },
           data: {
             stockCartons: { increment: u.item.quantityCartons },
-            stockLoosePieces: { increment: u.item.quantityPieces },
+            stockLoosePacks: { increment: u.item.quantityPacks },
           },
         });
         await tx.stockMovement.create({
           data: {
             productId: u.item.productId,
             deltaCartons: u.item.quantityCartons,
-            deltaPieces: u.item.quantityPieces,
+            deltaPacks: u.item.quantityPacks,
             reason: "ADJUSTMENT",
             orderId: order.id,
             note: "Order edited: item removed",
@@ -646,7 +684,7 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
         continue;
       }
 
-      if (u.cartonsDelta === 0 && u.piecesDelta === 0) {
+      if (u.cartonsDelta === 0 && u.packsDelta === 0) {
         // Nothing to change for this line.
         continue;
       }
@@ -655,32 +693,32 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
       // and decreases are returned to stock. Use updateMany so we can also
       // gate on the available-stock conditions for the increase case.
       const decCartons = u.cartonsDelta > 0 ? u.cartonsDelta : 0;
-      const decPieces = u.piecesDelta > 0 ? u.piecesDelta : 0;
+      const decPacks = u.packsDelta > 0 ? u.packsDelta : 0;
       const incCartons = u.cartonsDelta < 0 ? -u.cartonsDelta : 0;
-      const incPieces = u.piecesDelta < 0 ? -u.piecesDelta : 0;
+      const incPacks = u.packsDelta < 0 ? -u.packsDelta : 0;
 
-      if (decCartons > 0 || decPieces > 0) {
+      if (decCartons > 0 || decPacks > 0) {
         const upd = await tx.product.updateMany({
           where: {
             id: u.item.productId,
             stockCartons: { gte: decCartons },
-            stockLoosePieces: { gte: decPieces },
+            stockLoosePacks: { gte: decPacks },
           },
           data: {
             stockCartons: { decrement: decCartons },
-            stockLoosePieces: { decrement: decPieces },
+            stockLoosePacks: { decrement: decPacks },
           },
         });
         if (upd.count !== 1) {
           throw new OrderSubmissionError(`Insufficient stock for ${u.item.nameSnapshot}.`);
         }
       }
-      if (incCartons > 0 || incPieces > 0) {
+      if (incCartons > 0 || incPacks > 0) {
         await tx.product.update({
           where: { id: u.item.productId },
           data: {
             stockCartons: { increment: incCartons },
-            stockLoosePieces: { increment: incPieces },
+            stockLoosePacks: { increment: incPacks },
           },
         });
       }
@@ -689,15 +727,15 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
         where: { id: u.item.id },
         data: {
           quantityCartons: u.newCartons,
-          quantityPieces: u.newPieces,
-          quantity: u.newTotalPieces,
+          quantityPacks: u.newPacks,
+          quantity: u.newTotalPacks,
         },
       });
       await tx.stockMovement.create({
         data: {
           productId: u.item.productId,
           deltaCartons: -u.cartonsDelta,
-          deltaPieces: -u.piecesDelta,
+          deltaPacks: -u.packsDelta,
           reason: "ADJUSTMENT",
           orderId: order.id,
           note: "Order edited by customer",
@@ -742,11 +780,11 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
           statusReset,
           removed: updates.filter((u) => u.remove).map((u) => u.item.skuSnapshot),
           changed: updates
-            .filter((u) => !u.remove && (u.cartonsDelta !== 0 || u.piecesDelta !== 0))
+            .filter((u) => !u.remove && (u.cartonsDelta !== 0 || u.packsDelta !== 0))
             .map((u) => ({
               sku: u.item.skuSnapshot,
               cartonsDelta: u.cartonsDelta,
-              piecesDelta: u.piecesDelta,
+              packsDelta: u.packsDelta,
             })),
         },
       },
@@ -760,13 +798,13 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
         .filter((u) => u.remove)
         .map((u) => `- removed ${u.item.nameSnapshot} (${u.item.skuSnapshot})`),
       ...updates
-        .filter((u) => !u.remove && (u.cartonsDelta !== 0 || u.piecesDelta !== 0))
+        .filter((u) => !u.remove && (u.cartonsDelta !== 0 || u.packsDelta !== 0))
         .map((u) => {
           const parts: string[] = [];
           if (u.cartonsDelta !== 0)
             parts.push(`${u.cartonsDelta > 0 ? "+" : ""}${u.cartonsDelta} cartons`);
-          if (u.piecesDelta !== 0)
-            parts.push(`${u.piecesDelta > 0 ? "+" : ""}${u.piecesDelta} pieces`);
+          if (u.packsDelta !== 0)
+            parts.push(`${u.packsDelta > 0 ? "+" : ""}${u.packsDelta} packs`);
           return `- ${u.item.nameSnapshot} (${u.item.skuSnapshot}): ${parts.join(", ")}`;
         }),
     ].join("\n");
@@ -775,6 +813,16 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
       business?.name ?? "Unknown business",
       `Status reset to SUBMITTED; existing invoice cancelled. Please re-issue with the new logistics.\n\nChanges:\n${summary}`,
     ).catch((e) => logError("orders.editNotify", e));
+    void inAppAdminOrderEdited(
+      order.id,
+      order.number,
+      business?.name ?? "Unknown business",
+    ).catch((e) => logError("notifications.inApp", e));
+    void checkLowStockAndNotify(
+      updates
+        .filter((u) => !u.remove && (u.cartonsDelta > 0 || u.packsDelta > 0))
+        .map((u) => u.item.productId),
+    ).catch((e) => logError("notifications.lowStock", e));
   }
 }
 
@@ -819,11 +867,11 @@ export async function restoreOrderToCartAndCancel(
   const skipped: RestoreResult["skipped"] = [];
   let restored = 0;
   for (const it of order.items) {
-    if (it.quantityCartons === 0 && it.quantityPieces === 0) continue;
+    if (it.quantityCartons === 0 && it.quantityPacks === 0) continue;
     try {
       await addItem(userId, it.productId, {
         cartons: it.quantityCartons,
-        pieces: it.quantityPieces,
+        packs: it.quantityPacks,
       });
       restored += 1;
     } catch (e) {

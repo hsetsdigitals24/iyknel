@@ -15,7 +15,7 @@ export function CartLineRow({ line }: { line: Line }) {
   const [pending, start] = useTransition();
   const canCartons = line.unitsPerCarton != null;
 
-  function setQty(next: { cartons: number; pieces: number }) {
+  function setQty(next: { cartons: number; packs: number }) {
     start(async () => {
       const res = await updateQtyAction(line.itemId, next);
       if (!res.ok) toast.error(res.message);
@@ -23,11 +23,11 @@ export function CartLineRow({ line }: { line: Line }) {
   }
   function bumpCartons(delta: number) {
     const target = Math.max(0, Math.min(line.stockCartons, line.quantityCartons + delta));
-    setQty({ cartons: target, pieces: line.quantityPieces });
+    setQty({ cartons: target, packs: line.quantityPacks });
   }
-  function bumpPieces(delta: number) {
-    const target = Math.max(0, Math.min(line.stockLoosePieces, line.quantityPieces + delta));
-    setQty({ cartons: line.quantityCartons, pieces: target });
+  function bumpPacks(delta: number) {
+    const target = Math.max(0, Math.min(line.stockLoosePacks, line.quantityPacks + delta));
+    setQty({ cartons: line.quantityCartons, packs: target });
   }
   function remove() {
     start(async () => {
@@ -55,8 +55,8 @@ export function CartLineRow({ line }: { line: Line }) {
               {line.name}
             </Link>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {formatNaira(line.unitPriceKobo)} per piece
-              {canCartons && <> · 1 carton = {line.unitsPerCarton} pcs</>}
+              {formatNaira(line.unitPriceKobo)} per pack
+              {canCartons && <> · 1 carton = {line.unitsPerCarton} packs</>}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {canCartons && (
@@ -64,9 +64,9 @@ export function CartLineRow({ line }: { line: Line }) {
                   {line.quantityCartons} carton{line.quantityCartons === 1 ? "" : "s"} +{" "}
                 </>
               )}
-              {line.quantityPieces} piece{line.quantityPieces === 1 ? "" : "s"}
+              {line.quantityPacks} pack{line.quantityPacks === 1 ? "" : "s"}
               {" · "}
-              <span className="font-medium text-foreground">{line.totalPieces} pcs total</span>
+              <span className="font-medium text-foreground">{line.totalPacks} packs total</span>
             </p>
           </div>
           <p className="shrink-0 text-base font-bold tabular-nums text-primary">
@@ -87,13 +87,13 @@ export function CartLineRow({ line }: { line: Line }) {
               />
             )}
             <StepperGroup
-              label="Pieces"
-              value={line.quantityPieces}
-              onDec={() => bumpPieces(-1)}
-              onInc={() => bumpPieces(1)}
+              label="Packs"
+              value={line.quantityPacks}
+              onDec={() => bumpPacks(-1)}
+              onInc={() => bumpPacks(1)}
               disabled={pending}
-              canDec={line.quantityPieces > 0}
-              canInc={line.quantityPieces < line.stockLoosePieces}
+              canDec={line.quantityPacks > 0}
+              canInc={line.quantityPacks < line.stockLoosePacks}
             />
           </div>
           <Button

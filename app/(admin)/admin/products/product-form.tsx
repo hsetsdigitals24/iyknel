@@ -20,7 +20,7 @@ export type ProductFormData = {
   weightGrams: number;
   unitsPerCarton: number | null;
   stockCartons: number;
-  stockLoosePieces: number;
+  stockLoosePacks: number;
   categoryName: string;
   active: boolean;
   featured: boolean;
@@ -113,7 +113,7 @@ export function ProductForm({ initial, categories, action }: Props) {
       <div className="grid gap-4 md:grid-cols-3">
         <Field
           id="priceNaira"
-          label="Price per piece (₦)"
+          label="Price per pack (₦)"
           type="number"
           step="0.01"
           defaultValue={initial?.priceNaira}
@@ -122,7 +122,7 @@ export function ProductForm({ initial, categories, action }: Props) {
         />
         <Field
           id="weightGrams"
-          label="Weight per piece (grams)"
+          label="Weight per pack (grams)"
           type="number"
           step="1"
           defaultValue={initial?.weightGrams}
@@ -136,7 +136,7 @@ export function ProductForm({ initial, categories, action }: Props) {
           step="1"
           defaultValue={initial?.unitsPerCarton ?? ""}
           error={fieldErrors?.unitsPerCarton?.[0]}
-          placeholder="Blank if sold by piece only"
+          placeholder="Blank if sold by pack only"
         />
       </div>
 
@@ -151,17 +151,17 @@ export function ProductForm({ initial, categories, action }: Props) {
           required
         />
         <Field
-          id="stockLoosePieces"
-          label="Stock — loose pieces"
+          id="stockLoosePacks"
+          label="Stock — loose packs"
           type="number"
           step="1"
-          defaultValue={initial?.stockLoosePieces ?? 0}
-          error={fieldErrors?.stockLoosePieces?.[0]}
+          defaultValue={initial?.stockLoosePacks ?? 0}
+          error={fieldErrors?.stockLoosePacks?.[0]}
           required
         />
       </div>
       <p className="-mt-3 text-xs text-muted-foreground">
-        Leave units-per-carton blank for piece-only products. Loose pieces are the units from an
+        Leave units-per-carton blank for pack-only products. Loose packs are the units from an
         opened carton.
       </p>
 

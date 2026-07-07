@@ -170,7 +170,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                   <div>
                     <div className="font-medium">{it.nameSnapshot}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">
-                      {it.skuSnapshot} · {formatNaira(it.priceKoboSnap)} / piece
+                      {it.skuSnapshot} · {formatNaira(it.priceKoboSnap)} / pack
                     </div>
                     <div className="mt-0.5 text-xs">
                       {it.quantityCartons > 0 && (
@@ -183,13 +183,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                           )}
                         </>
                       )}
-                      {it.quantityCartons > 0 && it.quantityPieces > 0 && " + "}
-                      {it.quantityPieces > 0 && (
+                      {it.quantityCartons > 0 && it.quantityPacks > 0 && " + "}
+                      {it.quantityPacks > 0 && (
                         <span className="font-medium">
-                          {it.quantityPieces} loose piece{it.quantityPieces === 1 ? "" : "s"}
+                          {it.quantityPacks} loose pack{it.quantityPacks === 1 ? "" : "s"}
                         </span>
                       )}
-                      <span className="text-muted-foreground"> · {it.quantity} pcs total</span>
+                      <span className="text-muted-foreground"> · {it.quantity} packs total</span>
                     </div>
                   </div>
                   <div className="shrink-0 font-medium tabular-nums">

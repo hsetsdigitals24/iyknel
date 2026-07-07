@@ -55,12 +55,12 @@ export default async function CheckoutPage() {
                   <span className="line-clamp-2 text-muted-foreground">
                     <span className="font-medium text-foreground">
                       {l.quantityCartons > 0 && `${l.quantityCartons}c`}
-                      {l.quantityCartons > 0 && l.quantityPieces > 0 && " + "}
-                      {l.quantityPieces > 0 && `${l.quantityPieces}p`}
+                      {l.quantityCartons > 0 && l.quantityPacks > 0 && " + "}
+                      {l.quantityPacks > 0 && `${l.quantityPacks}p`}
                       {" "}
                     </span>
                     {l.name}{" "}
-                    <span className="text-xs">({l.totalPieces} pcs)</span>
+                    <span className="text-xs">({l.totalPacks} packs)</span>
                   </span>
                   <span className="shrink-0 tabular-nums">
                     {formatNaira(l.lineSubtotalKobo)}

@@ -24,7 +24,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     weightGrams: product.weightGrams,
     unitsPerCarton: product.unitsPerCarton,
     stockCartons: product.stockCartons,
-    stockLoosePieces: product.stockLoosePieces,
+    stockLoosePacks: product.stockLoosePacks,
     categoryName: product.category?.name ?? "",
     active: product.active,
     featured: product.featured,

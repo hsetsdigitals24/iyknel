@@ -40,11 +40,11 @@ export default async function CustomerDashboard() {
 
   const cartLines =
     cart?.items.map((item) => {
-      const totalPieces =
-        item.quantityCartons * (item.product.unitsPerCarton ?? 0) + item.quantityPieces;
-      return { totalPieces, lineKobo: totalPieces * item.product.priceKobo };
+      const totalPacks =
+        item.quantityCartons * (item.product.unitsPerCarton ?? 0) + item.quantityPacks;
+      return { totalPacks, lineKobo: totalPacks * item.product.priceKobo };
     }) ?? [];
-  const cartItemCount = cartLines.reduce((sum, l) => sum + l.totalPieces, 0);
+  const cartItemCount = cartLines.reduce((sum, l) => sum + l.totalPacks, 0);
   const cartSubtotalKobo = cartLines.reduce((sum, l) => sum + l.lineKobo, 0);
 
   const pendingReviews = await listUnreviewedDeliveredProducts(userId);

@@ -37,7 +37,7 @@ type ProductRow = {
   images: string[];
   stockCartons: number;
   unitsPerCarton: number | null;
-  stockLoosePieces: number;
+  stockLoosePacks: number;
   category?: { name: string } | null;
 };
 
@@ -54,7 +54,7 @@ function mapProduct(
     priceKobo: p.priceKobo,
     image: image ?? undefined,
     category: p.category?.name ?? null,
-    stock: p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces,
+    stock: p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePacks,
     badge,
     wishlisted: savedIds.has(p.id),
   };
@@ -79,7 +79,7 @@ export default async function LandingPage() {
         images: true,
         stockCartons: true,
         unitsPerCarton: true,
-        stockLoosePieces: true,
+        stockLoosePacks: true,
         category: { select: { name: true } },
       },
     }),
@@ -125,7 +125,7 @@ export default async function LandingPage() {
           images: true,
           stockCartons: true,
           unitsPerCarton: true,
-          stockLoosePieces: true,
+          stockLoosePacks: true,
           category: { select: { name: true } },
         },
       }),

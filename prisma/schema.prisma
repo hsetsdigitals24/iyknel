@@ -44,6 +44,7 @@ model User {
   sessions      Session[]
   reviews       Review[]
   quoteResponses QuoteRequest[] @relation("QuoteResponder")
+  notifications Notification[]
 }
 
 model Account {
@@ -146,7 +147,7 @@ model Product {
   weightGrams      Int
   unitsPerCarton   Int?
   stockCartons     Int           @default(0)
-  stockLoosePieces Int           @default(0)
+  stockLoosePacks  Int           @default(0)
   images      String[]      @default([])
   active      Boolean       @default(true)
   featured    Boolean       @default(false)
@@ -198,7 +199,7 @@ model CartItem {
   cartId          String
   productId       String
   quantityCartons Int     @default(0)
-  quantityPieces  Int     @default(0)
+  quantityPacks   Int     @default(0)
   cart            Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product         Product @relation(fields: [productId], references: [id])
 
@@ -282,7 +283,7 @@ model OrderItem {
   priceKoboSnap      Int
   weightGramsSnap    Int
   quantityCartons    Int     @default(0)
-  quantityPieces     Int     @default(0)
+  quantityPacks      Int     @default(0)
   unitsPerCartonSnap Int?
   quantity           Int
   order              Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -373,7 +374,7 @@ model StockMovement {
   id           String      @id @default(cuid())
   productId    String
   deltaCartons Int         @default(0)
-  deltaPieces  Int         @default(0)
+  deltaPacks   Int         @default(0)
   reason       StockReason
   orderId      String?
   note         String?
@@ -397,6 +398,50 @@ model AuditLog {
   order     Order?   @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
+}
+
+// ---------- In-app notifications ----------
+
+enum NotificationType {
+  ORDER_INVOICE_ISSUED
+  ORDER_APPROVED
+  ORDER_PAID
+  ORDER_DISPATCHED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  ADMIN_NEW_ORDER
+  ADMIN_PAYMENT_DECLARED
+  ADMIN_ORDER_EDITED
+  ADMIN_LOW_STOCK
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String?
+  href      String? // in-app link, e.g. /orders/{id} or /admin/orders/{id}
+  readAt    DateTime? // null = unread
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// ---------- WhatsApp chat contacts ----------
+
+model WhatsappContact {
+  id        String   @id @default(cuid())
+  label     String
+  phone     String // digits with country code, e.g. "2348012345678"
+  sortOrder Int      @default(100)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, sortOrder])
 }
 
 // ---------- Quote requests (public, unauthenticated) ----------

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Heart, Search, ShoppingCart, User } from "lucide-react";
 import { UserMenu } from "@/components/user-menu";
 import { BrandLogo } from "@/components/brand-logo";
+import { NotificationBell } from "@/components/notification-bell";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 
@@ -61,6 +62,7 @@ export async function SiteHeader() {
           >
             <Heart className="h-5 w-5" />
           </Link>
+          {userId && <NotificationBell />}
           <Link
             href="/cart"
             aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}

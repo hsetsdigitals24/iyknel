@@ -86,7 +86,7 @@ async function uploadImage(filePath: string, contentType: string): Promise<strin
 // ---- matching ----
 
 const STOP = new Set([
-  "foods", "food", "by", "x", "carton", "cartons", "pack", "pcs", "rf", "sup",
+  "foods", "food", "by", "x", "carton", "cartons", "pack", "packs", "pcs", "rf", "sup",
   "and", "the", "premium", "tin", "bucket",
 ]);
 

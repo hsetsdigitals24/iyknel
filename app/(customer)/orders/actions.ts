@@ -37,7 +37,7 @@ const editSchema = z.object({
       z.object({
         itemId: z.string().min(1),
         cartons: z.coerce.number().int().min(0).max(10_000),
-        pieces: z.coerce.number().int().min(0).max(10_000),
+        packs: z.coerce.number().int().min(0).max(10_000),
       }),
     )
     .min(1),

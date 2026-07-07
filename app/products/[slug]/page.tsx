@@ -31,10 +31,10 @@ export default async function ProductDetailPage({
   });
   if (!product || !product.active) notFound();
 
-  const totalPiecesAvailable =
-    product.stockCartons * (product.unitsPerCarton ?? 0) + product.stockLoosePieces;
-  const inStock = totalPiecesAvailable > 0;
-  const lowStock = inStock && totalPiecesAvailable < 20;
+  const totalPacksAvailable =
+    product.stockCartons * (product.unitsPerCarton ?? 0) + product.stockLoosePacks;
+  const inStock = totalPacksAvailable > 0;
+  const lowStock = inStock && totalPacksAvailable < 20;
 
   const reviewPage = Math.max(1, Number.parseInt(searchParams.reviewPage ?? "1", 10) || 1);
 
@@ -58,7 +58,7 @@ export default async function ProductDetailPage({
             images: true,
             stockCartons: true,
             unitsPerCarton: true,
-            stockLoosePieces: true,
+            stockLoosePacks: true,
             category: { select: { name: true } },
           },
         })
@@ -148,12 +148,12 @@ export default async function ProductDetailPage({
                     {product.unitsPerCarton != null && product.stockCartons > 0 && (
                       <span className="font-normal text-success/80">
                         · {product.stockCartons} carton{product.stockCartons === 1 ? "" : "s"}
-                        {product.stockLoosePieces > 0 && ` + ${product.stockLoosePieces} loose`}
+                        {product.stockLoosePacks > 0 && ` + ${product.stockLoosePacks} loose`}
                       </span>
                     )}
                     {(product.unitsPerCarton == null || product.stockCartons === 0) && (
                       <span className="font-normal text-success/80">
-                        · {product.stockLoosePieces} pcs
+                        · {product.stockLoosePacks} packs
                       </span>
                     )}
                   </span>
@@ -164,7 +164,7 @@ export default async function ProductDetailPage({
                 )}
                 {lowStock && (
                   <span className="inline-flex items-center rounded-full bg-warning/15 px-3 py-1 text-xs font-semibold text-[hsl(var(--warning-foreground))] ring-1 ring-warning/40">
-                    Only {totalPiecesAvailable} pcs left
+                    Only {totalPacksAvailable} packs left
                   </span>
                 )}
               </div>
@@ -176,7 +176,7 @@ export default async function ProductDetailPage({
                 </div>
                 <div>
                   <dt className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Weight / piece
+                    Weight / pack
                   </dt>
                   <dd className="mt-0.5 font-medium">
                     {(product.weightGrams / 1000).toFixed(2)} kg
@@ -188,8 +188,8 @@ export default async function ProductDetailPage({
                   </dt>
                   <dd className="mt-0.5 font-medium">
                     {product.unitsPerCarton != null
-                      ? `${product.unitsPerCarton} pcs`
-                      : "Sold by piece"}
+                      ? `${product.unitsPerCarton} packs`
+                      : "Sold by pack"}
                   </dd>
                 </div>
               </dl>
@@ -205,7 +205,7 @@ export default async function ProductDetailPage({
                   productId={product.id}
                   unitsPerCarton={product.unitsPerCarton}
                   stockCartons={product.stockCartons}
-                  stockLoosePieces={product.stockLoosePieces}
+                  stockLoosePacks={product.stockLoosePacks}
                   priceKobo={product.priceKobo}
                 />
                 <WishlistButton productId={product.id} />
@@ -259,7 +259,7 @@ export default async function ProductDetailPage({
                     priceKobo={p.priceKobo}
                     image={relatedImages[i] ?? undefined}
                     category={p.category?.name}
-                    stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces}
+                    stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePacks}
                     wishlisted={savedIds.has(p.id)}
                   />
                 ))}

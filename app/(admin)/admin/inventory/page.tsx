@@ -133,10 +133,10 @@ export default async function InventoryPage({
                   <TableCell className="text-muted-foreground">{m.product.sku}</TableCell>
                   <TableCell
                     className={`text-right tabular-nums ${
-                      m.deltaCartons < 0 || m.deltaPieces < 0 ? "text-destructive" : ""
+                      m.deltaCartons < 0 || m.deltaPacks < 0 ? "text-destructive" : ""
                     }`}
                   >
-                    {formatDelta(m.deltaCartons, m.deltaPieces)}
+                    {formatDelta(m.deltaCartons, m.deltaPacks)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{m.reason.toLowerCase().replace(/_/g, " ")}</Badge>
@@ -197,10 +197,10 @@ export default async function InventoryPage({
   );
 }
 
-function formatDelta(cartons: number, pieces: number): string {
+function formatDelta(cartons: number, packs: number): string {
   const parts: string[] = [];
   if (cartons !== 0) parts.push(`${cartons > 0 ? "+" : ""}${cartons}c`);
-  if (pieces !== 0) parts.push(`${pieces > 0 ? "+" : ""}${pieces}p`);
+  if (packs !== 0) parts.push(`${packs > 0 ? "+" : ""}${packs}p`);
   return parts.length === 0 ? "0" : parts.join(" / ");
 }
 

@@ -17,7 +17,7 @@ function parseInput(formData: FormData) {
     weightGrams: formData.get("weightGrams"),
     unitsPerCarton: formData.get("unitsPerCarton") ?? "",
     stockCartons: formData.get("stockCartons") ?? 0,
-    stockLoosePieces: formData.get("stockLoosePieces") ?? 0,
+    stockLoosePacks: formData.get("stockLoosePacks") ?? 0,
     categoryName: formData.get("categoryName") ?? "",
     active: formData.get("active") === "on",
     featured: formData.get("featured") === "on",

@@ -66,8 +66,8 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                   <div>
                     <div className="font-medium">{it.nameSnapshot}</div>
                     <div className="text-xs text-muted-foreground">
-                      {it.skuSnapshot} · {formatNaira(it.priceKoboSnap)} / piece ·{" "}
-                      {(it.weightGramsSnap / 1000).toFixed(2)} kg / piece
+                      {it.skuSnapshot} · {formatNaira(it.priceKoboSnap)} / pack ·{" "}
+                      {(it.weightGramsSnap / 1000).toFixed(2)} kg / pack
                     </div>
                     <div className="text-xs">
                       {it.quantityCartons > 0 && (
@@ -78,13 +78,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
                           )}
                         </span>
                       )}
-                      {it.quantityCartons > 0 && it.quantityPieces > 0 && " + "}
-                      {it.quantityPieces > 0 && (
+                      {it.quantityCartons > 0 && it.quantityPacks > 0 && " + "}
+                      {it.quantityPacks > 0 && (
                         <span className="font-medium">
-                          {it.quantityPieces} loose piece{it.quantityPieces === 1 ? "" : "s"}
+                          {it.quantityPacks} loose pack{it.quantityPacks === 1 ? "" : "s"}
                         </span>
                       )}
-                      <span className="text-muted-foreground"> · {it.quantity} pcs total</span>
+                      <span className="text-muted-foreground"> · {it.quantity} packs total</span>
                     </div>
                   </div>
                   <div className="tabular-nums">

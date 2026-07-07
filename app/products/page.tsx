@@ -50,7 +50,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
   }
   if (inStockOnly) {
     filters.push({
-      OR: [{ stockCartons: { gt: 0 } }, { stockLoosePieces: { gt: 0 } }],
+      OR: [{ stockCartons: { gt: 0 } }, { stockLoosePacks: { gt: 0 } }],
     });
   }
   if (featuredOnly) {
@@ -84,7 +84,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
         images: true,
         stockCartons: true,
         unitsPerCarton: true,
-        stockLoosePieces: true,
+        stockLoosePacks: true,
         category: { select: { name: true } },
       },
     }),
@@ -282,7 +282,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
                       priceKobo={p.priceKobo}
                       image={productImages[i] ?? undefined}
                       category={p.category?.name}
-                      stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePieces}
+                      stock={p.stockCartons * (p.unitsPerCarton ?? 0) + p.stockLoosePacks}
                       badge={i % 7 === 0 ? "deal" : i % 11 === 0 ? "bestseller" : null}
                       wishlisted={savedIds.has(p.id)}
                     />

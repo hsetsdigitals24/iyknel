@@ -25,7 +25,7 @@ export function AddToCartButton({ productId, disabled, size = "lg", className }:
       return;
     }
     start(async () => {
-      const res = await addToCartAction(productId, { cartons: 0, pieces: 1 });
+      const res = await addToCartAction(productId, { cartons: 0, packs: 1 });
       if (!res.ok) toast.error(res.message);
       else toast.success("Added to cart");
     });

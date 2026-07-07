@@ -52,6 +52,6 @@ export async function removeFromWishlist(userId: string, productId: string) {
 }
 
 export async function moveToCart(userId: string, productId: string) {
-  await addItem(userId, productId, { cartons: 0, pieces: 1 });
+  await addItem(userId, productId, { cartons: 0, packs: 1 });
   await removeFromWishlist(userId, productId);
 }
