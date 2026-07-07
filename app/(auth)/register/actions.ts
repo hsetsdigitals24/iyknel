@@ -5,6 +5,7 @@ import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { registerSchema, type FormState } from "@/lib/validation";
 import { friendlyError, logError } from "@/lib/errors";
+import { notifyWelcome } from "@/lib/notifications";
 
 export async function registerBusiness(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = registerSchema.safeParse({
@@ -46,6 +47,13 @@ export async function registerBusiness(_prev: FormState, formData: FormData): Pr
         wishlist: { create: {} },
       },
     });
+
+    // Fire-and-forget welcome notification; never block signup on it.
+    void notifyWelcome({
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      name: parsed.data.contactName,
+    }).catch((e) => logError("auth.welcomeNotify", e));
   } catch (e) {
     logError("auth.register", e);
     return { ok: false, message: friendlyError(e) };

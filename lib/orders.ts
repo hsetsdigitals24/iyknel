@@ -8,7 +8,15 @@ import {
   notifyAdminOrderEdited,
   notifyAdminPaymentDeclared,
 } from "@/lib/mail";
+import { sendOrderStatusSms } from "@/lib/sms";
 import { formatNaira } from "@/lib/utils";
+
+// Optional admin SMS alert; no-ops when ADMIN_NOTIFY_PHONE is unset.
+async function notifyAdminSms(message: string) {
+  const to = process.env.ADMIN_NOTIFY_PHONE;
+  if (!to) return;
+  await sendOrderStatusSms(to, message);
+}
 import { pickVehicleForWeight, logisticsCostKobo } from "@/lib/logistics";
 import { uploadInvoicePdf, getSignedFileUrl, SIGNED_URL_EXPIRY, deleteFile } from "@/lib/r2";
 import { renderInvoiceToBuffer } from "@/lib/invoice/render";
@@ -167,6 +175,9 @@ export async function submitOrder(
       const bizName = (await businessName(userId)) ?? "Unknown business";
       void notifyAdminNewOrder(order.number, bizName).catch(
         (e) => logError("orders.adminNotify", e),
+      );
+      void notifyAdminSms(`New order ${order.number} from ${bizName}.`).catch((e) =>
+        logError("orders.adminSms", e),
       );
       void inAppAdminNewOrder(order.id, order.number, bizName).catch((e) =>
         logError("notifications.inApp", e),
@@ -576,6 +587,9 @@ export async function markPaidByCustomer(userId: string, orderId: string) {
     await inAppAdminPaymentDeclared(order.id, order.number, name, totalDueText).catch((e) =>
       logError("notifications.inApp", e),
     );
+    void notifyAdminSms(
+      `Payment declared on order ${order.number} by ${name} (${totalDueText}). Verify transfer.`,
+    ).catch((e) => logError("orders.adminSms", e));
     return notifyAdminPaymentDeclared(order.number, name, totalDueText);
   })().catch((e) => logError("orders.paymentDeclaredNotify", e));
 

@@ -15,12 +15,29 @@ export function bankFromEnv(): BankDetails | null {
 
 type Recipient = { email: string; phone?: string | null; name?: string | null };
 
+export async function notifyWelcome(r: Recipient) {
+  await sendMail({
+    to: r.email,
+    subject: "Your Iyknel account is ready",
+    text: `Hi ${r.name ?? "there"},\n\nYour Iyknel business account is ready. You can now browse products, build a cart, and submit orders.\n\nSign in any time at your dashboard.\n\n— Iyknel`,
+  });
+  if (r.phone) {
+    await sendOrderStatusSms(r.phone, "Your Iyknel account is ready. Sign in to start ordering.");
+  }
+}
+
 export async function notifyInvoiceIssued(r: Recipient, orderNumber: string, invoiceUrl: string, totalKobo: number) {
   await sendMail({
     to: r.email,
     subject: `Your invoice for order ${orderNumber}`,
     text: `Hi ${r.name ?? "there"},\n\nYour invoice for order ${orderNumber} is ready.\nTotal due: ${formatNaira(totalKobo)}\n\nDownload: ${invoiceUrl}\n\nWe'll follow up shortly with bank-transfer instructions once your order is approved.\n\n— Iyknel`,
   });
+  if (r.phone) {
+    await sendOrderStatusSms(
+      r.phone,
+      `Invoice ready for order ${orderNumber}. Total due: ${formatNaira(totalKobo)}. See your dashboard.`,
+    );
+  }
 }
 
 export async function notifyApproved(
