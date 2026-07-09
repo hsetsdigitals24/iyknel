@@ -13,8 +13,8 @@ export function ForgotForm() {
   return (
     <form action={action} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone</Label>
-        <Input id="phone" name="phone" type="tel" required autoComplete="tel" />
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" required autoComplete="email" />
       </div>
       <FormStateToast state={state} />
       <SubmitButton />

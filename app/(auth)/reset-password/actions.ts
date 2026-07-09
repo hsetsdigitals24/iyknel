@@ -8,7 +8,7 @@ import { friendlyError, logError } from "@/lib/errors";
 
 export async function resetPassword(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = resetSchema.safeParse({
-    phone: formData.get("phone"),
+    email: formData.get("email"),
     code: formData.get("code"),
     password: formData.get("password"),
   });
@@ -17,9 +17,9 @@ export async function resetPassword(_prev: FormState, formData: FormData): Promi
   }
 
   try {
-    const user = await db.user.findFirst({ where: { phone: parsed.data.phone } });
+    const user = await db.user.findFirst({ where: { email: parsed.data.email.toLowerCase() } });
     if (!user) {
-      return { ok: false, message: "Invalid code or phone number." };
+      return { ok: false, message: "Invalid code or email." };
     }
 
     const candidates = await db.passwordResetCode.findMany({

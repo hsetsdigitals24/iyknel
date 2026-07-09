@@ -430,6 +430,15 @@ model Notification {
   @@index([userId, createdAt])
 }
 
+// ---------- Site settings (singleton) ----------
+
+model SiteSetting {
+  id                         String   @id @default("singleton")
+  freeLogisticsThresholdKobo Int      @default(20000000)
+  freeLogisticsBannerText    String   @default("Free logistics on orders over {amount}")
+  updatedAt                  DateTime @updatedAt
+}
+
 // ---------- WhatsApp chat contacts ----------
 
 model WhatsappContact {

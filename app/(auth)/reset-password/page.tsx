@@ -8,7 +8,7 @@ export default function ResetPasswordPage() {
       <div className="space-y-2">
         <h1 className="font-serif text-4xl font-semibold tracking-tight">Set a new password</h1>
         <p className="text-sm text-muted-foreground">
-          Enter the 6-digit code we sent to your phone, and choose a new password.
+          Enter the 6-digit code we sent to your email, and choose a new password.
         </p>
       </div>
       <Suspense>

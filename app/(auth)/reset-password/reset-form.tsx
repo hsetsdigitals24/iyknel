@@ -11,20 +11,20 @@ import { resetPassword } from "./actions";
 
 export function ResetForm() {
   const search = useSearchParams();
-  const phoneFromQuery = search.get("phone") ?? "";
+  const emailFromQuery = search.get("email") ?? "";
   const [state, action] = useFormState(resetPassword, null);
 
   return (
     <form action={action} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="phone"
-          name="phone"
-          type="tel"
+          id="email"
+          name="email"
+          type="email"
           required
-          defaultValue={phoneFromQuery}
-          autoComplete="tel"
+          defaultValue={emailFromQuery}
+          autoComplete="email"
         />
       </div>
       <div className="space-y-2">

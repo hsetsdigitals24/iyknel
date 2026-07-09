@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
+import { getSiteSettings } from "@/lib/settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +18,12 @@ import { deleteAdminAction } from "./admins/actions";
 import { ConfirmDeleteAdminButton } from "./admins/row-controls";
 import { deleteWhatsappContactAction } from "./whatsapp/actions";
 import { ConfirmDeleteContactButton } from "./whatsapp/row-controls";
+import { FreeLogisticsForm } from "./free-logistics/free-logistics-form";
 
 export default async function AdminSettingsPage() {
   const session = await requireAdmin();
 
-  const [admins, whatsappContacts] = await Promise.all([
+  const [admins, whatsappContacts, siteSettings] = await Promise.all([
     db.user.findMany({
       where: { role: "ADMIN" },
       orderBy: { createdAt: "asc" },
@@ -30,6 +32,7 @@ export default async function AdminSettingsPage() {
     db.whatsappContact.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
+    getSiteSettings(),
   ]);
   const isLastAdmin = admins.length <= 1;
 
@@ -50,6 +53,22 @@ export default async function AdminSettingsPage() {
           </p>
         </div>
         <ChangePasswordForm />
+      </section>
+
+      <section className="max-w-md space-y-4 rounded-xl border bg-card p-6">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">Free logistics banner</h2>
+          <p className="text-sm text-muted-foreground">
+            The promo pill on product pages, and the order value at which delivery is
+            waived in the cart.
+          </p>
+        </div>
+        <FreeLogisticsForm
+          initial={{
+            thresholdNaira: siteSettings.freeLogisticsThresholdKobo / 100,
+            bannerText: siteSettings.freeLogisticsBannerText,
+          }}
+        />
       </section>
 
       <section className="space-y-4">

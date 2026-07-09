@@ -7,7 +7,7 @@ export default function ForgotPasswordPage() {
       <div className="space-y-2">
         <h1 className="font-serif text-4xl font-semibold tracking-tight">Reset your password</h1>
         <p className="text-sm text-muted-foreground">
-          Enter your registered phone number. We&apos;ll send a reset code by SMS.
+          Enter your registered email address. We&apos;ll send a reset code by email.
         </p>
       </div>
       <ForgotForm />

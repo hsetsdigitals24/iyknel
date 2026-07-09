@@ -24,7 +24,7 @@ export const loginSchema = z.object({
 });
 
 export const forgotSchema = z.object({
-  phone: z.string().regex(phoneRegex, "Enter a valid phone number"),
+  email: z.string().email("Enter a valid email"),
 });
 
 export const categoryInputSchema = z.object({
@@ -49,7 +49,7 @@ export const reviewSchema = z.object({
 export type ReviewInput = z.infer<typeof reviewSchema>;
 
 export const resetSchema = z.object({
-  phone: z.string().regex(phoneRegex),
+  email: z.string().email(),
   code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
   password: z.string().min(8).max(72),
 });
@@ -119,6 +119,20 @@ export const whatsappContactSchema = z.object({
   active: z.coerce.boolean().optional().default(true),
 });
 export type WhatsappContactInput = z.infer<typeof whatsappContactSchema>;
+
+export const freeLogisticsSchema = z.object({
+  // Entered/edited in naira; stored as integer kobo.
+  thresholdNaira: z.coerce
+    .number({ invalid_type_error: "Enter a valid amount" })
+    .positive("Enter an amount greater than zero")
+    .max(1_000_000_000, "That amount is too large"),
+  bannerText: z
+    .string()
+    .trim()
+    .min(1, "Banner text is required")
+    .max(200, "Keep it under 200 characters"),
+});
+export type FreeLogisticsInput = z.infer<typeof freeLogisticsSchema>;
 
 export type FormState =
   | { ok: true; message?: string }

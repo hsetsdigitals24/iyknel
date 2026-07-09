@@ -6,6 +6,7 @@ export { canTransition, formatOrderNumber } from "@/lib/order-state";
 import {
   notifyAdminNewOrder,
   notifyAdminOrderEdited,
+  notifyAdminOrderUpdate,
   notifyAdminPaymentDeclared,
 } from "@/lib/mail";
 import { sendOrderStatusSms } from "@/lib/sms";
@@ -28,7 +29,10 @@ import {
   notifyDelivered,
   notifyDispatched,
   notifyInvoiceIssued,
+  notifyOrderEdited,
+  notifyOrderSubmitted,
   notifyPaid,
+  notifyPaymentDeclaredAck,
 } from "@/lib/notifications";
 import {
   checkLowStockAndNotify,
@@ -179,6 +183,10 @@ export async function submitOrder(
       void notifyAdminSms(`New order ${order.number} from ${bizName}.`).catch((e) =>
         logError("orders.adminSms", e),
       );
+      void (async () => {
+        const recipient = await loadOrderRecipient(userId);
+        await notifyOrderSubmitted(recipient, order.number, subtotalKobo);
+      })().catch((e) => logError("orders.submitCustomerNotify", e));
       void inAppAdminNewOrder(order.id, order.number, bizName).catch((e) =>
         logError("notifications.inApp", e),
       );
@@ -350,6 +358,12 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
   await notifyInvoiceIssued(recipient, order.number, emailPdfUrl, totalKobo).catch((e) =>
     logError("orders.invoiceEmail", e),
   );
+  void notifyAdminOrderUpdate(
+    order.number,
+    (await businessName(order.userId)) ?? "Unknown business",
+    "Invoice issued",
+    `Total due: ${formatNaira(totalKobo)}`,
+  ).catch((e) => logError("orders.invoiceAdminNotify", e));
   void inAppInvoiceIssued(order.userId, order.id, order.number, totalKobo).catch((e) =>
     logError("notifications.inApp", e),
   );
@@ -384,6 +398,12 @@ export async function approveOrder(actorId: string, orderId: string) {
     emailPdfUrl,
     bankFromEnv(),
   ).catch((e) => logError("orders.approveNotify", e));
+  void notifyAdminOrderUpdate(
+    order.number,
+    (await businessName(order.userId)) ?? "Unknown business",
+    "Approved — awaiting payment",
+    `Total due: ${formatNaira(order.totalKobo)}`,
+  ).catch((e) => logError("orders.approveAdminNotify", e));
   void inAppApproved(order.userId, order.id, order.number, order.totalKobo).catch((e) =>
     logError("notifications.inApp", e),
   );
@@ -431,6 +451,12 @@ export async function markPaidByAdmin(actorId: string, orderId: string, args: Ma
   });
   const recipient = await loadOrderRecipient(order.userId);
   await notifyPaid(recipient, order.number).catch((e) => logError("orders.paidNotify", e));
+  void notifyAdminOrderUpdate(
+    order.number,
+    (await businessName(order.userId)) ?? "Unknown business",
+    "Payment confirmed",
+    `Amount: ${formatNaira(args.amountKobo)}${args.bankRef ? ` · Ref: ${args.bankRef}` : ""}`,
+  ).catch((e) => logError("orders.paidAdminNotify", e));
   void inAppPaid(order.userId, order.id, order.number).catch((e) =>
     logError("notifications.inApp", e),
   );
@@ -463,6 +489,12 @@ export async function markDispatched(actorId: string, orderId: string, courierNo
   await notifyDispatched(recipient, order.number, courierNote).catch((e) =>
     logError("orders.dispatchNotify", e),
   );
+  void notifyAdminOrderUpdate(
+    order.number,
+    (await businessName(order.userId)) ?? "Unknown business",
+    "Dispatched",
+    courierNote ? `Courier note: ${courierNote}` : null,
+  ).catch((e) => logError("orders.dispatchAdminNotify", e));
   void inAppDispatched(order.userId, order.id, order.number).catch((e) =>
     logError("notifications.inApp", e),
   );
@@ -490,6 +522,11 @@ export async function markDelivered(actorId: string, orderId: string) {
   await notifyDelivered(recipient, order.number).catch((e) =>
     logError("orders.deliverNotify", e),
   );
+  void notifyAdminOrderUpdate(
+    order.number,
+    (await businessName(order.userId)) ?? "Unknown business",
+    "Delivered",
+  ).catch((e) => logError("orders.deliverAdminNotify", e));
   void inAppDelivered(order.userId, order.id, order.number).catch((e) =>
     logError("notifications.inApp", e),
   );
@@ -554,6 +591,12 @@ export async function cancelOrder(actorId: string, orderId: string, reason: stri
   await notifyCancelled(recipient, order.number, reason).catch((e) =>
     logError("orders.cancelNotify", e),
   );
+  void notifyAdminOrderUpdate(
+    order.number,
+    (await businessName(order.userId)) ?? "Unknown business",
+    "Cancelled",
+    `Reason: ${reason}`,
+  ).catch((e) => logError("orders.cancelAdminNotify", e));
   void inAppCancelled(order.userId, order.id, order.number, reason).catch((e) =>
     logError("notifications.inApp", e),
   );
@@ -592,6 +635,12 @@ export async function markPaidByCustomer(userId: string, orderId: string) {
     ).catch((e) => logError("orders.adminSms", e));
     return notifyAdminPaymentDeclared(order.number, name, totalDueText);
   })().catch((e) => logError("orders.paymentDeclaredNotify", e));
+
+  // Acknowledge to the customer that we're verifying their payment.
+  void (async () => {
+    const recipient = await loadOrderRecipient(userId);
+    await notifyPaymentDeclaredAck(recipient, order.number);
+  })().catch((e) => logError("orders.paymentDeclaredAck", e));
 
   return updated;
 }
@@ -827,6 +876,10 @@ export async function editOrder(userId: string, orderId: string, input: EditOrde
       business?.name ?? "Unknown business",
       `Status reset to SUBMITTED; existing invoice cancelled. Please re-issue with the new logistics.\n\nChanges:\n${summary}`,
     ).catch((e) => logError("orders.editNotify", e));
+    void (async () => {
+      const recipient = await loadOrderRecipient(userId);
+      await notifyOrderEdited(recipient, order.number, summary);
+    })().catch((e) => logError("orders.editCustomerNotify", e));
     void inAppAdminOrderEdited(
       order.id,
       order.number,

@@ -4,6 +4,7 @@ import { ArrowRight, MessageSquareText, ShoppingCart } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getCartSummary } from "@/lib/cart";
 import { logisticsWaiverFor } from "@/lib/logistics";
+import { getSiteSettings } from "@/lib/settings";
 import { formatNaira } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CartLineRow } from "@/components/cart-line";
@@ -11,8 +12,11 @@ import { CartLineRow } from "@/components/cart-line";
 export default async function CartPage() {
   const session = await getSession();
   if (!session?.user) return <GuestCart />;
-  const cart = await getCartSummary(session.user.id);
-  const waiver = logisticsWaiverFor(cart.subtotalKobo);
+  const [cart, settings] = await Promise.all([
+    getCartSummary(session.user.id),
+    getSiteSettings(),
+  ]);
+  const waiver = logisticsWaiverFor(cart.subtotalKobo, settings.freeLogisticsThresholdKobo);
 
   return (
     <div className="space-y-6">

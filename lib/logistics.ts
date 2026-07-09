@@ -8,12 +8,15 @@ export type LogisticsWaiver = {
   remainingKobo: number;
 };
 
-export function logisticsWaiverFor(subtotalKobo: number): LogisticsWaiver {
-  const waived = subtotalKobo >= FREE_LOGISTICS_THRESHOLD_KOBO;
+export function logisticsWaiverFor(
+  subtotalKobo: number,
+  thresholdKobo: number = FREE_LOGISTICS_THRESHOLD_KOBO,
+): LogisticsWaiver {
+  const waived = subtotalKobo >= thresholdKobo;
   return {
     waived,
-    thresholdKobo: FREE_LOGISTICS_THRESHOLD_KOBO,
-    remainingKobo: waived ? 0 : FREE_LOGISTICS_THRESHOLD_KOBO - subtotalKobo,
+    thresholdKobo,
+    remainingKobo: waived ? 0 : thresholdKobo - subtotalKobo,
   };
 }
 

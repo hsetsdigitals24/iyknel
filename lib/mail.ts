@@ -2,6 +2,9 @@
 // In dev (no SMTP_HOST configured) we log to the console instead of sending.
 
 import "server-only";
+import * as React from "react";
+import { AdminNoticeEmail } from "@/emails/admin-notice";
+import { PasswordResetEmail } from "@/emails/password-reset";
 
 type Mailable = {
   to: string;
@@ -29,6 +32,19 @@ async function getTransport() {
   return cachedTransport;
 }
 
+/**
+ * Render a React Email component to both HTML and a plain-text fallback.
+ * Used so every branded email still degrades gracefully in text-only clients.
+ */
+export async function renderEmail(node: React.ReactElement): Promise<{ html: string; text: string }> {
+  const { render } = await import("@react-email/render");
+  const [html, text] = await Promise.all([
+    render(node),
+    render(node, { plainText: true }),
+  ]);
+  return { html, text };
+}
+
 export async function sendMail(msg: Mailable) {
   const transport = await getTransport();
   if (!transport) {
@@ -47,16 +63,51 @@ export async function sendMail(msg: Mailable) {
   return { ok: true, dev: false as const };
 }
 
-export async function notifyAdminNewOrder(orderNumber: string, businessName: string) {
+export async function sendPasswordResetEmail(email: string, code: string, name?: string | null) {
+  const { html, text } = await renderEmail(
+    React.createElement(PasswordResetEmail, { name, code, expiresMinutes: 15 }),
+  );
+  await sendMail({
+    to: email,
+    subject: "Your Iyknel password reset code",
+    text,
+    html,
+  });
+}
+
+// ── Admin notifications ────────────────────────────────────────────────────
+// All admin alerts render the shared AdminNoticeEmail template and go to
+// ADMIN_NOTIFY_EMAIL. Callers should treat a missing address as a no-op.
+
+async function sendAdminNotice(args: {
+  subject: string;
+  heading: string;
+  body: string;
+  detail?: string | null;
+  action?: string | null;
+}) {
   const to = process.env.ADMIN_NOTIFY_EMAIL;
   if (!to) {
     console.warn("ADMIN_NOTIFY_EMAIL not set; skipping admin notification.");
     return;
   }
-  await sendMail({
-    to,
+  const { html, text } = await renderEmail(
+    React.createElement(AdminNoticeEmail, {
+      heading: args.heading,
+      preview: args.subject,
+      body: args.body,
+      detail: args.detail ?? null,
+      action: args.action ?? "Review it in the back office.",
+    }),
+  );
+  await sendMail({ to, subject: args.subject, text, html });
+}
+
+export async function notifyAdminNewOrder(orderNumber: string, businessName: string) {
+  await sendAdminNotice({
     subject: `New order ${orderNumber} from ${businessName}`,
-    text: `Order ${orderNumber} submitted by ${businessName}. Review it in the back office.`,
+    heading: `New order ${orderNumber}`,
+    body: `Order ${orderNumber} was submitted by ${businessName}.`,
   });
 }
 
@@ -65,15 +116,11 @@ export async function notifyAdminPaymentDeclared(
   businessName: string,
   totalDueText: string,
 ) {
-  const to = process.env.ADMIN_NOTIFY_EMAIL;
-  if (!to) {
-    console.warn("ADMIN_NOTIFY_EMAIL not set; skipping admin notification.");
-    return;
-  }
-  await sendMail({
-    to,
+  await sendAdminNotice({
     subject: `Payment declared on order ${orderNumber}`,
-    text: `${businessName} has declared payment for order ${orderNumber} (${totalDueText}). Verify the bank transfer and mark paid in the back office.`,
+    heading: `Payment declared — ${orderNumber}`,
+    body: `${businessName} has declared payment for order ${orderNumber} (${totalDueText}).`,
+    action: "Verify the bank transfer and mark it paid in the back office.",
   });
 }
 
@@ -82,14 +129,28 @@ export async function notifyAdminOrderEdited(
   businessName: string,
   summary: string,
 ) {
-  const to = process.env.ADMIN_NOTIFY_EMAIL;
-  if (!to) {
-    console.warn("ADMIN_NOTIFY_EMAIL not set; skipping admin notification.");
-    return;
-  }
-  await sendMail({
-    to,
+  await sendAdminNotice({
     subject: `Order ${orderNumber} edited by ${businessName}`,
-    text: `${businessName} edited order ${orderNumber}.\n\n${summary}\n\nReview it in the back office.`,
+    heading: `Order ${orderNumber} edited`,
+    body: `${businessName} edited order ${orderNumber}.`,
+    detail: summary,
+  });
+}
+
+/**
+ * Generic admin alert fired on every order state change so the back office is
+ * always notified alongside the customer.
+ */
+export async function notifyAdminOrderUpdate(
+  orderNumber: string,
+  businessName: string,
+  statusLabel: string,
+  detail?: string | null,
+) {
+  await sendAdminNotice({
+    subject: `Order ${orderNumber}: ${statusLabel}`,
+    heading: `Order ${orderNumber} — ${statusLabel}`,
+    body: `Order ${orderNumber} (${businessName}) is now: ${statusLabel}.`,
+    detail: detail ?? null,
   });
 }
