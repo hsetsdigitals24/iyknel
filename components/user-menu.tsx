@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { isAdminRole } from "@/lib/permissions";
 
 export function UserMenu() {
   const { data: session, status } = useSession();
@@ -22,7 +23,7 @@ export function UserMenu() {
     );
   }
 
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = isAdminRole(session.user.role);
   return (
     <div className="flex items-center gap-2">
       <Button asChild variant="ghost" size="sm">

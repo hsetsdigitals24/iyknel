@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { requireAdmin } from "@/lib/session";
+import { requireSuperAdmin } from "@/lib/session";
 import { AdminForm } from "../admin-form";
 import { createAdminAction } from "../actions";
 
 export default async function NewAdminPage() {
-  await requireAdmin();
+  await requireSuperAdmin();
 
   return (
     <div className="space-y-6">

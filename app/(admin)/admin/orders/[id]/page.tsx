@@ -33,6 +33,14 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
   ]);
   const picked = order.status === "SUBMITTED" ? await pickVehicleForWeight(order.weightGrams) : null;
   const pickedTripCount = picked?.tripCount ?? 1;
+  // Base (per-trip) matrix cost in naira for the auto-picked vehicle, keyed by band,
+  // so the issue form can prefill the fee client-side. Bands with no configured cell
+  // are omitted (admin types the fee manually).
+  const bandBaseCostNaira: Record<string, number> = {};
+  if (picked) {
+    const costs = await db.logisticsCost.findMany({ where: { vehicleId: picked.vehicleId } });
+    for (const c of costs) bandBaseCostNaira[c.distanceBandId] = c.costKobo / 100;
+  }
   const invoiceUrl = order.invoice?.pdfKey
     ? await getSignedFileUrl(order.invoice.pdfKey)
     : null;
@@ -211,9 +219,10 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
               totalKobo={order.totalKobo || order.subtotalKobo}
               bands={bands.map((b) => ({ id: b.id, label: b.label }))}
               pickedVehicle={picked?.vehicleName ?? null}
-              pickedCostNaira={null}
+              bandBaseCostNaira={bandBaseCostNaira}
               pickedTripCount={pickedTripCount}
               overflow={picked?.overflow ?? false}
+              currentLogisticsNaira={order.logisticsKobo / 100}
             />
           </div>
         </aside>

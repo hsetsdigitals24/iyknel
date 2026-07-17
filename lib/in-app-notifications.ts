@@ -1,6 +1,7 @@
 import "server-only";
 import type { NotificationType } from "@prisma/client";
 import { db } from "@/lib/db";
+import { ADMIN_ROLES } from "@/lib/permissions";
 import { formatNaira } from "@/lib/utils";
 
 // Products at or below this many cartons trigger an admin low-stock alert.
@@ -28,7 +29,7 @@ export async function createNotification(userId: string, input: NotificationInpu
 
 export async function notifyAdminsInApp(input: NotificationInput) {
   const admins = await db.user.findMany({
-    where: { role: "ADMIN" },
+    where: { role: { in: [...ADMIN_ROLES] } },
     select: { id: true },
   });
   if (admins.length === 0) return;

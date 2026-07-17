@@ -5,13 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FormStateToast } from "@/components/form-state-toast";
 import type { FormState } from "@/lib/validation";
+import { ADMIN_ROLES, ADMIN_ROLE_LABELS, type AdminRole } from "@/lib/permissions";
 
 export type AdminFormData = {
   name: string;
   email: string;
   phone: string;
+  role: AdminRole;
 };
 
 export function AdminForm({
@@ -70,6 +79,29 @@ export function AdminForm({
         {fieldErrors?.phone?.[0] && (
           <p className="text-xs text-destructive">{fieldErrors.phone[0]}</p>
         )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="role">Role</Label>
+        <Select name="role" defaultValue={initial?.role ?? "MANAGER"}>
+          <SelectTrigger id="role" aria-invalid={!!fieldErrors?.role?.[0]}>
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            {ADMIN_ROLES.map((r) => (
+              <SelectItem key={r} value={r}>
+                {ADMIN_ROLE_LABELS[r]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldErrors?.role?.[0] && (
+          <p className="text-xs text-destructive">{fieldErrors.role[0]}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Super Admins manage other admins and site settings. Managers run the full
+          shop; Staff handle orders &amp; customers; Catalog manages products &amp;
+          inventory.
+        </p>
       </div>
 
       {mode === "create" ? (

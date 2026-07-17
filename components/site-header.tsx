@@ -4,6 +4,7 @@ import { UserMenu } from "@/components/user-menu";
 import { BrandLogo } from "@/components/brand-logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { getSession } from "@/lib/session";
+import { isAdminRole } from "@/lib/permissions";
 import { db } from "@/lib/db";
 
 async function getCartCount(userId: string | undefined): Promise<number> {
@@ -18,7 +19,7 @@ async function getCartCount(userId: string | undefined): Promise<number> {
 export async function SiteHeader() {
   const session = await getSession();
   const userId = session?.user?.id;
-  const isAdmin = session?.user?.role === "ADMIN";
+  const isAdmin = isAdminRole(session?.user?.role);
   const cartCount = await getCartCount(userId);
   const authHref = !userId ? "/login" : isAdmin ? "/admin" : "/dashboard";
   const authLabel = !userId ? "Sign in" : isAdmin ? "Back office" : "Dashboard";

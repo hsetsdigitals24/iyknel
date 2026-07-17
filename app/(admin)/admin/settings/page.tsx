@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
+import { ADMIN_ROLES, ADMIN_ROLE_LABELS, isSuperAdmin } from "@/lib/permissions";
 import { getSiteSettings } from "@/lib/settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,22 +20,33 @@ import { ConfirmDeleteAdminButton } from "./admins/row-controls";
 import { deleteWhatsappContactAction } from "./whatsapp/actions";
 import { ConfirmDeleteContactButton } from "./whatsapp/row-controls";
 import { FreeLogisticsForm } from "./free-logistics/free-logistics-form";
+import { BankDetailsForm } from "./bank-details/bank-details-form";
+import { ContactDetailsForm } from "./contact-details/contact-details-form";
 
 export default async function AdminSettingsPage() {
   const session = await requireAdmin();
 
+  const canManage = isSuperAdmin(session.user.role);
+
   const [admins, whatsappContacts, siteSettings] = await Promise.all([
     db.user.findMany({
-      where: { role: "ADMIN" },
+      where: { role: { in: [...ADMIN_ROLES] } },
       orderBy: { createdAt: "asc" },
-      select: { id: true, name: true, email: true, phone: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        createdAt: true,
+      },
     }),
     db.whatsappContact.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     getSiteSettings(),
   ]);
-  const isLastAdmin = admins.length <= 1;
+  const superAdminCount = admins.filter((a) => a.role === "SUPER_ADMIN").length;
 
   return (
     <div className="space-y-8">
@@ -55,6 +67,7 @@ export default async function AdminSettingsPage() {
         <ChangePasswordForm />
       </section>
 
+      {canManage && (
       <section className="max-w-md space-y-4 rounded-xl border bg-card p-6">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Free logistics banner</h2>
@@ -70,7 +83,50 @@ export default async function AdminSettingsPage() {
           }}
         />
       </section>
+      )}
 
+      {canManage && (
+      <section className="max-w-md space-y-4 rounded-xl border bg-card p-6">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">Bank details</h2>
+          <p className="text-sm text-muted-foreground">
+            The payee account shown on invoices, approval emails, order pages, and the
+            contact page. Customers pay by transfer using their order number as reference.
+          </p>
+        </div>
+        <BankDetailsForm
+          initial={{
+            bankName: siteSettings.bankName,
+            bankAccountName: siteSettings.bankAccountName,
+            bankAccountNumber: siteSettings.bankAccountNumber,
+          }}
+        />
+      </section>
+      )}
+
+      {canManage && (
+      <section className="max-w-md space-y-4 rounded-xl border bg-card p-6">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">Contact details</h2>
+          <p className="text-sm text-muted-foreground">
+            The email, phone, and address shown on the contact page, site footer, about page,
+            invoices, and transactional emails.
+          </p>
+        </div>
+        <ContactDetailsForm
+          initial={{
+            contactEmail: siteSettings.contactEmail,
+            contactPhones: siteSettings.contactPhones,
+            contactAddressLine1: siteSettings.contactAddressLine1,
+            contactAddressLine2: siteSettings.contactAddressLine2,
+            contactAddressLga: siteSettings.contactAddressLga,
+            contactAddressState: siteSettings.contactAddressState,
+          }}
+        />
+      </section>
+      )}
+
+      {canManage && (
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -89,6 +145,7 @@ export default async function AdminSettingsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Added</TableHead>
@@ -98,6 +155,8 @@ export default async function AdminSettingsPage() {
             <TableBody>
               {admins.map((a) => {
                 const isSelf = a.id === session.user.id;
+                const isLastSuperAdmin =
+                  a.role === "SUPER_ADMIN" && superAdminCount <= 1;
                 return (
                   <TableRow key={a.id}>
                     <TableCell>
@@ -110,6 +169,15 @@ export default async function AdminSettingsPage() {
                         </Link>
                         {isSelf && <Badge variant="secondary">You</Badge>}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={a.role === "SUPER_ADMIN" ? "default" : "outline"}
+                      >
+                        {ADMIN_ROLE_LABELS[
+                          a.role as keyof typeof ADMIN_ROLE_LABELS
+                        ] ?? a.role}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{a.email}</TableCell>
                     <TableCell className="text-muted-foreground">
@@ -127,7 +195,7 @@ export default async function AdminSettingsPage() {
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/admin/settings/admins/${a.id}`}>Edit</Link>
                         </Button>
-                        {!isSelf && !isLastAdmin && (
+                        {!isSelf && !isLastSuperAdmin && (
                           <form action={deleteAdminAction.bind(null, a.id)}>
                             <ConfirmDeleteAdminButton
                               label={`Delete ${a.name ?? a.email}`}
@@ -143,7 +211,9 @@ export default async function AdminSettingsPage() {
           </Table>
         </div>
       </section>
+      )}
 
+      {canManage && (
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -210,6 +280,7 @@ export default async function AdminSettingsPage() {
           </Table>
         </div>
       </section>
+      )}
     </div>
   );
 }

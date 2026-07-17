@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getContact } from "@/lib/contact";
+import { getSiteSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Contact · Iyknel",
@@ -13,12 +14,13 @@ export const metadata: Metadata = {
     "Reach the Iyknel back office for orders, invoices, logistics, and partnership inquiries.",
 };
 
-export default function ContactPage() {
-  const contact = getContact();
+export default async function ContactPage() {
+  const contact = await getContact();
+  const settings = await getSiteSettings();
   const bank = {
-    name: process.env.BANK_NAME ?? null,
-    accountName: process.env.BANK_ACCOUNT_NAME ?? null,
-    accountNumber: process.env.BANK_ACCOUNT_NUMBER ?? null,
+    name: settings.bankName || null,
+    accountName: settings.bankAccountName || null,
+    accountNumber: settings.bankAccountNumber || null,
   };
 
   return (

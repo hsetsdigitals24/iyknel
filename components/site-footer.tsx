@@ -13,8 +13,8 @@ const CATEGORY_LINKS = [
   { slug: "personal-care", name: "Personal Care" },
 ];
 
-export function SiteFooter() {
-  const contact = getContact();
+export async function SiteFooter() {
+  const contact = await getContact();
   return (
     <footer className="mt-16 border-t bg-[#f8f8f8]">
       <div className="container grid gap-10 py-12 md:grid-cols-4">
@@ -80,6 +80,11 @@ export function SiteFooter() {
                 Contact us
               </Link>
             </li>
+            <li>
+              <Link href="/quote" className="text-muted-foreground hover:text-foreground">
+                Request a quote
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -140,9 +145,6 @@ export function SiteFooter() {
             </Link>
             <Link href="/terms" className="hover:text-foreground">
               Terms
-            </Link>
-            <Link href="/quote" className="hover:text-foreground">
-              Request a quote
             </Link>
           </div>
         </div>

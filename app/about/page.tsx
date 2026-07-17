@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     "Iyknel Ventures Ltd has been bridging the gap in FMCG distribution and logistics across Lagos and beyond since 1999.",
 };
 
-export default function AboutPage() {
-  const contact = getContact();
+export default async function AboutPage() {
+  const contact = await getContact();
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />

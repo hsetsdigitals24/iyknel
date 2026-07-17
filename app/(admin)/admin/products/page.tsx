@@ -13,7 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ClickableRow } from "@/components/clickable-row";
-import { deleteProductAction } from "./actions";
+import { StockCell } from "./stock-cell";
+import { deleteProductAction, updateStockAction } from "./actions";
 
 const PAGE_SIZE = 50;
 
@@ -125,16 +126,13 @@ export default async function AdminProductsPage({
                     {formatNaira(p.priceKobo)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {p.unitsPerCarton != null ? (
-                      <span className="inline-flex flex-col items-end leading-tight">
-                        <span>{p.stockCartons}c + {p.stockLoosePacks}p</span>
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          {p.stockCartons * p.unitsPerCarton + p.stockLoosePacks} packs
-                        </span>
-                      </span>
-                    ) : (
-                      <>{p.stockLoosePacks} packs</>
-                    )}
+                    <StockCell
+                      productId={p.id}
+                      stockCartons={p.stockCartons}
+                      stockLoosePacks={p.stockLoosePacks}
+                      unitsPerCarton={p.unitsPerCarton}
+                      action={updateStockAction.bind(null, p.id)}
+                    />
                   </TableCell>
                   <TableCell>
                     {p.active ? (

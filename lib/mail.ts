@@ -5,6 +5,8 @@ import "server-only";
 import * as React from "react";
 import { AdminNoticeEmail } from "@/emails/admin-notice";
 import { PasswordResetEmail } from "@/emails/password-reset";
+import { EmailContactContext } from "@/emails/layout";
+import { getContact } from "@/lib/contact";
 
 type Mailable = {
   to: string;
@@ -38,9 +40,22 @@ async function getTransport() {
  */
 export async function renderEmail(node: React.ReactElement): Promise<{ html: string; text: string }> {
   const { render } = await import("@react-email/render");
+  // Inject the admin-editable contact details into the shared footer once,
+  // so every template reflects the current values without threading props.
+  const contact = await getContact();
+  const wrapped = React.createElement(
+    EmailContactContext.Provider,
+    {
+      value: {
+        email: contact.email,
+        phone: contact.phones.map((p) => p.display).join(" · ") || null,
+      },
+    },
+    node,
+  );
   const [html, text] = await Promise.all([
-    render(node),
-    render(node, { plainText: true }),
+    render(wrapped),
+    render(wrapped, { plainText: true }),
   ]);
   return { html, text };
 }

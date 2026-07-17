@@ -22,8 +22,8 @@ import { pickVehicleForWeight, logisticsCostKobo } from "@/lib/logistics";
 import { uploadInvoicePdf, getSignedFileUrl, SIGNED_URL_EXPIRY, deleteFile } from "@/lib/r2";
 import { renderInvoiceToBuffer } from "@/lib/invoice/render";
 import { logError } from "@/lib/errors";
+import { bankFromSettings, getSiteSettings } from "@/lib/settings";
 import {
-  bankFromEnv,
   notifyApproved,
   notifyCancelled,
   notifyDelivered,
@@ -237,34 +237,44 @@ async function loadOrderRecipient(userId: string) {
   };
 }
 
-export type IssueInvoiceArgs = { distanceBandId: string; tripCountOverride?: number };
+export type IssueInvoiceArgs = {
+  distanceBandId: string;
+  tripCountOverride?: number;
+  /** When set, use this fee (in kobo) instead of the matrix lookup. */
+  logisticsKoboOverride?: number;
+};
 
-export async function issueInvoice(actorId: string, orderId: string, args: IssueInvoiceArgs) {
-  const order = await db.order.findUnique({
-    where: { id: orderId },
-    include: { items: true, address: true, invoice: true },
-  });
-  if (!order) throw new OrderSubmissionError("Order not found.");
-  if (order.status === "AWAITING_APPROVAL" && order.invoice?.pdfKey) return order; // idempotent
-  if (!canTransition(order.status, "AWAITING_APPROVAL")) {
-    throw new OrderSubmissionError("Cannot issue invoice from this state.");
-  }
-  if (!order.address) throw new OrderSubmissionError("Order has no delivery address.");
-
-  const pick = await pickVehicleForWeight(order.weightGrams);
-  if (!pick) throw new OrderSubmissionError("No vehicle configured.");
-  const tripCount = args.tripCountOverride ?? pick.tripCount;
-  const logisticsKobo = await logisticsCostKobo(pick.vehicleId, args.distanceBandId, tripCount);
-  const totalKobo = order.subtotalKobo + logisticsKobo;
-
-  const band = await db.distanceBand.findUnique({ where: { id: args.distanceBandId } });
-  if (!band) throw new OrderSubmissionError("Distance band not found.");
-
+/**
+ * Render the invoice PDF for an order and upload it to R2, returning the new key.
+ * Shared by invoice issuance and post-issue logistics adjustments.
+ */
+async function buildInvoicePdfKey(
+  order: Prisma.OrderGetPayload<{ include: { items: true; address: true } }>,
+  args: { vehicleName: string | null; bandLabel: string | null; tripCount: number; logisticsKobo: number },
+): Promise<string> {
+  const totalKobo = order.subtotalKobo + args.logisticsKobo;
   const business = await db.business.findUnique({ where: { userId: order.userId } });
   const user = await db.user.findUnique({ where: { id: order.userId } });
+  const settings = await getSiteSettings();
   const buf = await renderInvoiceToBuffer({
     invoiceNumber: `INV-${order.number}`,
     issuedAt: new Date(),
+    company: {
+      address: [
+        settings.contactAddressLine1,
+        settings.contactAddressLine2,
+        settings.contactAddressLga,
+        settings.contactAddressState,
+      ]
+        .filter(Boolean)
+        .join(", "),
+      phones: settings.contactPhones
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .join(" · "),
+      email: settings.contactEmail,
+    },
     business: {
       name: business?.name ?? user?.name ?? "Customer",
       contactName: business?.contactName ?? user?.name ?? "",
@@ -288,16 +298,48 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
       priceKoboSnap: i.priceKoboSnap,
     })),
     subtotalKobo: order.subtotalKobo,
-    logisticsKobo,
+    logisticsKobo: args.logisticsKobo,
     totalKobo,
     weightGrams: order.weightGrams,
+    vehicleName: args.vehicleName,
+    bandLabel: args.bandLabel,
+    tripCount: args.tripCount,
+    bank: bankFromSettings(settings),
+  });
+  return uploadInvoicePdf(buf);
+}
+
+export async function issueInvoice(actorId: string, orderId: string, args: IssueInvoiceArgs) {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, address: true, invoice: true },
+  });
+  if (!order) throw new OrderSubmissionError("Order not found.");
+  if (order.status === "AWAITING_APPROVAL" && order.invoice?.pdfKey) return order; // idempotent
+  if (!canTransition(order.status, "AWAITING_APPROVAL")) {
+    throw new OrderSubmissionError("Cannot issue invoice from this state.");
+  }
+  if (!order.address) throw new OrderSubmissionError("Order has no delivery address.");
+
+  const pick = await pickVehicleForWeight(order.weightGrams);
+  if (!pick) throw new OrderSubmissionError("No vehicle configured.");
+  const tripCount = args.tripCountOverride ?? pick.tripCount;
+  // A manual override skips the matrix lookup so an unconfigured cell can't throw.
+  const logisticsKobo =
+    args.logisticsKoboOverride ??
+    (await logisticsCostKobo(pick.vehicleId, args.distanceBandId, tripCount));
+  const totalKobo = order.subtotalKobo + logisticsKobo;
+
+  const band = await db.distanceBand.findUnique({ where: { id: args.distanceBandId } });
+  if (!band) throw new OrderSubmissionError("Distance band not found.");
+
+  const previousPdfKey = order.invoice?.pdfKey ?? null;
+  const pdfKey = await buildInvoicePdfKey(order, {
     vehicleName: pick.vehicleName,
     bandLabel: band.label,
     tripCount,
-    bank: bankFromEnv(),
+    logisticsKobo,
   });
-  const previousPdfKey = order.invoice?.pdfKey ?? null;
-  const pdfKey = await uploadInvoicePdf(buf);
 
   const updated = await db.$transaction(async (tx) => {
     const ord = await tx.order.update({
@@ -340,6 +382,7 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
           totalKobo,
           tripCount,
           overflow: pick.overflow,
+          logisticsOverridden: args.logisticsKoboOverride != null,
         },
       },
     });
@@ -370,6 +413,75 @@ export async function issueInvoice(actorId: string, orderId: string, args: Issue
   return updated;
 }
 
+/**
+ * Adjust the logistics fee on an order whose invoice has already been issued
+ * (before payment is recorded). Regenerates the invoice PDF and re-notifies the
+ * customer of the new total. Vehicle/band/trips are kept as originally set.
+ */
+export async function updateOrderLogistics(
+  actorId: string,
+  orderId: string,
+  args: { logisticsKobo: number },
+) {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, address: true, invoice: true, vehicle: true, distanceBand: true },
+  });
+  if (!order) throw new OrderSubmissionError("Order not found.");
+  if (order.status !== "AWAITING_APPROVAL" && order.status !== "AWAITING_PAYMENT") {
+    throw new OrderSubmissionError("Logistics can only be adjusted before payment.");
+  }
+  if (!order.invoice || !order.vehicleId || !order.distanceBandId) {
+    throw new OrderSubmissionError("Issue the invoice before adjusting logistics.");
+  }
+
+  const fromKobo = order.logisticsKobo;
+  const logisticsKobo = args.logisticsKobo;
+  const totalKobo = order.subtotalKobo + logisticsKobo;
+
+  const previousPdfKey = order.invoice.pdfKey ?? null;
+  const pdfKey = await buildInvoicePdfKey(order, {
+    vehicleName: order.vehicle?.name ?? null,
+    bandLabel: order.distanceBand?.label ?? null,
+    tripCount: order.tripCount,
+    logisticsKobo,
+  });
+
+  const updated = await db.$transaction(async (tx) => {
+    const ord = await tx.order.update({
+      where: { id: order.id },
+      data: { logisticsKobo, totalKobo },
+    });
+    await tx.invoice.update({
+      where: { orderId: order.id },
+      data: { logisticsKobo, totalKobo, pdfKey },
+    });
+    await tx.auditLog.create({
+      data: {
+        actorId,
+        orderId: order.id,
+        action: "order.logistics_adjusted",
+        detail: { from: fromKobo, to: logisticsKobo, totalKobo },
+      },
+    });
+    return ord;
+  });
+
+  if (previousPdfKey && previousPdfKey !== pdfKey) {
+    await deleteFile(previousPdfKey).catch((e) => logError("orders.deleteOldInvoice", e));
+  }
+
+  const recipient = await loadOrderRecipient(order.userId);
+  const emailPdfUrl = await getSignedFileUrl(pdfKey, { expiresIn: SIGNED_URL_EXPIRY.email });
+  await notifyInvoiceIssued(recipient, order.number, emailPdfUrl, totalKobo).catch((e) =>
+    logError("orders.invoiceEmail", e),
+  );
+  void inAppInvoiceIssued(order.userId, order.id, order.number, totalKobo).catch((e) =>
+    logError("notifications.inApp", e),
+  );
+  return updated;
+}
+
 export async function approveOrder(actorId: string, orderId: string) {
   const order = await db.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
   if (!order) throw new OrderSubmissionError("Order not found.");
@@ -391,12 +503,13 @@ export async function approveOrder(actorId: string, orderId: string) {
   const emailPdfUrl = order.invoice?.pdfKey
     ? await getSignedFileUrl(order.invoice.pdfKey, { expiresIn: SIGNED_URL_EXPIRY.email })
     : null;
+  const settings = await getSiteSettings();
   await notifyApproved(
     recipient,
     order.number,
     order.totalKobo,
     emailPdfUrl,
-    bankFromEnv(),
+    bankFromSettings(settings),
   ).catch((e) => logError("orders.approveNotify", e));
   void notifyAdminOrderUpdate(
     order.number,

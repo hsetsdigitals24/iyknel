@@ -17,7 +17,7 @@ export function RegisterForm() {
     <form action={action} className="space-y-4">
       <Field
         id="businessName"
-        label="Business name"
+        label="Business name*"
         error={fieldErrors?.businessName?.[0]}
         required
       />
@@ -25,7 +25,7 @@ export function RegisterForm() {
         <Field id="rcNumber" label="RC number" error={fieldErrors?.rcNumber?.[0]} />
         <Field
           id="contactName"
-          label="Contact person"
+          label="Contact person*"
           error={fieldErrors?.contactName?.[0]}
           required
         />
@@ -33,7 +33,7 @@ export function RegisterForm() {
       <Field
         id="email"
         type="email"
-        label="Email"
+        label="Email*"
         autoComplete="email"
         error={fieldErrors?.email?.[0]}
         required
@@ -41,7 +41,7 @@ export function RegisterForm() {
       <Field
         id="phone"
         type="tel"
-        label="Phone"
+        label="Phone*"
         autoComplete="tel"
         error={fieldErrors?.phone?.[0]}
         required
@@ -49,7 +49,7 @@ export function RegisterForm() {
       <Field
         id="password"
         type="password"
-        label="Password"
+        label="Password*"
         autoComplete="new-password"
         error={fieldErrors?.password?.[0]}
         required

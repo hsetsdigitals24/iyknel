@@ -3,8 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/session";
-import { productInputSchema } from "@/lib/products";
-import { createProduct, updateProduct, deleteProduct } from "@/lib/products";
+import { productInputSchema, stockInputSchema } from "@/lib/products";
+import { createProduct, updateProduct, updateProductStock, deleteProduct } from "@/lib/products";
 import type { FormState } from "@/lib/validation";
 import { friendlyError, logError } from "@/lib/errors";
 
@@ -71,6 +71,31 @@ export async function updateProductAction(
   revalidatePath("/products");
   revalidatePath("/");
   redirect("/admin/products");
+}
+
+export async function updateStockAction(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireAdmin();
+  const parsed = stockInputSchema.safeParse({
+    stockCartons: formData.get("stockCartons") ?? 0,
+    stockLoosePacks: formData.get("stockLoosePacks") ?? 0,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: friendlyError(parsed.error) };
+  }
+  try {
+    await updateProductStock(id, parsed.data);
+  } catch (e) {
+    logError("admin.products.updateStock", e, { productId: id });
+    return { ok: false, message: friendlyError(e) };
+  }
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+  return { ok: true, message: "Stock updated" };
 }
 
 export async function deleteProductAction(formData: FormData) {

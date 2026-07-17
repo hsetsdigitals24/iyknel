@@ -15,6 +15,7 @@ import {
   markDeliveredAction,
   markDispatchedAction,
   markPaidAction,
+  updateLogisticsFeeAction,
 } from "../actions";
 import type { FormState } from "@/lib/validation";
 
@@ -26,18 +27,20 @@ export function ActionPanel({
   totalKobo,
   bands,
   pickedVehicle,
-  pickedCostNaira,
+  bandBaseCostNaira,
   pickedTripCount,
   overflow,
+  currentLogisticsNaira,
 }: {
   orderId: string;
   status: OrderStatus;
   totalKobo: number;
   bands: Band[];
   pickedVehicle: string | null;
-  pickedCostNaira: number | null;
+  bandBaseCostNaira: Record<string, number>;
   pickedTripCount: number;
   overflow: boolean;
+  currentLogisticsNaira: number;
 }) {
   switch (status) {
     case "SUBMITTED":
@@ -46,15 +49,21 @@ export function ActionPanel({
           orderId={orderId}
           bands={bands}
           pickedVehicle={pickedVehicle}
-          pickedCostNaira={pickedCostNaira}
+          bandBaseCostNaira={bandBaseCostNaira}
           pickedTripCount={pickedTripCount}
           overflow={overflow}
         />
       );
     case "AWAITING_APPROVAL":
-      return <ApprovePanel orderId={orderId} />;
+      return <ApprovePanel orderId={orderId} currentLogisticsNaira={currentLogisticsNaira} />;
     case "AWAITING_PAYMENT":
-      return <CancelPanel orderId={orderId} note="Awaiting customer payment." />;
+      return (
+        <CancelPanel
+          orderId={orderId}
+          note="Awaiting customer payment."
+          currentLogisticsNaira={currentLogisticsNaira}
+        />
+      );
     case "PAYMENT_REVIEW":
       return <MarkPaidPanel orderId={orderId} totalKobo={totalKobo} />;
     case "PAID":
@@ -74,19 +83,30 @@ function IssuePanel({
   orderId,
   bands,
   pickedVehicle,
-  pickedCostNaira,
+  bandBaseCostNaira,
   pickedTripCount,
   overflow,
 }: {
   orderId: string;
   bands: Band[];
   pickedVehicle: string | null;
-  pickedCostNaira: number | null;
+  bandBaseCostNaira: Record<string, number>;
   pickedTripCount: number;
   overflow: boolean;
 }) {
   const action = issueInvoiceAction.bind(null, orderId);
   const [state, formAction] = useFormState<FormState, FormData>(action, null);
+  const [bandId, setBandId] = useState("");
+  const [trips, setTrips] = useState(pickedTripCount);
+  const [fee, setFee] = useState("");
+
+  // Prefill the fee from the matrix (base cost × trips) whenever the band or
+  // trip count changes; the admin can then overtype a custom amount.
+  function prefillFee(nextBandId: string, nextTrips: number) {
+    const base = bandBaseCostNaira[nextBandId];
+    setFee(base != null ? String(base * nextTrips) : "");
+  }
+
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
@@ -96,6 +116,11 @@ function IssuePanel({
           name="distanceBandId"
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           required
+          value={bandId}
+          onChange={(e) => {
+            setBandId(e.target.value);
+            prefillFee(e.target.value, trips);
+          }}
         >
           <option value="">Select…</option>
           {bands.map((b) => (
@@ -113,7 +138,12 @@ function IssuePanel({
           type="number"
           min={1}
           max={10}
-          defaultValue={pickedTripCount}
+          value={trips}
+          onChange={(e) => {
+            const n = Number(e.target.value) || 1;
+            setTrips(n);
+            prefillFee(bandId, n);
+          }}
         />
         <p className="text-xs text-muted-foreground">
           {overflow
@@ -121,16 +151,27 @@ function IssuePanel({
             : "Usually 1. Override only if you'll split the delivery."}
         </p>
       </div>
-      <div className="space-y-1 rounded-md border bg-secondary/40 p-3 text-sm">
+      <div className="space-y-2">
+        <Label htmlFor="logisticsNaira">Logistics fee (₦)</Label>
+        <Input
+          id="logisticsNaira"
+          name="logisticsNaira"
+          type="number"
+          min={0}
+          step="0.01"
+          value={fee}
+          onChange={(e) => setFee(e.target.value)}
+          placeholder="Pick a band to prefill"
+        />
+        <p className="text-xs text-muted-foreground">
+          Prefilled from the rate matrix — edit for a one-off adjustment.
+        </p>
+      </div>
+      <div className="rounded-md border bg-secondary/40 p-3 text-sm">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Auto-selected vehicle</span>
           <span>{pickedVehicle ?? "—"}</span>
         </div>
-        {pickedCostNaira !== null && (
-          <p className="text-xs text-muted-foreground">
-            Cost is set after you pick a band.
-          </p>
-        )}
       </div>
       {state && !state.ok && <p className="text-sm text-destructive">{state.message}</p>}
       <SubmitButton label="Issue invoice" pendingLabel="Issuing…" />
@@ -139,13 +180,20 @@ function IssuePanel({
   );
 }
 
-function ApprovePanel({ orderId }: { orderId: string }) {
+function ApprovePanel({
+  orderId,
+  currentLogisticsNaira,
+}: {
+  orderId: string;
+  currentLogisticsNaira: number;
+}) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         Invoice issued. Approving will email + SMS the customer with bank details.
       </p>
       <ApproveButton orderId={orderId} />
+      <AdjustFeeInline orderId={orderId} currentLogisticsNaira={currentLogisticsNaira} />
       <CancelInline orderId={orderId} />
     </div>
   );
@@ -171,12 +219,74 @@ function ApproveButton({ orderId }: { orderId: string }) {
   );
 }
 
-function CancelPanel({ orderId, note }: { orderId: string; note: string }) {
+function CancelPanel({
+  orderId,
+  note,
+  currentLogisticsNaira,
+}: {
+  orderId: string;
+  note: string;
+  currentLogisticsNaira?: number;
+}) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">{note}</p>
+      {currentLogisticsNaira != null && (
+        <AdjustFeeInline orderId={orderId} currentLogisticsNaira={currentLogisticsNaira} />
+      )}
       <CancelInline orderId={orderId} />
     </div>
+  );
+}
+
+function AdjustFeeInline({
+  orderId,
+  currentLogisticsNaira,
+}: {
+  orderId: string;
+  currentLogisticsNaira: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const action = updateLogisticsFeeAction.bind(null, orderId);
+  const [state, formAction] = useFormState<FormState, FormData>(action, null);
+  if (!open) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setOpen(true)}
+      >
+        Adjust logistics fee
+      </Button>
+    );
+  }
+  return (
+    <form action={formAction} className="space-y-2 border-t pt-3">
+      <Label htmlFor="logisticsNaira">Logistics fee (₦)</Label>
+      <Input
+        id="logisticsNaira"
+        name="logisticsNaira"
+        type="number"
+        min={0}
+        step="0.01"
+        defaultValue={currentLogisticsNaira}
+        required
+      />
+      <p className="text-xs text-muted-foreground">
+        Saving regenerates the invoice PDF and re-notifies the customer of the new total.
+      </p>
+      {state && !state.ok && <p className="text-sm text-destructive">{state.message}</p>}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm">
+          Save fee
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+          Back
+        </Button>
+      </div>
+    </form>
   );
 }
 

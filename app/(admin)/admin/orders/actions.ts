@@ -10,6 +10,7 @@ import {
   markDelivered,
   markDispatched,
   markPaidByAdmin,
+  updateOrderLogistics,
 } from "@/lib/orders";
 import type { FormState } from "@/lib/validation";
 import { friendlyError, logError } from "@/lib/errors";
@@ -20,6 +21,13 @@ const issueSchema = z.object({
     .union([z.coerce.number().int().min(1).max(10), z.literal(""), z.null()])
     .optional()
     .transform((v) => (v === "" || v == null ? undefined : (v as number))),
+  logisticsNaira: z
+    .union([z.coerce.number().nonnegative(), z.literal(""), z.null()])
+    .optional()
+    .transform((v) => (v === "" || v == null ? undefined : (v as number))),
+});
+const adjustLogisticsSchema = z.object({
+  logisticsNaira: z.coerce.number().nonnegative(),
 });
 const markPaidSchema = z.object({
   amountKobo: z.coerce.number().int().nonnegative(),
@@ -49,6 +57,7 @@ export async function issueInvoiceAction(
   const parsed = issueSchema.safeParse({
     distanceBandId: formData.get("distanceBandId"),
     tripCount: formData.get("tripCount") ?? "",
+    logisticsNaira: formData.get("logisticsNaira") ?? "",
   });
   if (!parsed.success) {
     return { ok: false, message: friendlyError(parsed.error) };
@@ -57,6 +66,10 @@ export async function issueInvoiceAction(
     await issueInvoice(s.user.id, orderId, {
       distanceBandId: parsed.data.distanceBandId,
       tripCountOverride: parsed.data.tripCount,
+      logisticsKoboOverride:
+        parsed.data.logisticsNaira != null
+          ? Math.round(parsed.data.logisticsNaira * 100)
+          : undefined,
     });
   } catch (e) {
     logError("admin.orders.action", e, { orderId, userId: s.user.id });
@@ -64,6 +77,30 @@ export async function issueInvoiceAction(
   }
   revalidate(orderId);
   return { ok: true, message: "Invoice issued." };
+}
+
+export async function updateLogisticsFeeAction(
+  orderId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const s = await requireAdmin();
+  const parsed = adjustLogisticsSchema.safeParse({
+    logisticsNaira: formData.get("logisticsNaira"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: friendlyError(parsed.error) };
+  }
+  try {
+    await updateOrderLogistics(s.user.id, orderId, {
+      logisticsKobo: Math.round(parsed.data.logisticsNaira * 100),
+    });
+  } catch (e) {
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
+  }
+  revalidate(orderId);
+  return { ok: true, message: "Logistics fee updated." };
 }
 
 export async function approveOrderAction(orderId: string): Promise<FormState> {

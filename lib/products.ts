@@ -160,6 +160,43 @@ export async function updateProduct(
   return product;
 }
 
+export const stockInputSchema = z.object({
+  stockCartons: z.coerce.number().int().nonnegative().max(10_000_000),
+  stockLoosePacks: z.coerce.number().int().nonnegative().max(10_000_000),
+});
+export type StockInput = z.infer<typeof stockInputSchema>;
+
+export async function updateProductStock(id: string, input: StockInput) {
+  const existing = await db.product.findUnique({ where: { id } });
+  if (!existing) throw new AppError("We couldn't find that product — it may have been removed.");
+
+  const cartonsDelta = input.stockCartons - existing.stockCartons;
+  const packsDelta = input.stockLoosePacks - existing.stockLoosePacks;
+
+  const product = await db.product.update({
+    where: { id },
+    data: {
+      stockCartons: input.stockCartons,
+      stockLoosePacks: input.stockLoosePacks,
+      movements:
+        cartonsDelta !== 0 || packsDelta !== 0
+          ? {
+              create: {
+                deltaCartons: cartonsDelta,
+                deltaPacks: packsDelta,
+                reason: "ADJUSTMENT",
+                note: "Manual adjustment",
+              },
+            }
+          : undefined,
+    },
+  });
+  if (cartonsDelta < 0) {
+    void checkLowStockAndNotify([id]).catch((e) => logError("notifications.lowStock", e));
+  }
+  return product;
+}
+
 export async function bulkUpsertProducts(rows: ProductRow[]) {
   let created = 0;
   let updated = 0;

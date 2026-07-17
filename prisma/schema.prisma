@@ -18,7 +18,11 @@ datasource db {
 
 enum Role {
   CUSTOMER
-  ADMIN
+  ADMIN // legacy — retained for enum safety; not assigned to new users
+  SUPER_ADMIN
+  MANAGER
+  STAFF
+  CATALOG
 }
 
 model User {
@@ -436,6 +440,15 @@ model SiteSetting {
   id                         String   @id @default("singleton")
   freeLogisticsThresholdKobo Int      @default(20000000)
   freeLogisticsBannerText    String   @default("Free logistics on orders over {amount}")
+  bankName                   String   @default("")
+  bankAccountName            String   @default("")
+  bankAccountNumber          String   @default("")
+  contactEmail               String   @default("info@iyknel.com")
+  contactPhones              String   @default("08182806282,08114499558")
+  contactAddressLine1        String   @default("Plot 10 Abesan Estate Road")
+  contactAddressLine2        String   @default("Abesan Estate, Ipaja")
+  contactAddressLga          String   @default("Alimosho LGA")
+  contactAddressState        String   @default("Lagos")
   updatedAt                  DateTime @updatedAt
 }
 

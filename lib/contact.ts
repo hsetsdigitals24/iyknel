@@ -3,6 +3,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 
 import { db } from "@/lib/db";
+import { getSiteSettings } from "@/lib/settings";
 
 export type ContactPhone = {
   e164: string;
@@ -114,15 +115,34 @@ export async function getWhatsappContacts(): Promise<WhatsappContactView[]> {
   ];
 }
 
-export function getContact(): Contact {
-  const email = process.env.CONTACT_EMAIL?.trim() || DEFAULT_EMAIL;
-  const phones = parsePhones(process.env.CONTACT_PHONE || DEFAULT_PHONES_RAW);
+export async function getContact(): Promise<Contact> {
+  // Admin-editable contact details live on the SiteSetting singleton; fall back
+  // to env vars, then hardcoded defaults, if a column is blank.
+  const settings = await getSiteSettings();
+
+  const email =
+    settings.contactEmail?.trim() || process.env.CONTACT_EMAIL?.trim() || DEFAULT_EMAIL;
+  const phones = parsePhones(
+    settings.contactPhones?.trim() || process.env.CONTACT_PHONE || DEFAULT_PHONES_RAW,
+  );
   const whatsapp = process.env.CONTACT_WHATSAPP?.replace(/\D/g, "") || null;
 
-  const line1 = process.env.CONTACT_ADDRESS_LINE1?.trim() || DEFAULT_ADDRESS_LINE1;
-  const line2 = process.env.CONTACT_ADDRESS_LINE2?.trim() || DEFAULT_ADDRESS_LINE2;
-  const lga = process.env.CONTACT_ADDRESS_LGA?.trim() || DEFAULT_ADDRESS_LGA;
-  const state = process.env.CONTACT_ADDRESS_STATE?.trim() || DEFAULT_ADDRESS_STATE;
+  const line1 =
+    settings.contactAddressLine1?.trim() ||
+    process.env.CONTACT_ADDRESS_LINE1?.trim() ||
+    DEFAULT_ADDRESS_LINE1;
+  const line2 =
+    settings.contactAddressLine2?.trim() ||
+    process.env.CONTACT_ADDRESS_LINE2?.trim() ||
+    DEFAULT_ADDRESS_LINE2;
+  const lga =
+    settings.contactAddressLga?.trim() ||
+    process.env.CONTACT_ADDRESS_LGA?.trim() ||
+    DEFAULT_ADDRESS_LGA;
+  const state =
+    settings.contactAddressState?.trim() ||
+    process.env.CONTACT_ADDRESS_STATE?.trim() ||
+    DEFAULT_ADDRESS_STATE;
   const full = [line1, line2, lga, state].filter(Boolean).join(", ");
 
   return {

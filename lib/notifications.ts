@@ -5,16 +5,9 @@ import { sendOrderStatusSms } from "@/lib/sms";
 import { formatNaira } from "@/lib/utils";
 import { OrderStatusEmail, type OrderStatusEmailProps } from "@/emails/order-status";
 import { WelcomeEmail } from "@/emails/welcome";
+import type { BankDetails } from "@/lib/settings";
 
-export type BankDetails = { name: string; accountName: string; accountNumber: string };
-
-export function bankFromEnv(): BankDetails | null {
-  const name = process.env.BANK_NAME;
-  const accountName = process.env.BANK_ACCOUNT_NAME;
-  const accountNumber = process.env.BANK_ACCOUNT_NUMBER;
-  if (!name || !accountName || !accountNumber) return null;
-  return { name, accountName, accountNumber };
-}
+export type { BankDetails };
 
 type Recipient = { email: string; phone?: string | null; name?: string | null };
 

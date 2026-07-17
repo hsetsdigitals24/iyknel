@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/session";
+import { canAccess, sectionForPath } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { UserMenu } from "@/components/user-menu";
 import { BrandLogo } from "@/components/brand-logo";
@@ -13,7 +14,8 @@ type NavItem = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
+  const session = await requireAdmin();
+  const role = session.user.role;
 
   const [pendingOrders, outOfStock, pendingQuotes] = await Promise.all([
     db.order.count({
@@ -25,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     db.quoteRequest.count({ where: { status: "PENDING" } }),
   ]);
 
-  const nav: NavItem[] = [
+  const allNav = [
     { href: "/admin", label: "Overview" },
     { href: "/admin/orders", label: "Orders", count: pendingOrders, tone: "warning" },
     { href: "/admin/products", label: "Products", count: outOfStock, tone: "warning" },
@@ -36,7 +38,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/logistics", label: "Logistics" },
     { href: "/admin/audit", label: "Audit" },
     { href: "/admin/settings", label: "Settings" },
-  ];
+  ] satisfies NavItem[];
+  const nav = allNav.filter((item) => canAccess(role, sectionForPath(item.href)));
 
   return (
     <div className="flex min-h-screen flex-col bg-card">

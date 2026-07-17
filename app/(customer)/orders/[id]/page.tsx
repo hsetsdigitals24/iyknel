@@ -14,6 +14,7 @@ import {
 import { requireCustomer } from "@/lib/session";
 import { db } from "@/lib/db";
 import { getSignedFileUrl } from "@/lib/r2";
+import { bankFromSettings, getSiteSettings, type BankDetails } from "@/lib/settings";
 import { formatNaira } from "@/lib/utils";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   }
 
   const showBank = order.status === "AWAITING_PAYMENT" || order.status === "PAYMENT_REVIEW";
+  const bank = showBank ? bankFromSettings(await getSiteSettings()) : null;
   const cancelled = order.status === "CANCELLED";
   const currentStep = stepIndex(order.status);
   const canEdit = EDITABLE_STATUSES.has(order.status);
@@ -310,7 +312,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
               </p>
             )}
 
-            {showBank && <BankBlock />}
+            {showBank && <BankBlock bank={bank} />}
 
             {order.status === "AWAITING_PAYMENT" && <IPaidButton orderId={order.id} />}
 
@@ -343,11 +345,8 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function BankBlock() {
-  const bank = process.env.BANK_NAME;
-  const name = process.env.BANK_ACCOUNT_NAME;
-  const number = process.env.BANK_ACCOUNT_NUMBER;
-  if (!bank || !name || !number) {
+function BankBlock({ bank }: { bank: BankDetails | null }) {
+  if (!bank) {
     return (
       <p className="rounded-lg bg-surface-muted p-3 text-xs text-muted-foreground">
         Bank details will be sent in your invoice email.
@@ -360,10 +359,10 @@ function BankBlock() {
         <Building2 className="h-3.5 w-3.5" />
         Pay by transfer
       </div>
-      <div className="font-semibold">{bank}</div>
-      <div className="text-muted-foreground">{name}</div>
+      <div className="font-semibold">{bank.name}</div>
+      <div className="text-muted-foreground">{bank.accountName}</div>
       <div className="rounded bg-background px-2 py-1 font-mono text-base font-bold tabular-nums">
-        {number}
+        {bank.accountNumber}
       </div>
     </div>
   );

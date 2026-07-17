@@ -29,10 +29,10 @@ async function main() {
     const passwordHash = await hash(adminPassword, 10);
     await db.user.upsert({
       where: { email: adminEmail },
-      update: { role: "ADMIN" },
+      update: { role: "SUPER_ADMIN" },
       create: {
         email: adminEmail,
-        role: "ADMIN",
+        role: "SUPER_ADMIN",
         name: "Admin",
         passwordHash,
       },
@@ -40,7 +40,34 @@ async function main() {
   } else {
     console.warn("SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set — skipping admin user.");
   }
-  
+
+  // Bank transfer details are DB-backed and admin-editable. Backfill the
+  // singleton from the legacy BANK_* env vars only when the stored fields are
+  // still empty, so re-seeding never clobbers values entered in the back office.
+  const settings = await db.siteSetting.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton" },
+    update: {},
+  });
+  const bankBackfill: {
+    bankName?: string;
+    bankAccountName?: string;
+    bankAccountNumber?: string;
+  } = {};
+  if (!settings.bankName && process.env.BANK_NAME) {
+    bankBackfill.bankName = process.env.BANK_NAME;
+  }
+  if (!settings.bankAccountName && process.env.BANK_ACCOUNT_NAME) {
+    bankBackfill.bankAccountName = process.env.BANK_ACCOUNT_NAME;
+  }
+  if (!settings.bankAccountNumber && process.env.BANK_ACCOUNT_NUMBER) {
+    bankBackfill.bankAccountNumber = process.env.BANK_ACCOUNT_NUMBER;
+  }
+  if (Object.keys(bankBackfill).length > 0) {
+    console.log("Backfilling bank details from BANK_* env vars…");
+    await db.siteSetting.update({ where: { id: "singleton" }, data: bankBackfill });
+  }
+
   console.log("Done.");
 }
 

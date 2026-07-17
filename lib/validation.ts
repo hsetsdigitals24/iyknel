@@ -69,6 +69,11 @@ export const changePasswordSchema = z
     path: ["newPassword"],
   });
 
+export const adminRoleSchema = z.enum(
+  ["SUPER_ADMIN", "MANAGER", "STAFF", "CATALOG"],
+  { errorMap: () => ({ message: "Select a valid role" }) },
+);
+
 export const adminCreateSchema = z
   .object({
     name: z.string().trim().min(2, "Name is required").max(120),
@@ -79,6 +84,7 @@ export const adminCreateSchema = z
       .regex(phoneRegex, "Enter a valid phone number")
       .optional()
       .or(z.literal("")),
+    role: adminRoleSchema,
     password: z.string().min(8, "Use at least 8 characters").max(72),
     confirmPassword: z.string().min(1, "Confirm the password"),
   })
@@ -98,6 +104,7 @@ export const adminUpdateSchema = z
       .regex(phoneRegex, "Enter a valid phone number")
       .optional()
       .or(z.literal("")),
+    role: adminRoleSchema,
     newPassword: z
       .string()
       .min(8, "Use at least 8 characters")
@@ -133,6 +140,30 @@ export const freeLogisticsSchema = z.object({
     .max(200, "Keep it under 200 characters"),
 });
 export type FreeLogisticsInput = z.infer<typeof freeLogisticsSchema>;
+
+export const bankDetailsSchema = z.object({
+  bankName: z.string().trim().min(1, "Bank name is required").max(120),
+  bankAccountName: z.string().trim().min(1, "Account name is required").max(120),
+  bankAccountNumber: z
+    .string()
+    .trim()
+    .regex(/^\d{6,20}$/, "Enter a valid account number (digits only)"),
+});
+export type BankDetailsInput = z.infer<typeof bankDetailsSchema>;
+
+export const contactDetailsSchema = z.object({
+  contactEmail: z.string().trim().email("Enter a valid email address").max(160),
+  contactPhones: z
+    .string()
+    .trim()
+    .min(1, "Enter at least one phone number")
+    .max(200),
+  contactAddressLine1: z.string().trim().min(1, "Address line 1 is required").max(160),
+  contactAddressLine2: z.string().trim().max(160).optional().default(""),
+  contactAddressLga: z.string().trim().min(1, "LGA is required").max(120),
+  contactAddressState: z.string().trim().min(1, "State is required").max(120),
+});
+export type ContactDetailsInput = z.infer<typeof contactDetailsSchema>;
 
 export type FormState =
   | { ok: true; message?: string }

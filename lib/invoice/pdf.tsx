@@ -54,6 +54,7 @@ const fmt = (kobo: number) =>
 export type InvoiceProps = {
   invoiceNumber: string;
   issuedAt: Date;
+  company: { address: string; phones: string; email: string } | null;
   business: { name: string; contactName: string; phone: string };
   address: { line1: string; line2: string | null; city: string; state: string } | null;
   items: Array<{
@@ -83,6 +84,19 @@ export function InvoiceDocument(props: InvoiceProps) {
           <View>
             <Text style={styles.brand}>Iyknel</Text>
             <Text style={styles.subtle}>Wholesale FMCG · Nigeria</Text>
+            {props.company && (
+              <View style={{ marginTop: 4 }}>
+                {props.company.address ? (
+                  <Text style={styles.subtle}>{props.company.address}</Text>
+                ) : null}
+                {props.company.phones ? (
+                  <Text style={styles.subtle}>{props.company.phones}</Text>
+                ) : null}
+                {props.company.email ? (
+                  <Text style={styles.subtle}>{props.company.email}</Text>
+                ) : null}
+              </View>
+            )}
           </View>
           <View>
             <Text style={styles.label}>Invoice</Text>
@@ -136,8 +150,7 @@ export function InvoiceDocument(props: InvoiceProps) {
               <View style={styles.tr} key={i}>
                 <View style={styles.colName}>
                   <Text>{it.nameSnapshot}</Text>
-                  <Text style={styles.subtle}>{it.skuSnapshot}</Text>
-                  {parts.length > 0 && <Text style={styles.subtle}>{parts.join(" + ")}</Text>}
+                  <Text style={styles.subtle}>{it.skuSnapshot}</Text> 
                 </View>
                 <Text style={styles.colQty}>{it.quantity}</Text>
                 <Text style={styles.colUnit}>{fmt(it.priceKoboSnap)}</Text>

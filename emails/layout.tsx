@@ -20,8 +20,15 @@ const brand = {
   border: "#e7e3da",
 };
 
-const contactEmail = process.env.CONTACT_EMAIL;
-const contactPhone = process.env.CONTACT_PHONE;
+/**
+ * Contact details shown in the email footer. Injected once at render time
+ * (see `renderEmail` in lib/mail.ts) from the admin-editable SiteSetting row,
+ * falling back to env vars so template previews still render.
+ */
+export const EmailContactContext = React.createContext<{
+  email?: string | null;
+  phone?: string | null;
+}>({});
 
 export type EmailLayoutProps = {
   /** Text shown in the inbox preview line. */
@@ -35,6 +42,9 @@ export type EmailLayoutProps = {
  * inline-styled — email clients ignore <style>/external CSS.
  */
 export function EmailLayout({ preview, heading, children }: EmailLayoutProps) {
+  const injected = React.useContext(EmailContactContext);
+  const contactEmail = injected.email ?? process.env.CONTACT_EMAIL;
+  const contactPhone = injected.phone ?? process.env.CONTACT_PHONE;
   return (
     <Html>
       <Head />
