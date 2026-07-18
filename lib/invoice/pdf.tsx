@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   page: {
@@ -9,6 +9,7 @@ const styles = StyleSheet.create({
     color: "#111",
   },
   brand: { fontSize: 18, fontWeight: 700, marginBottom: 2 },
+  logo: { width: 120, height: 42, marginBottom: 4, objectFit: "contain" },
   subtle: { color: "#666" },
   rowBetween: { flexDirection: "row", justifyContent: "space-between" },
   section: { marginTop: 20 },
@@ -69,6 +70,7 @@ export type InvoiceProps = {
   subtotalKobo: number;
   logisticsKobo: number;
   totalKobo: number;
+  logo?: Buffer;
   weightGrams: number;
   vehicleName: string | null;
   bandLabel: string | null;
@@ -82,7 +84,11 @@ export function InvoiceDocument(props: InvoiceProps) {
       <Page size="A4" style={styles.page}>
         <View style={styles.rowBetween}>
           <View>
-            <Text style={styles.brand}>Iyknel</Text>
+            {props.logo ? (
+              <Image style={styles.logo} src={{ data: props.logo, format: "png" }} />
+            ) : (
+              <Text style={styles.brand}>Iyknel</Text>
+            )}
             <Text style={styles.subtle}>Wholesale FMCG · Nigeria</Text>
             {props.company && (
               <View style={{ marginTop: 4 }}>
