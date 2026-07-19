@@ -24,11 +24,18 @@ const brand = {
  * Contact details shown in the email footer. Injected once at render time
  * (see `renderEmail` in lib/mail.ts) from the admin-editable SiteSetting row,
  * falling back to env vars so template previews still render.
+ *
+ * Held in a module-level variable rather than React Context: this module is
+ * imported into the React Server Components graph (via lib/mail.ts), where
+ * `react`'s `react-server` build has no `createContext`. The contact is a
+ * single global value identical for every email in a request, so a shared
+ * holder set synchronously before render is safe and avoids that failure.
  */
-export const EmailContactContext = React.createContext<{
-  email?: string | null;
-  phone?: string | null;
-}>({});
+type EmailContact = { email?: string | null; phone?: string | null };
+let currentContact: EmailContact = {};
+export function setEmailContact(contact: EmailContact) {
+  currentContact = contact;
+}
 
 export type EmailLayoutProps = {
   /** Text shown in the inbox preview line. */
@@ -42,7 +49,7 @@ export type EmailLayoutProps = {
  * inline-styled — email clients ignore <style>/external CSS.
  */
 export function EmailLayout({ preview, heading, children }: EmailLayoutProps) {
-  const injected = React.useContext(EmailContactContext);
+  const injected = currentContact;
   const contactEmail = injected.email ?? process.env.CONTACT_EMAIL;
   const contactPhone = injected.phone ?? process.env.CONTACT_PHONE;
   return (
