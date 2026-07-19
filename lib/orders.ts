@@ -482,6 +482,42 @@ export async function updateOrderLogistics(
   return updated;
 }
 
+/**
+ * Re-render an already-issued invoice's PDF and swap it in R2, without changing
+ * any money or order state. Used to refresh the artifact after presentation
+ * changes (e.g. adding the logo) and by the backfill script. Does not re-notify
+ * the customer — nothing about the order's totals has changed.
+ */
+export async function regenerateInvoicePdf(actorId: string, orderId: string) {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, address: true, invoice: true, vehicle: true, distanceBand: true },
+  });
+  if (!order) throw new OrderSubmissionError("Order not found.");
+  if (!order.invoice) throw new OrderSubmissionError("No invoice to regenerate.");
+
+  const previousPdfKey = order.invoice.pdfKey ?? null;
+  const pdfKey = await buildInvoicePdfKey(order, {
+    vehicleName: order.vehicle?.name ?? null,
+    bandLabel: order.distanceBand?.label ?? null,
+    tripCount: order.tripCount,
+    logisticsKobo: order.logisticsKobo,
+  });
+
+  await db.$transaction(async (tx) => {
+    await tx.invoice.update({ where: { orderId: order.id }, data: { pdfKey } });
+    await tx.auditLog.create({
+      data: { actorId, orderId: order.id, action: "order.invoice_regenerated" },
+    });
+  });
+
+  if (previousPdfKey && previousPdfKey !== pdfKey) {
+    await deleteFile(previousPdfKey).catch((e) => logError("orders.deleteOldInvoice", e));
+  }
+
+  return order;
+}
+
 export async function approveOrder(actorId: string, orderId: string) {
   const order = await db.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
   if (!order) throw new OrderSubmissionError("Order not found.");

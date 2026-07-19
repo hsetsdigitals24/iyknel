@@ -22,7 +22,8 @@
     "match:unmatched-images": "tsx scripts/match-unmatched-images.ts",
     "scan:duplicates": "tsx scripts/scan-duplicate-products.ts",
     "fix:image-host": "tsx scripts/fix-image-host.ts",
-    "compress:r2-images": "tsx scripts/compress-r2-images.ts"
+    "compress:r2-images": "tsx scripts/compress-r2-images.ts",
+    "backfill:invoice-logos": "tsx scripts/backfill-invoice-logos.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

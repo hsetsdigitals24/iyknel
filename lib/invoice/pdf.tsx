@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 36,
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "Inter",
     color: "#111",
   },
   brand: { fontSize: 18, fontWeight: 700, marginBottom: 2 },

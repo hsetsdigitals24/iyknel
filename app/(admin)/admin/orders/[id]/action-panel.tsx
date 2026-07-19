@@ -15,6 +15,7 @@ import {
   markDeliveredAction,
   markDispatchedAction,
   markPaidAction,
+  regenerateInvoiceAction,
   updateLogisticsFeeAction,
 } from "../actions";
 import type { FormState } from "@/lib/validation";
@@ -71,7 +72,12 @@ export function ActionPanel({
     case "DISPATCHED":
       return <DeliverPanel orderId={orderId} />;
     case "DELIVERED":
-      return <p className="text-sm text-muted-foreground">Delivered — no further actions.</p>;
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">Delivered — no further actions.</p>
+          <RegenerateInvoiceInline orderId={orderId} />
+        </div>
+      );
     case "CANCELLED":
       return <p className="text-sm text-muted-foreground">Cancelled — no further actions.</p>;
     default:
@@ -194,6 +200,7 @@ function ApprovePanel({
       </p>
       <ApproveButton orderId={orderId} />
       <AdjustFeeInline orderId={orderId} currentLogisticsNaira={currentLogisticsNaira} />
+      <RegenerateInvoiceInline orderId={orderId} />
       <CancelInline orderId={orderId} />
     </div>
   );
@@ -219,6 +226,28 @@ function ApproveButton({ orderId }: { orderId: string }) {
   );
 }
 
+function RegenerateInvoiceInline({ orderId }: { orderId: string }) {
+  const [pending, setPending] = useState(false);
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="w-full"
+      disabled={pending}
+      onClick={async () => {
+        setPending(true);
+        const res = await regenerateInvoiceAction(orderId);
+        setPending(false);
+        if (res && !res.ok) toast.error(res.message);
+        else toast.success("Invoice PDF regenerated.");
+      }}
+    >
+      {pending ? "Regenerating…" : "Regenerate invoice PDF"}
+    </Button>
+  );
+}
+
 function CancelPanel({
   orderId,
   note,
@@ -234,6 +263,7 @@ function CancelPanel({
       {currentLogisticsNaira != null && (
         <AdjustFeeInline orderId={orderId} currentLogisticsNaira={currentLogisticsNaira} />
       )}
+      <RegenerateInvoiceInline orderId={orderId} />
       <CancelInline orderId={orderId} />
     </div>
   );
@@ -321,6 +351,7 @@ function MarkPaidPanel({ orderId, totalKobo }: { orderId: string; totalKobo: num
       </div>
       {state && !state.ok && <p className="text-sm text-destructive">{state.message}</p>}
       <SubmitButton label="Mark paid" pendingLabel="Confirming…" />
+      <RegenerateInvoiceInline orderId={orderId} />
       <CancelInline orderId={orderId} />
     </form>
   );
@@ -337,6 +368,7 @@ function DispatchPanel({ orderId }: { orderId: string }) {
       </div>
       {state && !state.ok && <p className="text-sm text-destructive">{state.message}</p>}
       <SubmitButton label="Mark dispatched" pendingLabel="Saving…" />
+      <RegenerateInvoiceInline orderId={orderId} />
     </form>
   );
 }
@@ -344,20 +376,23 @@ function DispatchPanel({ orderId }: { orderId: string }) {
 function DeliverPanel({ orderId }: { orderId: string }) {
   const [pending, setPending] = useState(false);
   return (
-    <Button
-      type="button"
-      className="w-full"
-      disabled={pending}
-      onClick={async () => {
-        setPending(true);
-        const res = await markDeliveredAction(orderId);
-        setPending(false);
-        if (res && !res.ok) toast.error(res.message);
-        else toast.success("Marked delivered.");
-      }}
-    >
-      {pending ? "Saving…" : "Mark delivered"}
-    </Button>
+    <div className="space-y-3">
+      <Button
+        type="button"
+        className="w-full"
+        disabled={pending}
+        onClick={async () => {
+          setPending(true);
+          const res = await markDeliveredAction(orderId);
+          setPending(false);
+          if (res && !res.ok) toast.error(res.message);
+          else toast.success("Marked delivered.");
+        }}
+      >
+        {pending ? "Saving…" : "Mark delivered"}
+      </Button>
+      <RegenerateInvoiceInline orderId={orderId} />
+    </div>
   );
 }
 

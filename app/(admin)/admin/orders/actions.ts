@@ -10,6 +10,7 @@ import {
   markDelivered,
   markDispatched,
   markPaidByAdmin,
+  regenerateInvoicePdf,
   updateOrderLogistics,
 } from "@/lib/orders";
 import type { FormState } from "@/lib/validation";
@@ -101,6 +102,18 @@ export async function updateLogisticsFeeAction(
   }
   revalidate(orderId);
   return { ok: true, message: "Logistics fee updated." };
+}
+
+export async function regenerateInvoiceAction(orderId: string): Promise<FormState> {
+  const s = await requireAdmin();
+  try {
+    await regenerateInvoicePdf(s.user.id, orderId);
+  } catch (e) {
+    logError("admin.orders.action", e, { orderId, userId: s.user.id });
+    return { ok: false, message: friendlyError(e) };
+  }
+  revalidate(orderId);
+  return { ok: true, message: "Invoice PDF regenerated." };
 }
 
 export async function approveOrderAction(orderId: string): Promise<FormState> {
