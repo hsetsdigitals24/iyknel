@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // public/ assets aren't bundled into serverless functions by default, so the
+    // invoice PDF renderer (lib/invoice/render.ts) fails at runtime reading fonts
+    // and the logo via process.cwd(). Force-trace them into every function bundle.
+    outputFileTracingIncludes: {
+      "/**": ["./public/fonts/**", "./public/main_logo.png"],
+    },
+  },
   images: {
     // We don't use Vercel's /_next/image optimizer (it returned 402 once its quota
     // was exhausted). Instead a custom loader routes images through our own /_img
